@@ -104,6 +104,4 @@ ENV/
 .idea/
 
 # my DB
-wg.sqlite3
-wanggedb.sqlite3
 db.sqlite3
