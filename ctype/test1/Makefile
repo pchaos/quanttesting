@@ -2,7 +2,7 @@ all: point
 #all: point wrappedPoint line
 
 clean:
-	rm *.or *.so
+	rm *.o *.so
 
 libpoint.so: Point.c
 	gcc -shared -fPIC $^ -o $@
