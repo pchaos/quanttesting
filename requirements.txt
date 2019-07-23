@@ -1,1 +1,9 @@
 python-dotenv
+ta-lib
+tushare
+pandas
+numpy
+matplotlib
+QUANTAXIS>1.4.3
+pyecharts
+jupyter-echarts-pypkg
