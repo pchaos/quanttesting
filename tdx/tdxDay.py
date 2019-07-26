@@ -2,7 +2,35 @@
 """
 -------------------------------------------------
    File Name：     tdxDay
-   Description :
+   Description : 一、通达信日线*.day文件
+    文件名即股票代码
+    每32个字节为一天数据
+    每4个字节为一个字段，每个字段内低字节在前
+    00 ~ 03 字节：年月日, 整型
+    04 ~ 07 字节：开盘价*100， 整型
+    08 ~ 11 字节：最高价*100,  整型
+    12 ~ 15 字节：最低价*100,  整型
+    16 ~ 19 字节：收盘价*100,  整型
+    20 ~ 23 字节：成交额（元），float型
+    24 ~ 27 字节：成交量（股），整型
+    28 ~ 31 字节：上日收盘*100, 整型
+
+
+二、通达信5分钟线*.5文件
+    文件名即股票代码
+    每32个字节为一个5分钟数据，每字段内低字节在前
+    00 ~ 01 字节：日期，整型，设其值为num，则日期计算方法为：
+                  year=floor(num/2048)+2004;
+                  month=floor(mod(num,2048)/100);
+                  day=mod(mod(num,2048),100);
+    02 ~ 03 字节： 从0点开始至目前的分钟数，整型
+    04 ~ 07 字节：开盘价*100，整型
+    08 ~ 11 字节：最高价*100，整型
+    12 ~ 15 字节：最低价*100，整型
+    16 ~ 19 字节：收盘价*100，整型
+    20 ~ 23 字节：成交额*100，float型
+    24 ~ 27 字节：成交量（股），整型
+    28 ~ 31 字节：（保留）
    Author :       pchaos
    date：          2019/7/24
 -------------------------------------------------
@@ -15,11 +43,19 @@ import struct
 import os
 import time
 from tdx import fdaydata
+import os
+from dotenv import load_dotenv
 
-tdxpath = "/home/yg/software/shared/finacing/gtja/RichEZ/vipdoc"
+
+def getEnvVar(key):
+	load_dotenv(verbose=True)
+	return os.getenv(key)
+
+
+tdxpath = getEnvVar('tdxpath')
 america_path = "/ds/lday/"
-sh_path = "/sh/lday/"
-sz_path = "/sz/lday/"
+sh_path = os.path.join(tdxpath, "sh/lday/")
+sz_path = os.path.join(tdxpath, "sz/lday/")
 
 
 def change_path(pval, pname='tdxpath'):
@@ -111,9 +147,9 @@ def get_dayline_by_fid(str_fid='sh000001', restrictSize=0):
 	size_of_tdx_dayline = 32  # 32 bytes per struct
 
 	if str_fid[0:2] == 'sh':
-		spath = tdxpath + sh_path
+		spath = sh_path
 	else:
-		spath = tdxpath + sz_path
+		spath = sz_path
 
 	filename = spath + str_fid + ".day"
 	f = open(filename, 'rb')
@@ -145,9 +181,8 @@ def get_dayline_by_fid(str_fid='sh000001', restrictSize=0):
 
 		dayline.append(q)
 
-	return dayline
-
 	f.close()
+	return dayline
 
 
 def get_file_list(isAmerica=0):
@@ -159,9 +194,9 @@ def get_file_list(isAmerica=0):
 		listfile = os.listdir(fdir)
 		return listfile
 	else:
-		fdir = tdxpath + sh_path
+		fdir = sh_path
 		listfile = os.listdir(fdir)
-		fdir = tdxpath + sz_path
+		fdir = sz_path
 		listfile += os.listdir(fdir)
 
 	return listfile
@@ -176,7 +211,7 @@ def get_stock_data_list():
 		if not rd: break
 		rd = rd.split('\t')
 		for i in range(0, len(rd)):
-			print(rd[i],)
+			print(rd[i], )
 		print()
 
 
@@ -189,7 +224,6 @@ if __name__ == '__main__':
 
 		dlist[0].display()
 		dlist[-1].display()
-		print()
 	else:
 		print('america demo')
 
