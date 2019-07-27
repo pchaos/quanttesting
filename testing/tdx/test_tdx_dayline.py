@@ -12,9 +12,10 @@
 """
 from unittest import TestCase
 import unittest
-import os, time
+import os, time, datetime
 from struct import unpack
-from tdx import get_dayline_by_fid, get_file_list, sh_path, sz_path
+from tdx import get_dayline_by_fid, get_file_list, parse_time_reverse, \
+	parse_time, sh_path, sz_path
 
 __author__ = 'pchaos'
 
@@ -45,6 +46,27 @@ class Test_tdx_dayline(TestCase):
 		filelist = get_file_list()
 		self.assertTrue(len(filelist) > 100, '目录列表:{}'.format(filelist))
 		print('通达信目录： {}\n{}'.format(len(filelist), filelist))
+
+	def test_parse_time(self):
+		j = 4182
+		i = parse_time(parse_time_reverse(j))
+		self.assertTrue(i == j, '{} != {}'.format(i, j))
+
+		i = 20101007
+		j = parse_time_reverse(parse_time(i))
+		self.assertTrue(i == j, '{} != {}'.format(i, j))
+
+		a = datetime.datetime.today()
+		numdays = 10000
+		k = int((a + datetime.timedelta(days=1)).strftime('%Y%m%d'))
+		for x in range(0, numdays):
+			i = int((a - datetime.timedelta(days=x)).strftime('%Y%m%d'))
+			j = parse_time_reverse(parse_time(i))
+			self.assertTrue(i == j, '{} != {}, count:{}'.format(i, j, x))
+			self.assertFalse(j == k , "{} {}".format(k, j))
+			k = j
+
+	# print(i)
 
 	def test_readFileOnce(self):
 		""" 一次性读取整个文件

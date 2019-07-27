@@ -14,4 +14,4 @@ __author__ = 'pchaos'
 
 from .libqda_struct import fdata, fdaydata
 from .tdxDay import tdxpath, sh_path, sz_path
-from .tdxDay import get_dayline_by_fid, get_file_list
+from .tdxDay import get_dayline_by_fid, get_file_list, parse_time, parse_time_reverse

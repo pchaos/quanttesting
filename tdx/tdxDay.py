@@ -93,7 +93,7 @@ def parse_time(ft):
 	s = time.mktime(s)
 	s += 1000 * 60 * 60 * 6
 	s = s / 86400 - 10956
-	s = int(s)
+	s = int(round(s, 0))
 	return s
 
 
