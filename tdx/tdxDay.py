@@ -186,6 +186,11 @@ def get_dayline_by_fid(str_fid='sh000001', restrictSize=0):
 
 
 def get_file_list(isAmerica=0):
+	''' 获取通达信目录下文件列表
+
+	:param isAmerica: 是否美股，默认为0（不是）
+	:return:
+	'''
 	print('tdxpath is ', tdxpath)
 
 	listfile = []

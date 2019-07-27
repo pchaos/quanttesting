@@ -13,7 +13,8 @@
 from unittest import TestCase
 import unittest
 import os, time
-from tdx import get_dayline_by_fid, sh_path, sz_path
+from struct import unpack
+from tdx import get_dayline_by_fid, get_file_list, sh_path, sz_path
 
 __author__ = 'pchaos'
 
@@ -34,7 +35,16 @@ class Test_tdx_dayline(TestCase):
 
 		dlist[0].display()
 		dlist[-1].display()
-		self.assertTrue(len(dlist)) ==0, '{} stays {} days'.format(code, len(dlist))
+		self.assertTrue(len(dlist)) == 0, '{} stays {} days'.format(code,
+		                                                            len(dlist))
+
+	def test_get_file_list(self):
+		''' get_file_list() 返回通达信目录文件列表
+
+		'''
+		filelist = get_file_list()
+		self.assertTrue(len(filelist) > 100, '目录列表:{}'.format(filelist))
+		print('通达信目录： {}\n{}'.format(len(filelist), filelist))
 
 	def test_readFileOnce(self):
 		""" 一次性读取整个文件
@@ -62,15 +72,17 @@ class Test_tdx_dayline(TestCase):
 			e = e + 32
 
 	def test_readFileOnce_multitimes(self):
-		n=1000
+		n = 1000
 		for i in range(n):
 			self.test_readFileOnce()
 
 	def test_readFileOnebyone(self):
 		""" 循环读取整个文件
 		"""
-		from struct import unpack
-		code = 'sz000680'
+		code = 'sz000001'
+		self._readCode(code)
+
+	def _readCode(self, code):
 		ofile = open(os.path.join(sz_path, '{}.day'.format(code)), 'rb')
 		buf = ofile.read()
 		line = ''
@@ -83,7 +95,6 @@ class Test_tdx_dayline(TestCase):
 				a[2] / 100.0) + ' ' + str(a[3] / 100.0) + ' ' + str(
 				a[4] / 100.0) + ' ' + str(a[5] / 10.0) + ' ' + str(
 				a[6]) + ' ' + str(a[7]) + ' ' + '\n'
-
 		ofile.close()
 
 	def test_readFileOnebyone_multitimes(self):
@@ -91,9 +102,10 @@ class Test_tdx_dayline(TestCase):
 
 		:return:
 		'''
-		n=1000
+		n = 1000
 		for i in range(n):
 			self.test_readFileOnebyone()
 
+
 if __name__ == '__main__':
-    unittest.main()
+	unittest.main()
