@@ -60,7 +60,20 @@ class TestCHCOUNTS(TestCase):
 		print(df.data.columns, type(df.data))
 		chCounts = df.to_qfq().add_func(CHCOUNTS)
 		self.assertTrue(len(chCounts) > 0, '指标为零')
+		self.assertFalse(len(chCounts['chCounts'] >5)> len(chCounts['chCounts'] >8))
+		self.assertFalse(len(chCounts['chCounts'] >8)==0, '缠中说禅均线强度最多为8')
+		self.assertFalse(len(chCounts['chCounts'] <0)==0, '缠中说禅均线强度最少为0')
 		print(chCounts)
+
+	def test_CHCOUNTS2(self):
+		code = '000001'
+		df = qa.QA_fetch_stock_day_adv(code)
+		print(df.data.columns, type(df.data))
+		chCounts = df.to_qfq().add_func(CHCOUNTS)
+		chCounts2 = df.to_qfq().add_func(CHCOUNTS2)
+		self.assertTrue(len(chCounts2) > 0, '指标为零')
+		self.assertTrue(chCounts.equals(chCounts2), '两种方式返回结果不相等')
+		# print(chCounts2)
 
 	def test_CHCOUNTS_codelist(self):
 		# code列表
