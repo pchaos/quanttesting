@@ -60,9 +60,13 @@ class TestCHCOUNTS(TestCase):
 		print(df.data.columns, type(df.data))
 		chCounts = df.to_qfq().add_func(CHCOUNTS)
 		self.assertTrue(len(chCounts) > 0, '指标为零')
-		self.assertFalse(len(chCounts['chCounts'] >5)> len(chCounts['chCounts'] >8))
-		self.assertFalse(len(chCounts['chCounts'] >8)==0, '缠中说禅均线强度最多为8')
-		self.assertFalse(len(chCounts['chCounts'] <0)==0, '缠中说禅均线强度最少为0')
+		self.assertFalse(
+			len(chCounts['chCounts'] > 5) > len(chCounts['chCounts'] > 8))
+		self.assertTrue(len(chCounts[chCounts['chCounts'] > 8]) == 0, '缠中说禅均线强度最多为8')
+		self.assertTrue(len(chCounts[chCounts['chCounts'] < 0]) == 0, '缠中说禅均线强度最少为0')
+		self.assertTrue(len(chCounts) == len(
+			(chCounts['chCounts'] < 9) & (chCounts['chCounts'] >= 0)),
+		                 '0 <= 缠中说禅均线强度 < 9')
 		print(chCounts)
 
 	def test_CHCOUNTS2(self):
@@ -73,7 +77,8 @@ class TestCHCOUNTS(TestCase):
 		chCounts2 = df.to_qfq().add_func(CHCOUNTS2)
 		self.assertTrue(len(chCounts2) > 0, '指标为零')
 		self.assertTrue(chCounts.equals(chCounts2), '两种方式返回结果不相等')
-		# print(chCounts2)
+
+	# print(chCounts2)
 
 	def test_CHCOUNTS_codelist(self):
 		# code列表
