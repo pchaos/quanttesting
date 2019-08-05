@@ -63,7 +63,7 @@ class Test_tdx_dayline(TestCase):
 			i = int((a - datetime.timedelta(days=x)).strftime('%Y%m%d'))
 			j = parse_time_reverse(parse_time(i))
 			self.assertTrue(i == j, '{} != {}, count:{}'.format(i, j, x))
-			self.assertFalse(j == k , "{} {}".format(k, j))
+			self.assertFalse(k <= j , "{} {}".format(k, j))
 			k = j
 
 	# print(i)
