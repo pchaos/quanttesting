@@ -18,8 +18,13 @@ import QUANTAXIS as qa
 import matplotlib.pyplot as plt
 import talib as ta
 
+
 def read_zxg(fname='zxg.txt'):
-	dir_path = os.path.dirname(os.path.realpath(__file__))
+	try:
+		# 当前目录
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+	except:
+		dir_path = os.path.dirname(os.path.realpath("./"))
 	if not fname.find(os.sep) > -1:
 		fname = os.path.join(dir_path, fname)
 	resultList = []
@@ -76,21 +81,75 @@ class TestCHCOUNTS(TestCase):
 		end = datetime.datetime.now() - datetime.timedelta(10)
 		self._test_index_day_adv(code, end, start)
 
-	def _test_index_day_adv(self, code, end, start):
+	def _test_index_day_adv(self, code, start, end):
 		df = qa.QA_fetch_index_day_adv(code, start, end)
 		self.assertTrue(len(df.code) == len(code),
 		                '有未获取到的代码 {} {}, {}:{}'.format(df.code, code,
 		                                               len(df.code), len(code)))
 		chCounts = df.add_func(CHCOUNTS)
 		self.assertTrue(len(chCounts) > 0, '指标为零')
-		print(chCounts)
+		# print(chCounts)
+		return chCounts
 
 	def test_CHCOUNTS_indexlist(self):
+		'''
+		:return:
+		                           chCounts
+			date       code
+			2018-10-08 000016         0
+			           399001         0
+			           399004         0
+			           399005         0
+			2018-10-09 000016         0
+			           399001         0
+			           399004         0
+			           399005         0
+			2018-10-10 000016         0
+			           399001         0
+			           399004         0
+			           399005         0
+
+		'''
 		# code列表
 		code = read_zxg()
 		start = datetime.datetime.now() - datetime.timedelta(300)
 		end = datetime.datetime.now() - datetime.timedelta(10)
-		self._test_index_day_adv(code, end, start)
+		self._test_index_day_adv(code, start, end)
+
+	def test_CHCOUNTS_std(self):
+		# code列表
+		code = read_zxg()
+		start = datetime.datetime.now() - datetime.timedelta(300)
+		end = datetime.datetime.now() - datetime.timedelta(10)
+		chcounts = self._test_index_day_adv(code, start, end)
+		chcounts.groupby('date').mean()
+		chcounts.groupby('date').agg('std')
+		chcounts.agg('std')
+		print("type chcounts.groupby('date').agg('std')): {}".format(
+			type(chcounts.groupby('date').agg('std'))))
+		print("type chcounts.agg('std')): {}".format(type(chcounts.agg('std'))))
+		chcounts.reset_index(inplace=True)
+		dd = chcounts
+		chcounts.set_index('date', inplace=True)
+
+		chcountsstd = chcounts.groupby('date').agg('std')['chCounts']
+		for d in chcountsstd.index[-5:]:
+			df1 = chcounts.chCounts.loc[d] > chcounts.chCounts.loc[d].mean() + \
+			      chcountsstd.loc[d]
+			df1 = chcounts.chCounts.loc[d] > chcounts.chCounts.loc[d].mean() + \
+			      chcountsstd.loc[d]
+			# df1.columns = [['TF']]
+			df2 = chcounts.chCounts.loc[d]
+			# df2.columns = [['chCouints']]
+			df = pd.concat([df1, df2], axis=1)
+			df.columns = [['TF', 'chCounts']]
+			print(pd.concat([df1, df2], axis=1))
+			# 当天各指数缠中说禅均质平均值+STD
+			stdHigh = df[chcounts.chCounts.loc[d] >
+			             chcounts.chCounts.loc[d].mean() +
+			             chcountsstd.loc[d]]
+			self.assertTrue(len(df) > 3 * len(stdHigh),
+			                '当天各指数个数/len(当天各指数缠中说禅均质平均值+STD)>3')
 
 	def test_readstkData(self):
 		# https://zhuanlan.zhihu.com/p/29519040
@@ -167,34 +226,34 @@ class TestCHCOUNTS(TestCase):
 		plt.ylabel('Stock price and Volume')
 		fig.show()
 
-		# maLeg = plt.legend(loc=9, ncol=2, prop={'size': 7},
-		#                    fancybox=True, borderaxespad=0.)
-		# maLeg.get_frame().set_alpha(0.4)
-		# textEd = pylab.gca().get_legend().get_texts()
-		# pylab.setp(textEd[0:5], color='w')
+# maLeg = plt.legend(loc=9, ncol=2, prop={'size': 7},
+#                    fancybox=True, borderaxespad=0.)
+# maLeg.get_frame().set_alpha(0.4)
+# textEd = pylab.gca().get_legend().get_texts()
+# pylab.setp(textEd[0:5], color='w')
 
-		# ax0 = plt.subplot2grid((6, 4), (0, 0), sharex=ax1, rowspan=1, colspan=4)
-		# rsi = ta.RSI(daysreshape.close.values, MA1)
-		# rsiCol = '#c1f9f7'
-		# posCol = '#386d13'
-		# negCol = '#8f2020'
-		#
-		# ax0.plot(days.values[-SP:], rsi[-SP:], rsiCol, linewidth=1.5)
-		# ax0.axhline(70, color=negCol)
-		# ax0.axhline(30, color=posCol)
-		# ax0.fill_between(dates.values[-SP:], rsi[-SP:], 70,
-		#                  where=(rsi[-SP:] >= 70), facecolor=negCol,
-		#                  edgecolor=negCol, alpha=0.5)
-		# ax0.fill_between(dates.values[-SP:], rsi[-SP:], 30,
-		#                  where=(rsi[-SP:] <= 30), facecolor=posCol,
-		#                  edgecolor=posCol, alpha=0.5)
-		# ax0.set_yticks([30, 70])
-		# ax0.yaxis.label.set_color("w")
-		# ax0.spines['bottom'].set_color("#5998ff")
-		# ax0.spines['top'].set_color("#5998ff")
-		# ax0.spines['left'].set_color("#5998ff")
-		# ax0.spines['right'].set_color("#5998ff")
-		# ax0.tick_params(axis='y', colors='w')
-		# ax0.tick_params(axis='x', colors='w')
-		# plt.ylabel('RSI')
-		# fig.show()
+# ax0 = plt.subplot2grid((6, 4), (0, 0), sharex=ax1, rowspan=1, colspan=4)
+# rsi = ta.RSI(daysreshape.close.values, MA1)
+# rsiCol = '#c1f9f7'
+# posCol = '#386d13'
+# negCol = '#8f2020'
+#
+# ax0.plot(days.values[-SP:], rsi[-SP:], rsiCol, linewidth=1.5)
+# ax0.axhline(70, color=negCol)
+# ax0.axhline(30, color=posCol)
+# ax0.fill_between(dates.values[-SP:], rsi[-SP:], 70,
+#                  where=(rsi[-SP:] >= 70), facecolor=negCol,
+#                  edgecolor=negCol, alpha=0.5)
+# ax0.fill_between(dates.values[-SP:], rsi[-SP:], 30,
+#                  where=(rsi[-SP:] <= 30), facecolor=posCol,
+#                  edgecolor=posCol, alpha=0.5)
+# ax0.set_yticks([30, 70])
+# ax0.yaxis.label.set_color("w")
+# ax0.spines['bottom'].set_color("#5998ff")
+# ax0.spines['top'].set_color("#5998ff")
+# ax0.spines['left'].set_color("#5998ff")
+# ax0.spines['right'].set_color("#5998ff")
+# ax0.tick_params(axis='y', colors='w')
+# ax0.tick_params(axis='x', colors='w')
+# plt.ylabel('RSI')
+# fig.show()
