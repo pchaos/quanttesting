@@ -278,6 +278,24 @@ class TestCHCOUNTS(TestCase):
 # plt.ylabel('RSI')
 # fig.show()
 
+	def test_FOURWEEK(self):
+		code = '000001'
+		start = datetime.datetime.now() - datetime.timedelta(300)
+		end = datetime.datetime.now() - datetime.timedelta(10)
+		df = qa.QA_fetch_index_day_adv(code, start, end)
+		print(df.data.columns, type(df.data))
+		data = df.add_func(FOURWEEK)
+		self.assertTrue(len(data) > 0, '指标为零')
+		# self.assertFalse(
+		# 	len(chCounts['chCounts'] > 5) > len(chCounts['chCounts'] > 8))
+		# self.assertTrue(len(chCounts[chCounts['chCounts'] > 8]) == 0,
+		#                 '缠中说禅均线强度最多为8')
+		# self.assertTrue(len(chCounts[chCounts['chCounts'] < 0]) == 0,
+		#                 '缠中说禅均线强度最少为0')
+		# self.assertTrue(len(chCounts) == len(
+		# 	(chCounts['chCounts'] < 9) & (chCounts['chCounts'] >= 0)),
+		#                 '0 <= 缠中说禅均线强度 < 9')
+		print(data)
 
 if __name__ == '__main__':
 	unittest.main()

@@ -50,3 +50,13 @@ class CHCOUNT():
 	_counts = 0
 
 
+def FOURWEEK(data):
+	''' 四周规则
+
+	:param data:
+	:return:
+	'''
+	weeks = [20,10]
+	high = qa.HHV(data['close'], weeks[0])
+	low= qa.LLV(data['close'], weeks[0])
+	return pd.DataFrame({'high':high, 'low':low})
