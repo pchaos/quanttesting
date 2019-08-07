@@ -11,3 +11,6 @@
 -------------------------------------------------
 """
 __author__ = 'pchaos'
+
+from .chCounts import CHCOUNTS, CHCOUNTS2
+	# , FOURWEEK

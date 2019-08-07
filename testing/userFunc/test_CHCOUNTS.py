@@ -11,12 +11,14 @@
 -------------------------------------------------
 """
 from unittest import TestCase
-from czsc.chCounts import *
+import unittest
+from userFunc import *
 import datetime
 import os
 import QUANTAXIS as qa
 import matplotlib.pyplot as plt
 import talib as ta
+import pandas as pd
 
 
 def read_zxg(fname='zxg.txt'):
@@ -275,3 +277,7 @@ class TestCHCOUNTS(TestCase):
 # ax0.tick_params(axis='x', colors='w')
 # plt.ylabel('RSI')
 # fig.show()
+
+
+if __name__ == '__main__':
+	unittest.main()
