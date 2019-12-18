@@ -8,4 +8,5 @@
 
 [pyecharts简介](https://pyecharts.org/#/zh-cn/intro)
 
-这是一个公式 $f(r) = \frac {\pi r} {2} $
+这是一个公式 
+$$f(r) = \frac {\pi r} {2} $$
