@@ -7,3 +7,5 @@ matplotlib
 QUANTAXIS>1.4.3
 pyecharts
 jupyter-echarts-pypkg
+statsmodels
+ipython
