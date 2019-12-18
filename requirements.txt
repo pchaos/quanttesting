@@ -9,3 +9,5 @@ pyecharts
 jupyter-echarts-pypkg
 statsmodels
 ipython
+pytest
+mpl_finance
