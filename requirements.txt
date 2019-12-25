@@ -11,3 +11,5 @@ statsmodels
 ipython
 pytest
 mpl_finance
+mock
+seaborn
