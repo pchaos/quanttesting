@@ -13,3 +13,4 @@ pytest
 mpl_finance
 mock
 seaborn
+python-dotenv
