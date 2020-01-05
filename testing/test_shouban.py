@@ -148,19 +148,22 @@ class testShouBan(TestCase):
                         '002012',
                         '002034']
         else:
-            codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:1000]
+            codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:count]
         return codelist
 
     def testShouOutput(self):
         codelist = self.getCodeList(isSB=False)
+        # codelist = self.getCodeList(isSB=False, count=1000)
         # codelist = self.getCodeList(isSB=True)
+        # dayslong = ['2018-01-01', '2018-03-31']
         dayslong = ['2018-01-01', '2019-10-31']
         daylist = []
         # 月初 月末
         firstday = self.str2date(dayslong[0])
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
         lastday = self.str2date(dayslong[1])
-        data = qa.QA_fetch_stock_day_adv(codelist, firstday - relativedelta(months=7),
+        # 获取起始时间之前一年的数据，否则可能因停牌过长不能计算起涨点相对120均线涨幅
+        data = qa.QA_fetch_stock_day_adv(codelist, firstday - relativedelta(months=12),
                                          lastday + relativedelta(months=2)).to_qfq()
         while date_after_month <= lastday:
             print("首板...")
@@ -194,11 +197,12 @@ class testShouBan(TestCase):
         edate = self.date2str(self.str2date(enddate) + relativedelta(days=10))
         for code in codelist:
             # dfind = inc.get_timerange(startdate, edate, code) # 源码中有bug，code不起作用
-            dfind = inc.data.loc[(slice(pd.Timestamp(startdate), pd.Timestamp(enddate)), code), :]
+            dfind = inc.data.loc[(slice(pd.Timestamp(startdate), pd.Timestamp(self.str2date(enddate) + relativedelta(days=15))), code), :]
             d1 = df.loc[df.code == code]
             if (len(d1)) == 0:
                 continue
             assert len(d1) == 1, "首板个数：{}".format(len(d1))
+            # 首板日期
             d1date = pd.to_datetime(d1.date.values[0])
             if not (self.str2date(startdate) <= d1date <= self.str2date(enddate)):
                 continue
@@ -208,18 +212,15 @@ class testShouBan(TestCase):
             # code, d.JJZF,'2018-10-21' d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB))
             # 涨停板位置
             wz = d.WZ
-            if d1date == pd.to_datetime(enddate):
-                #
-                dfind = inc.data.loc[
-                        (slice(pd.Timestamp(startdate), pd.Timestamp(self.str2date(enddate) + relativedelta(days=10))), code), :]
             # 首次涨停涨停第二个交易日，公式计算值
             d = dfind.shift(-1).loc[(d1date.strftime('%Y-%m-%d'), d1.code.values[0])]
             d.WZ = wz
             a = ["%.2f" % i for i in d]
-            a.append(code)
+            a.insert(0, code)
+            a.insert(1, self.date2str(d1date))
             alist.append(a)
             print(code, ", %.2f" * len(d) % tuple(d))
-        dfc = pd.DataFrame(alist, columns=["次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "股票代码"])
+        dfc = pd.DataFrame(alist, columns=[ "股票代码", "首板日期", "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅", "次日量比"])
         dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
         # print("inc", inc.get_code(codelist[-1]))
         # qa.debug("indicator")
