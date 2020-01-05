@@ -7,8 +7,6 @@ import QUANTAXIS as qa
 import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 
 def shouban(dataFrame):
@@ -25,6 +23,9 @@ def shouban(dataFrame):
 
 
 def shoubanData(dataFrame):
+    """ 首板指标计算
+
+    """
     close = dataFrame['close']
     H = dataFrame['high']
     L = dataFrame['low']
@@ -60,6 +61,8 @@ class testShouBan(TestCase):
         print("done")
 
     def testShouBan(self):
+        """测试首板 shouban
+        """
         codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:5]
         data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
         ind = data.add_func(shouban)
@@ -74,6 +77,8 @@ class testShouBan(TestCase):
         self.assertTrue(len(ind) > 0, "")
 
     def testShouBanData(self):
+        """测试首板指标 shoubanData
+        """
         # codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:5]
         codelist = self.getCodeList()
 
@@ -197,7 +202,8 @@ class testShouBan(TestCase):
         edate = self.date2str(self.str2date(enddate) + relativedelta(days=10))
         for code in codelist:
             # dfind = inc.get_timerange(startdate, edate, code) # 源码中有bug，code不起作用
-            dfind = inc.data.loc[(slice(pd.Timestamp(startdate), pd.Timestamp(self.str2date(enddate) + relativedelta(days=15))), code), :]
+            dfind = inc.data.loc[(slice(pd.Timestamp(startdate),
+                                        pd.Timestamp(self.str2date(enddate) + relativedelta(days=15))), code), :]
             d1 = df.loc[df.code == code]
             if (len(d1)) == 0:
                 continue
@@ -220,7 +226,7 @@ class testShouBan(TestCase):
             a.insert(1, self.date2str(d1date))
             alist.append(a)
             print(code, ", %.2f" * len(d) % tuple(d))
-        dfc = pd.DataFrame(alist, columns=[ "股票代码", "首板日期", "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅", "次日量比"])
+        dfc = pd.DataFrame(alist, columns=["股票代码", "首板日期", "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅", "次日量比"])
         dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
         # print("inc", inc.get_code(codelist[-1]))
         # qa.debug("indicator")
@@ -248,6 +254,35 @@ class testShouBan(TestCase):
         if isinstance(startday, datetime):
             startday = startday.strftime('%Y-%m-%d')
         return startday
+
+    def testAddPercent(self):
+        """保存的csv重新计算（原百分数数字，变为纯数字）后保存
+            保存的文件名后加上“.num"
+        """
+        import os
+        path = '/tmp'
+
+        files = []
+        # 获取path目录下csv文件列表
+        # r=root, d=directories, f = files
+        for r, d, f in os.walk(path):
+            for file in f:
+                if '.csv' in file:
+                    if not file.endswith('.csv#'):
+                        files.append(os.path.join(r, file))
+
+        # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100
+        for f in files:
+            print(f)
+            df = pd.read_csv(f, converters={'股票代码': str})
+            df['次日均涨'] = round(df['次日均涨'] / 100, 4)
+            df['位置'] = round(df['位置'] / 100,4)
+            df['次日高幅'] = round(df['次日高幅'] / 100, 4)
+            df['次日低幅'] = round(df['次日低幅'] / 100, 4)
+            df['次日涨幅'] = round(df['次日涨幅'] / 100, 4)
+            df.to_csv("{}_num.csv".format(os.path.splitext(f)[0]), index=False)
+
+        self.assertTrue(len(files) > 0)
 
 
 if __name__ == '__main__':
