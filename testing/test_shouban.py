@@ -50,6 +50,60 @@ def shoubanData(dataFrame):
     return pd.DataFrame(dict)
 
 
+def shoubanType(dataFrame):
+    """首板类型（首次涨停，第二天k线形态）
+    0、非首板相关
+    10、一字涨停（第一天绝对一字涨停收盘，O=C=H=L>ref(c,1)*1.098）
+    21、实体阳线涨停，次日收十字，或收长上影线且涨幅小于3%， 或收长下影线且涨幅小于2%
+    22、实体阳线涨停，次日收阴实线
+    23、实体阳线涨停，次日收实体阳线或涨幅大于3%
+    24、实体阳线涨停，次日孕育k线（未创新高新低，H<ref(H,1) and L>ref(L,1)）
+    30、其他类型
+    """
+
+    def sbtype(x):
+        if x.SB == 0:
+            # 非首板 不用判断类型
+            return 0
+        # 首板
+        if x.zf > 1.03:
+            # 涨幅大于3%
+            if x.zf > 1.098 and x.H == x.L:
+                # 收盘价涨停zf
+                return 10
+            else:
+                return 23
+        elif x.zf > 1.0:
+            # 收盘价介于0%～3%之间
+            return 21
+        elif x.H <= x.preH and x.L >= x.preL:
+            # 收盘价小于前一天收盘价
+            return 24
+        elif x.close > x.preL:
+            return 22
+        else:
+            return 30
+
+    close = dataFrame['close']
+    # 首板
+    tj1 = close > qa.REF(close, 1) * 1.098
+    tj2 = qa.COUNT(tj1, 30) == 1
+    # 涨停 并且 最近30交易日涨停次数为1，则标记1,否则标记0
+    sb = pd.DataFrame({'tj1': tj1, 'tj2': tj2}).apply(lambda x: 1 if x['tj1'] and x['tj2'] else 0, axis=1)
+    # 首板及首板第二天标记为1
+    # dict = {'SB': sb + sb.shift(-1).fillna(0)}
+
+    H = dataFrame['high']
+    L = dataFrame['low']
+    # 首板第二天收盘价涨幅
+    zf = close / qa.REF(close, 1)
+    sbt = pd.DataFrame({'zf': zf, 'H': H, "L": L, "preH": qa.REF(H, 1), "preL": qa.REF(L, 1), 'close': close,
+                        'SB': sb + sb.shift(1).fillna(0)}).apply(lambda row: sbtype(row),
+                                                                 axis=1)
+    dict = {'TYPE': sbt}
+    return pd.DataFrame(dict)
+
+
 class testShouBan(TestCase):
     """
     首板
@@ -61,6 +115,24 @@ class testShouBan(TestCase):
 
     def teardown(self):
         print("done")
+
+    def testshoubanType(self):
+        # 获取股票代码列表（5个或者更多）
+        codelist = self.getCodeList(count=2)
+        # 获取股票代码列表对应的日线数据（前复权）
+        data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
+        # 计算首板
+        ind = data.add_func(shoubanType)
+        print("ind:", ind)
+        inc = qa.QA_DataStruct_Indicators(ind)
+        # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
+        # inc.get_code(codelist[-1])
+        # 获取时间段内的shoubanType计算数据
+        df = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
+        # 返回首板对应的日期及代码
+        df = df[df['TYPE'] > 0].reset_index(drop=False)
+        print("inc", inc.get_code(codelist[-1]))
+        self.assertTrue(len(ind) > 0, "")
 
     def testShouBan(self):
         """测试首板 shouban
@@ -80,7 +152,6 @@ class testShouBan(TestCase):
         # 返回首板对应的日期及代码
         df = df[df['SB'] == 1].reset_index(drop=False)
         print("inc", inc.get_code(codelist[-1]))
-        # qa.debug("indicator")
         self.assertTrue(len(ind) > 0, "")
 
     def testShouBanData(self):
@@ -106,7 +177,6 @@ class testShouBan(TestCase):
         dfind.loc[('2018-8-29', codelist[0])]
         dfind.loc[(df.iloc[1].date.strftime('%Y-%m-%d'), codelist[0])]
         # print("inc", inc.get_code(codelist[-1]))
-        # qa.debug("indicator")
         df = inc.get_timerange('2018-08-01', '2018-08-31', codelist[0])
         print(df)
         # 2018-08-15 000023 5.094597 - 15.386906 10.015291 0.688073 1.38 2.14
@@ -146,7 +216,6 @@ class testShouBan(TestCase):
         dfc = pd.DataFrame(alist, columns=["次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "股票代码"])
         dfc.to_csv("/tmp/d.csv", index=False)
         print("inc", inc.get_code(codelist[-1]))
-        # qa.debug("indicator")
         self.assertTrue(len(ind) > 0, "")
 
     def getCodeList(self, isSB=True, count=5000):
@@ -160,8 +229,8 @@ class testShouBan(TestCase):
                         '002012',
                         '002034']
         else:
-            codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:count]
-        return codelist
+            codelist = qa.QA_fetch_stock_list_adv().code.tolist()
+        return codelist[:count]
 
     def testShouOutput(self):
         codelist = self.getCodeList(isSB=False)
@@ -208,9 +277,7 @@ class testShouBan(TestCase):
         alist = []
         edate = self.date2str(self.str2date(enddate) + relativedelta(days=10))
         for code in codelist:
-            # dfind = inc.get_timerange(startdate, edate, code) # 源码中有bug，code不起作用
-            dfind = inc.data.loc[(slice(pd.Timestamp(startdate),
-                                        pd.Timestamp(self.str2date(enddate) + relativedelta(days=15))), code), :]
+            dfind = self.getTimeRange(inc, startdate, self.str2date(enddate) + relativedelta(days=15), code)
             d1 = df.loc[df.code == code]
             if (len(d1)) == 0:
                 continue
@@ -225,7 +292,7 @@ class testShouBan(TestCase):
             # code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB))
             # 涨停板位置
             wz = d.WZ
-            # 首次涨停涨停第二个交易日，公式计算值
+            # 首次涨停涨停第二个交易日，公式计算值 "次日均涨"位置", ", "次日高幅", "次日低幅", "次日涨幅", "次日量比"
             d = dfind.shift(-1).loc[(d1date.strftime('%Y-%m-%d'), d1.code.values[0])]
             d.WZ = wz
             a = ["%.2f" % i for i in d]
@@ -236,9 +303,24 @@ class testShouBan(TestCase):
         dfc = pd.DataFrame(alist, columns=["股票代码", "首板日期", "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅", "次日量比"])
         dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
         # print("inc", inc.get_code(codelist[-1]))
-        # qa.debug("indicator")
         self.assertTrue(len(ind) > 0, "")
         return alist
+
+    def getTimeRange(self, inc, startdate, enddate, code=None, isBugfixed=False):
+        if isBugfixed:
+            # 源码中bug修复时，使用以下代码
+            dfindicator = inc.get_timerange(startdate, enddate, code)  # QAUANTAXIS源码中有bug，code不起作用
+
+        else:
+            # 源码中bug未修复时，使用以下代码
+            if code is None:  # QAUANTAXIS源码中有bug，code为空时，不返回数据
+                dfindicator = inc.data.loc[(slice(pd.Timestamp(startdate),
+                                                  pd.Timestamp(self.str2date(enddate) + relativedelta(days=15)))), :]
+            else:
+                dfindicator = inc.data.loc[(slice(pd.Timestamp(startdate),
+                                                  pd.Timestamp(self.str2date(enddate) + relativedelta(days=15))), code),
+                              :]
+        return dfindicator
 
     def getShouBan(self, codelist, qaData, startday='2018-04-01', endday='2018-10-21'):
         startday = self.date2str(startday)
@@ -278,7 +360,7 @@ class testShouBan(TestCase):
                     if not file.endswith('.csv#'):
                         files.append(os.path.join(r, file))
 
-        # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100
+        # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100，另存为"原文件名.num.csv“
         for f in files:
             print(f)
             df = pd.read_csv(f, converters={'股票代码': str})
@@ -287,7 +369,7 @@ class testShouBan(TestCase):
             df['次日高幅'] = round(df['次日高幅'] / 100, 4)
             df['次日低幅'] = round(df['次日低幅'] / 100, 4)
             df['次日涨幅'] = round(df['次日涨幅'] / 100, 4)
-            df.to_csv("{}_num.csv".format(os.path.splitext(f)[0]), index=False)
+            df.to_csv("{}.num.csv".format(os.path.splitext(f)[0]), index=False)
 
         self.assertTrue(len(files) > 0)
 
