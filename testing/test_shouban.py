@@ -16,15 +16,17 @@ def shouban(dataFrame):
     close = dataFrame['close']
     tj1 = close > qa.REF(close, 1) * 1.098
     tj2 = qa.COUNT(tj1, 30) == 1
+    # 涨停 并且 最近30交易日涨停次数为1，则标记1,否则标记0
     sb = pd.DataFrame({'tj1': tj1, 'tj2': tj2}).apply(lambda x: 1 if x['tj1'] and x['tj2'] else 0, axis=1)
-    # sb TestCase= tj1 && tj2 && qa.COUNT(CLOSE) > 50
+    # sb = tj1 && tj2 && qa.COUNT(CLOSE) > 50
     dict = {'SB': sb}
     return pd.DataFrame(dict)
 
 
 def shoubanData(dataFrame):
     """ 首板指标计算
-
+    次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
+    JJZF, WZ, ZGZF, ZDDF, ZF, LB
     """
     close = dataFrame['close']
     H = dataFrame['high']
@@ -63,14 +65,19 @@ class testShouBan(TestCase):
     def testShouBan(self):
         """测试首板 shouban
         """
+        # 获取股票代码列表（5个或者更多）
         codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:5]
+        # 获取股票代码列表对应的日线数据（前复权）
         data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
+        # 计算首板
         ind = data.add_func(shouban)
         print("ind:", ind)
         inc = qa.QA_DataStruct_Indicators(ind)
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
         # inc.get_code(codelist[-1])
+        # 获取时间段内的shouban计算数据
         df = inc.get_timerange('2018-08-01', '2018-08-31')
+        # 返回首板对应的日期及代码
         df = df[df['SB'] == 1].reset_index(drop=False)
         print("inc", inc.get_code(codelist[-1]))
         # qa.debug("indicator")
@@ -144,7 +151,7 @@ class testShouBan(TestCase):
 
     def getCodeList(self, isSB=True, count=5000):
         if isSB:
-            # 2018.8首板个股
+            # 2018.8首板个股，测试用，减少调试时间
             codelist = ['000023', '000068', '000407', '000561', '000590', '000593', '000608', '000610', '000626',
                         '000638',
                         '000657', '000659', '000663', '000669', '000677', '000705', '000759', '000766', '000780',
@@ -215,7 +222,7 @@ class testShouBan(TestCase):
             d = dfind.loc[(d1date.strftime('%Y-%m-%d'), d1.code.values[0])]
             # d=dfind.loc[(d1.date.strftime('%Y-%m-%d'), d1.code)]
             # print("{} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f}".format(dfind
-            # code, d.JJZF,'2018-10-21' d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB))
+            # code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB))
             # 涨停板位置
             wz = d.WZ
             # 首次涨停涨停第二个交易日，公式计算值
@@ -276,7 +283,7 @@ class testShouBan(TestCase):
             print(f)
             df = pd.read_csv(f, converters={'股票代码': str})
             df['次日均涨'] = round(df['次日均涨'] / 100, 4)
-            df['位置'] = round(df['位置'] / 100,4)
+            df['位置'] = round(df['位置'] / 100, 4)
             df['次日高幅'] = round(df['次日高幅'] / 100, 4)
             df['次日低幅'] = round(df['次日低幅'] / 100, 4)
             df['次日涨幅'] = round(df['次日涨幅'] / 100, 4)
