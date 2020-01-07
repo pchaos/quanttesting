@@ -51,17 +51,18 @@ def shoubanData(dataFrame):
 
 
 def shoubanType(dataFrame):
-    """首板类型（首次涨停，第二天k线形态）
+    """首板类型（首次涨停，k线形态）
     0、非首板相关
-    10、一字涨停（第一天绝对一字涨停收盘，O=C=H=L>ref(c,1)*1.098）
-    21、实体阳线涨停，次日收十字，或收长上影线且涨幅小于3%， 或收长下影线且涨幅小于2%
-    22、实体阳线涨停，次日收阴实线
-    23、实体阳线涨停，次日收实体阳线或涨幅大于3%
-    24、实体阳线涨停，次日孕育k线（未创新高新低，H<ref(H,1) and L>ref(L,1)）
+    10、一字涨停（涨停第一天绝对一字涨停收盘，O=C=H=L>ref(c,1)*1.098）
+    21、实体阳线涨停，涨停次日收十字，或收长上影线且涨幅小于3%， 或收长下影线且涨幅小于2%
+    22、实体阳线涨停，涨停次日收阴实线
+    23、实体阳线涨停，涨停次日收实体阳线或涨幅大于3%
+    24、实体阳线涨停，涨停次日孕育k线（未创新高新低，H<ref(H,1) and L>ref(L,1)）
     30、其他类型
     """
 
     def sbtype(x):
+        # 计算首板第一天、第二天的类型。一字板在首板第一天判断，其他类型在首板第二天判断
         if x.SB == 0:
             # 非首板 不用判断类型
             return 0
@@ -69,7 +70,7 @@ def shoubanType(dataFrame):
         if x.zf > 1.03:
             # 涨幅大于3%
             if x.zf > 1.098 and x.H == x.L:
-                # 收盘价涨停zf
+                # 一字涨停
                 return 10
             else:
                 return 23
@@ -84,6 +85,20 @@ def shoubanType(dataFrame):
         else:
             return 30
 
+    def sbtype2(x):
+        # 合并首板类型技术指标到首板当天
+        if x.t1 == 0 or x.t1 == 10:
+            # 非首板 不用判断类型
+            if x.t1 == 10 and x.t2 != 0:
+                # 连续涨停的，第二个不用标记
+                print("", x.t2)
+                return 10
+            else:
+                return 0
+        else:
+            # 复制首板第二天
+            return x.t2
+
     close = dataFrame['close']
     # 首板
     tj1 = close > qa.REF(close, 1) * 1.098
@@ -97,9 +112,13 @@ def shoubanType(dataFrame):
     L = dataFrame['low']
     # 首板第二天收盘价涨幅
     zf = close / qa.REF(close, 1)
+    # 计算首板第一天、第二天的类型
     sbt = pd.DataFrame({'zf': zf, 'H': H, "L": L, "preH": qa.REF(H, 1), "preL": qa.REF(L, 1), 'close': close,
                         'SB': sb + sb.shift(1).fillna(0)}).apply(lambda row: sbtype(row),
                                                                  axis=1)
+    # 合并首板类型技术指标到首板当天
+    sbt = pd.DataFrame({'t1': sbt, 't2': sbt.shift(-1)}).apply(lambda row: sbtype2(row),
+                                                               axis=1)
     dict = {'TYPE': sbt}
     return pd.DataFrame(dict)
 
@@ -117,8 +136,17 @@ class testShouBan(TestCase):
         print("done")
 
     def testshoubanType(self):
+        """ 测试首板涨停类型
+        2018年8月首板一字涨停测试数据：
+    date    code  TYPE
+ 2018-08-01  002006    10
+ 2018-08-02  002006    10
+ 2018-08-13  000705    10
+ 2018-08-15  000657    10
+ 2018-08-16  000931    10
+"""
         # 获取股票代码列表（5个或者更多）
-        codelist = self.getCodeList(count=2)
+        codelist = self.getCodeList(count=100)
         # 获取股票代码列表对应的日线数据（前复权）
         data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
         # 计算首板
@@ -131,7 +159,20 @@ class testShouBan(TestCase):
         df = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
         # 返回首板对应的日期及代码
         df = df[df['TYPE'] > 0].reset_index(drop=False)
-        print("inc", inc.get_code(codelist[-1]))
+        # print("inc QA_DataStruct_Indicators", inc.get_code(codelist[-1]))
+        print("首板类型：", df)
+        dfresult= df[df['TYPE'] == 10].reset_index()
+        print("首板一字涨停：{}".format(type(dfresult)), dfresult)
+        # 2018.8 一字板数据
+        testingResult = [['2018-08-01',  '002006'],
+             ['2018-08-01',  '002006'],
+             ['2018-08-13',  '000705'],
+             ['2018-08-15',  '000657'],
+             ['2018-08-16',  '000931']]
+        dftest = pd.DataFrame(columns=['date', 'code'], data=testingResult)
+        dftest['TYPE'] = [10] * len(dftest)
+        print("测试数据",dftest)
+        self.assertTrue(dftest.equals(dfresult), "返回结果不同：\n{} {}".format(dftest, dfresult))
         self.assertTrue(len(ind) > 0, "")
 
     def testShouBan(self):
