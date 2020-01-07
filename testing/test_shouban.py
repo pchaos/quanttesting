@@ -120,7 +120,7 @@ def shoubanType(dataFrame):
     sbt = pd.DataFrame({'t1': sbt, 't2': sbt.shift(-1)}).apply(lambda row: sbtype2(row),
                                                                axis=1)
     dict = {'TYPE': sbt}
-    return pd.DataFrame(dict)
+    return pd.DataFrame(dict).fillna(0).astype('int')
 
 
 class testShouBan(TestCase):
@@ -141,7 +141,7 @@ class testShouBan(TestCase):
     date    code  TYPE
  2018-08-01  002006    10
  2018-08-02  002006    10
- 2018-08-13  000705    10
+ 2018-08-13  000705  drop index  10
  2018-08-15  000657    10
  2018-08-16  000931    10
 """
@@ -151,7 +151,7 @@ class testShouBan(TestCase):
         data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
         # 计算首板
         ind = data.add_func(shoubanType)
-        print("ind:", ind)
+        # print("ind:", ind)
         inc = qa.QA_DataStruct_Indicators(ind)
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
         # inc.get_code(codelist[-1])
@@ -161,19 +161,19 @@ class testShouBan(TestCase):
         df = df[df['TYPE'] > 0].reset_index(drop=False)
         # print("inc QA_DataStruct_Indicators", inc.get_code(codelist[-1]))
         print("首板类型：", df)
-        dfresult= df[df['TYPE'] == 10].reset_index()
-        print("首板一字涨停：{}".format(type(dfresult)), dfresult)
+        dfresult= df[df['TYPE'] == 10]
+        print("首板一字涨停：{}\n".format(type(dfresult)), dfresult)
         # 2018.8 一字板数据
-        testingResult = [['2018-08-01',  '002006'],
+        testingResult = [
              ['2018-08-01',  '002006'],
              ['2018-08-13',  '000705'],
              ['2018-08-15',  '000657'],
              ['2018-08-16',  '000931']]
         dftest = pd.DataFrame(columns=['date', 'code'], data=testingResult)
+        dftest['date']= pd.to_datetime(dftest['date'].astype('str'))
         dftest['TYPE'] = [10] * len(dftest)
         print("测试数据",dftest)
-        self.assertTrue(dftest.equals(dfresult), "返回结果不同：\n{} {}".format(dftest, dfresult))
-        self.assertTrue(len(ind) > 0, "")
+        self.assertTrue(dftest.equals(dfresult.reset_index(drop=True)), "返回结果不同：\n{} {}".format(dftest, dfresult))
 
     def testShouBan(self):
         """测试首板 shouban
