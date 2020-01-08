@@ -23,12 +23,12 @@ def shouban(dataFrame):
     return pd.DataFrame(dict)
 
 
-def shoubanData(dataFrame):
+def shoubanData_v1(dataFrame):
     """ 首板指标计算
     次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
     位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
-    次日量比：v/ma（v，10）
+    次日量比：v/ma（v，10） ;v10日均算的是涨停日
     """
     close = dataFrame['close']
     H = dataFrame['high']
@@ -125,6 +125,7 @@ def shoubanType(dataFrame):
     dict = {'TYPE': sbt}
     # 返回整数类型
     df = pd.DataFrame(dict).fillna(0).astype('int')
+    # 首板次日开盘涨幅
     df['CRKFZF'] = (op / qa.REF(close, 1) - 1).shift(-1)
     return df
 
@@ -224,7 +225,7 @@ class testShouBan(TestCase):
         """测试首板 shouban
         """
         # 获取股票代码列表（5个或者更多）
-        codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:5]
+        codelist = self.getCodeList(count=5)
         # 获取股票代码列表对应的日线数据（前复权）
         data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
         # 计算首板
@@ -234,7 +235,8 @@ class testShouBan(TestCase):
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
         # inc.get_code(codelist[-1])
         # 获取时间段内的shouban计算数据
-        df = inc.get_timerange('2018-08-01', '2018-08-31')
+        # df = inc.get_timerange('2018-08-01', '2018-08-31')
+        df = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
         # 返回首板对应的日期及代码
         df = df[df['SB'] == 1].reset_index(drop=False)
         print("inc", inc.get_code(codelist[-1]))
@@ -247,7 +249,7 @@ class testShouBan(TestCase):
         codelist = self.getCodeList()
 
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
-        ind = data.add_func(shoubanData)
+        ind = data.add_func(shoubanData_v1)
         print("ind:", ind.tail(10))
         inc = qa.QA_DataStruct_Indicators(ind)
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
@@ -257,7 +259,7 @@ class testShouBan(TestCase):
         df = self.getShouBan(codelist)
         codelist = sorted(df.code)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
-        ind = data.add_func(shoubanData)
+        ind = data.add_func(shoubanData_v1)
         inc = qa.QA_DataStruct_Indicators(ind)
         dfind = inc.get_timerange('2018-08-01', '2018-08-31')
         dfind.loc[('2018-8-29', codelist[0])]
@@ -274,7 +276,7 @@ class testShouBan(TestCase):
         df = self.getShouBan(codelist, startdate)
         codelist = sorted(df.code)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
-        ind = data.add_func(shoubanData)
+        ind = data.add_func(shoubanData_v1)
         inc = qa.QA_DataStruct_Indicators(ind)
         dfind = inc.get_timerange('2018-08-01', '2018-08-31')
         dfind.loc[('2018-8-29', codelist[2])]
@@ -357,7 +359,7 @@ class testShouBan(TestCase):
 
     def getshoubanInd(self, codelist, df, data, startdate, enddate):
         print(startdate, enddate)
-        ind = data.add_func(shoubanData)
+        ind = data.add_func(shoubanData_v1)
         inc = qa.QA_DataStruct_Indicators(ind)
         print("code   次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比")
         alist = []
