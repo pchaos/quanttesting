@@ -249,7 +249,6 @@ class testShouBan(TestCase):
         # 获取股票代码列表（最多num个）
         num = 100
         codelist = self.getCodeList(count=num)
-        codelist = self.getCodeList(count=num)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         ind = data.add_func(shoubanData_v1)
         print("ind:", ind.tail(10))
@@ -257,44 +256,48 @@ class testShouBan(TestCase):
         startdate, enddate='2018-08-01', '2018-08-31'
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
         # inc.get_code(codelist[-1])
-        df = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
+        df = self.getTimeRange(inc, startdate, enddate)
         df.loc[('2018-8-29', codelist[2])]
         df = self.getShouBan(codelist, data, startdate, enddate)
         codelist = sorted(df.code)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         ind = data.add_func(shoubanData_v1)
         inc = qa.QA_DataStruct_Indicators(ind)
-        dfind = inc.get_timerange('2018-08-01', '2018-08-31')
-        dfind = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
+        dfind = self.getTimeRange(inc, startdate, enddate)
         dfind.loc[('2018-8-29', codelist[0])]
         dfind.loc[(df.iloc[1].date.strftime('%Y-%m-%d'), codelist[0])]
         # print("inc", inc.get_code(codelist[-1]))
-        df = inc.get_timerange('2018-08-01', '2018-08-31', codelist[0])
+        df = inc.get_timerange(startdate, enddate, codelist[0])
         print(df)
         # 2018-08-15 000023 5.094597 - 15.386906 10.015291 0.688073 1.38 2.14
         self.assertTrue(len(df) > 0, "")
 
     def testShouOutput201808(self):
-        codelist = self.getCodeList()
+        # 获取股票代码列表（最多num个）
+        num = 5
+        codelist = self.getCodeList(count=num)
         startdate = datetime.strptime('2017-08-01', '%Y-%m-%d')
-        df = self.getShouBan(codelist, startdate)
-        codelist = sorted(df.code)
+        endday = '2018-10-21'
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
+        df = self.getShouBan(codelist, data, startdate, endday)
+        codelist = sorted(df.code.drop_duplicates())
         ind = data.add_func(shoubanData_v1)
         inc = qa.QA_DataStruct_Indicators(ind)
-        dfind = inc.get_timerange('2018-08-01', '2018-08-31')
+        startdate, enddate = '2018-08-01', '2018-08-31'
+        dfind = self.getTimeRange(inc, startdate, enddate)
         dfind.loc[('2018-8-29', codelist[2])]
-        dfind.loc[(df.iloc[1].date.strftime('%Y-%m-%d'), codelist[2])]
         print("code   次日均涨	位置 次日高幅 次日低里僧幅 次日涨幅 次日量比")
         for i in range(len(df.index) - 1):
-            d = dfind.loc[(df.iloc[i].date.strftime('%Y-%m-%d'),
-                           df.iloc[i].code)]
-            print(df.iloc[i].code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB)
+            dt = df.iloc[i].date.strftime('%Y-%m-%d')
+            if startdate <= dt <= enddate:
+                d = dfind.loc[(df.iloc[i].date.strftime('%Y-%m-%d'),
+                               df.iloc[i].code)]
+                print(df.iloc[i].code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB)
         # 按照代码顺序
         print("code   次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比")
         alist = []
         for code in codelist:
-            d1 = df.loc[df.code == code]
+            d1 = df.loc[df.code == code].loc[df.date.between(startdate, enddate)]
             d = dfind.loc[(pd.to_datetime(d1.date.values[0]).strftime('%Y-%m-%d'), d1.code.values[0])]
             # d=dfind.loc[(d1.date.strftime('%Y-%m-%d'), d1.code)]
             # print("{} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f}".format(
