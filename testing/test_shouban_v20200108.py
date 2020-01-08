@@ -115,19 +115,30 @@ class testShouBan(TestCase):
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
         # inc.get_code(codelist[-1])
         # 获取时间段内的shouban计算数据
-        # df = inc.get_timerange('2018-08-01', '2018-08-31')
         df = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
         # 返回首板对应的日期及代码
         df = df[df['SB'] == 1].reset_index(drop=False)
         print("inc", inc.get_code(codelist[-1]))
         self.assertTrue(len(ind) > 0, "")
+        self.assertTrue(df.dtypes.loc['SB']=='int', "返回的数据类型为：{}".format(df.dtypes))
 
     def testShouBanData(self):
         """测试首板指标 shoubanData
+        股票代码,首板日期,次日均涨,位置,次日高幅,次日低幅,次日涨幅,次日量比
+000023,2018-08-14,0.0509,-0.1663,0.1002,0.0069,0.0138,2.14
+000068,2018-08-06,0.011,-0.1533,0.0593,-0.0386,0.0326,1.45
+000407,2018-08-07,0.0377,-0.157,0.0976,-0.0044,0.031,1.83
+000561,2018-08-20,0.0051,-0.056,0.0346,-0.0236,0.0189,1.65
+000590,2018-08-24,0.0826,-0.111,0.1005,0.0199,0.1005,3.33
+000593,2018-08-31,0.0609,-0.1119,0.1003,0.0031,0.1003,2.47
+000608,2018-08-21,0.0614,-0.1864,0.0976,0.0081,0.0142,3.9
+000610,2018-08-06,0.0888,-0.2149,0.0997,0.0438,0.0997,1.67
+000626,2018-08-06,0.061,-0.1797,0.1005,0.0198,0.1005,2.12
+000638,2018-08-15,0.0262,-0.2226,0.0998,-0.0327,-0.0327,1.51
         """
         # 获取股票代码列表（最多num个）
         num = 100
-        codelist = self.getCodeList(count=num)
+        codelist = self.getCodeList(count=num, isTesting=False)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         ind = data.add_func(shoubanData)
         print("ind:", ind.tail(10))
@@ -147,7 +158,8 @@ class testShouBan(TestCase):
         dfind.loc[(df.iloc[1].date.strftime('%Y-%m-%d'), codelist[0])]
         # print("inc", inc.get_code(codelist[-1]))
         df = inc.get_timerange(startdate, enddate, codelist[0])
-        print(df)
+        dfc = list(df.columns)
+        print(df[dfc[:len(dfc)-1]])
         # 2018-08-15 000023 5.094597 - 15.386906 10.015291 0.688073 1.38 2.14
         self.assertTrue(len(df) > 0, "")
 

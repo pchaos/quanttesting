@@ -7,6 +7,7 @@ import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
+
 def shouban(dataFrame):
     """ 首板
 
@@ -26,27 +27,32 @@ def shoubanData(dataFrame):
     次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
     位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
-    次日量比：v/ma（v，10） ;v10日均算的是涨停日
+    次日量比10均：v/ma（v，10） ; v10日均算的是涨停日
     """
     close = dataFrame['close']
     H = dataFrame['high']
     L = dataFrame['low']
     V = dataFrame['volume']
     AMO = dataFrame['amount']
+    n = -1  # 次日数据
     # 位置
-    wz = close / qa.MA(close, 120) - 1
+    wz = close / qa.LLV(close, 60) - 1
     # 次日涨幅
-    zf = close / qa.REF(close, 1) - 1
+    zf = qa.REF(close, n) / close - 1
     # 次日高幅
-    zgzf = H / qa.REF(close, 1) - 1
+    zgzf = qa.REF(H, n) / close - 1
     # 次日跌幅
-    zddf = L / qa.REF(close, 1) - 1
-    # 量比
-    lb = V / qa.REF(V, 1)
-    # 次日均涨
+    zddf = qa.REF(L, n) / close - 1
+    # 次日量比
+    lb = qa.REF(V, n) / V
+    # 次日量比v10
+    crlbv10 = qa.REF(V, -1) / qa.MA(V, 10)
+
     cjjj = AMO / V / 100
-    jjzf = cjjj / qa.REF(close, 1) - 1
-    dict = {'JJZF': jjzf, 'WZ': wz, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb}
+    # 次日均涨
+    jjzf = qa.REF(cjjj, n) / close - 1
+    dict = {'JJZF': jjzf, 'WZ': wz, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
+            "CRLBV10": crlbv10}
     return pd.DataFrame(dict)
 
 
