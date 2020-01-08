@@ -27,8 +27,6 @@ def shoubanData(dataFrame):
     """ 首板指标计算
     次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
-    位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
-    次日量比：v/ma（v，10） ;v10日均算的是涨停日
     """
     close = dataFrame['close']
     H = dataFrame['high']
@@ -38,16 +36,16 @@ def shoubanData(dataFrame):
     # 位置
     wz = (close / qa.MA(close, 120) - 1) * 100
     # 次日涨幅
-    zf = round((close / qa.REF(close, 1) - 1) * 100, 2);
+    zf = round((close / qa.REF(close, 1) - 1) * 100, 2)
     # 次日高幅
-    zgzf = (H / qa.REF(close, 1) - 1) * 100;
+    zgzf = (H / qa.REF(close, 1) - 1) * 100
     # 次日跌幅
-    zddf = (L / qa.REF(close, 1) - 1) * 100;
+    zddf = (L / qa.REF(close, 1) - 1) * 100
     # 量比
-    lb = round(V / qa.REF(V, 1), 2);
+    lb = round(V / qa.REF(V, 1), 2)
     # 次日均涨
-    cjjj = AMO / V / 100;
-    jjzf = (cjjj / qa.REF(close, 1) - 1) * 100;
+    cjjj = AMO / V / 100
+    jjzf = (cjjj / qa.REF(close, 1) - 1) * 100
     dict = {'JJZF': jjzf, 'WZ': wz, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb}
     return pd.DataFrame(dict)
 
