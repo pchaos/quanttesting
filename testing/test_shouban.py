@@ -23,7 +23,7 @@ def shouban(dataFrame):
     return pd.DataFrame(dict)
 
 
-def shoubanData_v1(dataFrame):
+def shoubanData(dataFrame):
     """ 首板指标计算
     次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
@@ -250,7 +250,7 @@ class testShouBan(TestCase):
         num = 100
         codelist = self.getCodeList(count=num)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
-        ind = data.add_func(shoubanData_v1)
+        ind = data.add_func(shoubanData)
         print("ind:", ind.tail(10))
         inc = qa.QA_DataStruct_Indicators(ind)
         startdate, enddate='2018-08-01', '2018-08-31'
@@ -261,7 +261,7 @@ class testShouBan(TestCase):
         df = self.getShouBan(codelist, data, startdate, enddate)
         codelist = sorted(df.code)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
-        ind = data.add_func(shoubanData_v1)
+        ind = data.add_func(shoubanData)
         inc = qa.QA_DataStruct_Indicators(ind)
         dfind = self.getTimeRange(inc, startdate, enddate)
         dfind.loc[('2018-8-29', codelist[0])]
@@ -273,6 +273,8 @@ class testShouBan(TestCase):
         self.assertTrue(len(df) > 0, "")
 
     def testShouOutput201808(self):
+        """测试2018年8月首板数据
+        """
         # 获取股票代码列表（最多num个）
         num = 5
         codelist = self.getCodeList(count=num)
@@ -281,7 +283,7 @@ class testShouBan(TestCase):
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         df = self.getShouBan(codelist, data, startdate, endday)
         codelist = sorted(df.code.drop_duplicates())
-        ind = data.add_func(shoubanData_v1)
+        ind = data.add_func(shoubanData)
         inc = qa.QA_DataStruct_Indicators(ind)
         startdate, enddate = '2018-08-01', '2018-08-31'
         dfind = self.getTimeRange(inc, startdate, enddate)
@@ -332,6 +334,9 @@ class testShouBan(TestCase):
         return codelist[:count]
 
     def testShouOutput(self):
+        # 获取股票代码列表（最多num个）
+        num = 5
+        # codelist = self.getCodeList(count=num)
         codelist = self.getCodeList(isTesting=False)
         # codelist = self.getCodeList(isSB=False, count=1000)
         # codelist = self.getCodeList(isSB=True)
@@ -370,7 +375,7 @@ class testShouBan(TestCase):
 
     def getshoubanInd(self, codelist, df, data, startdate, enddate):
         print(startdate, enddate)
-        ind = data.add_func(shoubanData_v1)
+        ind = data.add_func(shoubanData)
         inc = qa.QA_DataStruct_Indicators(ind)
         print("code   次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比")
         alist = []
