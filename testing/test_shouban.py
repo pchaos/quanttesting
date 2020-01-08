@@ -27,6 +27,8 @@ def shoubanData(dataFrame):
     """ 首板指标计算
     次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
+    位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
+    次日量比：v/ma（v，10）
     """
     close = dataFrame['close']
     H = dataFrame['high']
@@ -100,6 +102,7 @@ def shoubanType(dataFrame):
             return x.t2
 
     close = dataFrame['close']
+    op = dataFrame['open']  # 开盘价
     # 首板
     tj1 = close > qa.REF(close, 1) * 1.098
     tj2 = qa.COUNT(tj1, 30) == 1
@@ -120,7 +123,10 @@ def shoubanType(dataFrame):
     sbt = pd.DataFrame({'t1': sbt, 't2': sbt.shift(-1)}).apply(lambda row: sbtype2(row),
                                                                axis=1)
     dict = {'TYPE': sbt}
-    return pd.DataFrame(dict).fillna(0).astype('int')
+    # 返回整数类型
+    df = pd.DataFrame(dict).fillna(0).astype('int')
+    df['CRKFZF'] = (op / qa.REF(close, 1) - 1).shift(-1)
+    return df
 
 
 class testShouBan(TestCase):
@@ -141,12 +147,47 @@ class testShouBan(TestCase):
     date    code  TYPE
  2018-08-01  002006    10
  2018-08-02  002006    10
- 2018-08-13  000705  drop index  10
+ 2018-08-13  000705    10
  2018-08-15  000657    10
  2018-08-16  000931    10
+
+ 首板类型：
+        date    code  TYPE
+0  2018-08-01  000909    22
+1  2018-08-01  002006    10
+2  2018-08-02  000885    22
+3  2018-08-03  000780    22
+4  2018-08-03  002012    22
+5  2018-08-06  000068    23
+6  2018-08-06  000610    23
+7  2018-08-06  000626    23
+8  2018-08-07  000407    23
+9  2018-08-08  000852    21
+10 2018-08-10  000659    21
+11 2018-08-13  000705    10
+12 2018-08-14  000023    21
+13 2018-08-14  000663    23
+14 2018-08-15  000638    22
+15 2018-08-15  000657    10
+16 2018-08-15  000928    21
+17 2018-08-16  000931    10
+18 2018-08-20  000561    21
+19 2018-08-20  000759    21
+20 2018-08-21  000608    21
+21 2018-08-21  000815    21
+22 2018-08-22  000766    23
+23 2018-08-23  000677    22
+24 2018-08-23  000913    23
+25 2018-08-24  000590    23
+26 2018-08-29  000792    24
+27 2018-08-29  002034    22
+28 2018-08-30  000669    23
+29 2018-08-30  000921    22
+30 2018-08-31  000593    23
 """
         # 获取股票代码列表（5个或者更多）
-        codelist = self.getCodeList(count=100)
+        num = 100
+        codelist = self.getCodeList(count=num)
         # 获取股票代码列表对应的日线数据（前复权）
         data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
         # 计算首板
@@ -161,19 +202,23 @@ class testShouBan(TestCase):
         df = df[df['TYPE'] > 0].reset_index(drop=False)
         # print("inc QA_DataStruct_Indicators", inc.get_code(codelist[-1]))
         print("首板类型：", df)
-        dfresult= df[df['TYPE'] == 10]
+        dfresult = df[df['TYPE'] == 10]
         print("首板一字涨停：{}\n".format(type(dfresult)), dfresult)
         # 2018.8 一字板数据
         testingResult = [
-             ['2018-08-01',  '002006'],
-             ['2018-08-13',  '000705'],
-             ['2018-08-15',  '000657'],
-             ['2018-08-16',  '000931']]
+            ['2018-08-01', '002006'],
+            ['2018-08-13', '000705'],
+            ['2018-08-15', '000657'],
+            ['2018-08-16', '000931']]
         dftest = pd.DataFrame(columns=['date', 'code'], data=testingResult)
-        dftest['date']= pd.to_datetime(dftest['date'].astype('str'))
+        dftest['date'] = pd.to_datetime(dftest['date'].astype('str'))
         dftest['TYPE'] = [10] * len(dftest)
-        print("测试数据",dftest)
-        self.assertTrue(dftest.equals(dfresult.reset_index(drop=True)), "返回结果不同：\n{} {}".format(dftest, dfresult))
+        print("测试数据", dftest)
+        if len(testingResult) == len(dftest):
+            # 测试数据数量匹配 验证计算指标是否也匹配
+            self.assertTrue(
+                dftest[['date', 'code', 'TYPE']].equals(dfresult[['date', 'code', 'TYPE']].reset_index(drop=True)),
+                "返回结果不同：\n{} {}".format(dftest, dfresult))
 
     def testShouBan(self):
         """测试首板 shouban
