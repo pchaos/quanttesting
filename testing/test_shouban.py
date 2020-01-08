@@ -186,7 +186,7 @@ class testShouBan(TestCase):
 29 2018-08-30  000921    22
 30 2018-08-31  000593    23
 """
-        # 获取股票代码列表（5个或者更多）
+        # 获取股票代码列表（最多num个）
         num = 100
         codelist = self.getCodeList(count=num)
         # 获取股票代码列表对应的日线数据（前复权）
@@ -224,8 +224,9 @@ class testShouBan(TestCase):
     def testShouBan(self):
         """测试首板 shouban
         """
-        # 获取股票代码列表（5个或者更多）
-        codelist = self.getCodeList(count=5)
+        # 获取股票代码列表（最多num个）
+        num = 100
+        codelist = self.getCodeList(count=num)
         # 获取股票代码列表对应的日线数据（前复权）
         data = qa.QA_fetch_stock_day_adv(codelist, '2018-04-01', '2018-10-21').to_qfq()
         # 计算首板
@@ -245,23 +246,26 @@ class testShouBan(TestCase):
     def testShouBanData(self):
         """测试首板指标 shoubanData
         """
-        # codelist = qa.QA_fetch_stock_list_adv().code.tolist()[:5]
-        codelist = self.getCodeList()
-
+        # 获取股票代码列表（最多num个）
+        num = 100
+        codelist = self.getCodeList(count=num)
+        codelist = self.getCodeList(count=num)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         ind = data.add_func(shoubanData_v1)
         print("ind:", ind.tail(10))
         inc = qa.QA_DataStruct_Indicators(ind)
+        startdate, enddate='2018-08-01', '2018-08-31'
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
         # inc.get_code(codelist[-1])
-        df = inc.get_timerange('2018-08-01', '2018-08-31')
+        df = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
         df.loc[('2018-8-29', codelist[2])]
-        df = self.getShouBan(codelist)
+        df = self.getShouBan(codelist, data, startdate, enddate)
         codelist = sorted(df.code)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         ind = data.add_func(shoubanData_v1)
         inc = qa.QA_DataStruct_Indicators(ind)
         dfind = inc.get_timerange('2018-08-01', '2018-08-31')
+        dfind = self.getTimeRange(inc, '2018-08-01', '2018-08-31')
         dfind.loc[('2018-8-29', codelist[0])]
         dfind.loc[(df.iloc[1].date.strftime('%Y-%m-%d'), codelist[0])]
         # print("inc", inc.get_code(codelist[-1]))
@@ -306,8 +310,12 @@ class testShouBan(TestCase):
         print("inc", inc.get_code(codelist[-1]))
         self.assertTrue(len(ind) > 0, "")
 
-    def getCodeList(self, isSB=True, count=5000):
-        if isSB:
+    def getCodeList(self, isTesting=True, count=5000):
+        """
+        isTesting: 是否使用测试数据
+        count： 返回最多结果集数量
+        """
+        if isTesting:
             # 2018.8首板个股，测试用，减少调试时间
             codelist = ['000023', '000068', '000407', '000561', '000590', '000593', '000608', '000610', '000626',
                         '000638',
@@ -321,7 +329,7 @@ class testShouBan(TestCase):
         return codelist[:count]
 
     def testShouOutput(self):
-        codelist = self.getCodeList(isSB=False)
+        codelist = self.getCodeList(isTesting=False)
         # codelist = self.getCodeList(isSB=False, count=1000)
         # codelist = self.getCodeList(isSB=True)
         # dayslong = ['2018-01-01', '2018-03-31']
@@ -423,7 +431,7 @@ class testShouBan(TestCase):
         inc = qa.QA_DataStruct_Indicators(ind)
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
         # inc.get_code(codelist[-1])
-        df = inc.get_timerange(startday, endday)
+        df = self.getTimeRange(inc, startday, endday)
         df = df[df['SB'] == 1].reset_index(drop=False)
         return df
 
@@ -448,18 +456,19 @@ class testShouBan(TestCase):
                     if not file.endswith('.csv#'):
                         files.append(os.path.join(r, file))
 
-        # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100，另存为"原文件名.num.csv“
-        for f in files:
-            print(f)
-            df = pd.read_csv(f, converters={'股票代码': str})
-            df['次日均涨'] = round(df['次日均涨'] / 100, 4)
-            df['位置'] = round(df['位置'] / 100, 4)
-            df['次日高幅'] = round(df['次日高幅'] / 100, 4)
-            df['次日低幅'] = round(df['次日低幅'] / 100, 4)
-            df['次日涨幅'] = round(df['次日涨幅'] / 100, 4)
-            df.to_csv("{}.num.csv".format(os.path.splitext(f)[0]), index=False)
+        if len(files) > 0:
+            # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100，另存为"原文件名.num.csv“
+            for f in files:
+                print(f)
+                df = pd.read_csv(f, converters={'股票代码': str})
+                df['次日均涨'] = round(df['次日均涨'] / 100, 4)
+                df['位置'] = round(df['位置'] / 100, 4)
+                df['次日高幅'] = round(df['次日高幅'] / 100, 4)
+                df['次日低幅'] = round(df['次日低幅'] / 100, 4)
+                df['次日涨幅'] = round(df['次日涨幅'] / 100, 4)
+                df.to_csv("{}.num.csv".format(os.path.splitext(f)[0]), index=False)
 
-        self.assertTrue(len(files) > 0)
+            self.assertTrue(len(files) > 0)
 
 
 if __name__ == '__main__':
