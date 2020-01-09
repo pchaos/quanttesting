@@ -19,6 +19,7 @@ class testShouBan(TestCase):
     """
     首板测试类
     """
+
     # cache = None
 
     def setUp(self):
@@ -185,7 +186,7 @@ class testShouBan(TestCase):
         startdate, enddate = '2018-08-01', '2018-08-31'
         df = self.getShouBan(codelist, data, startdate, enddate)
         codelist = sorted(df.code.drop_duplicates())
-        data =data.select_code(codelist)
+        data = data.select_code(codelist)
         ind = data.add_func(shoubanData)
         inc = qa.QA_DataStruct_Indicators(ind)
         dfind = self.getTimeRange(inc, startdate, enddate)
@@ -198,7 +199,7 @@ class testShouBan(TestCase):
                                df.iloc[i].code)]
                 print(df.iloc[i].code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB)
         # 按照代码顺序
-        print("code   次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比")
+        print("code   次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比 开盘价 均价")
         alist = []
         for code in codelist:
             d1 = df.loc[df.code == code].loc[df.date.between(startdate, enddate)]
@@ -217,7 +218,10 @@ class testShouBan(TestCase):
             print(code, ", %.4f" * len(d) % tuple(d))
 
         dfc = pd.DataFrame(alist,
-                           columns=["次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比v10均", "首板类型", "股票代码"])
+                           columns=["次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比v10均", "开盘价", "均价",
+                                    "首板类型", "股票代码"])
+        self.roundData(dfc, ["开盘价", "均价"], 2)
+        dfc['首板类型'] = dfc['首板类型'].astype('int')
         dfc.to_csv("/tmp/d.csv", index=False)
         print("inc", inc.get_code(codelist[-1]))
         self.assertTrue(len(ind) > 0, "")
@@ -243,39 +247,46 @@ class testShouBan(TestCase):
     def testShouOutput(self):
         # 获取股票代码列表（最多num个）
         num = 8000
-        num = 500
+        num = 5000
         isTesting = False
         # codelist = self.getCodeList(count=num)
         codelist = self.getCodeList(isTesting=isTesting, count=num)
         # codelist = self.getCodeList(isSB=False, count=1000)
         # codelist = self.getCodeList(isSB=True)
-        # dayslong = ['2018-01-01', '2018-03-31']
-        dayslong = ['2018-01-01', '2018-10-31']
-        daylist = []
+        dayslong = ['2018-01-01', '2018-12-31']
+        # dayslong = ['2019-01-01', '2019-12-31']
         # 月初 月末
         firstday = self.str2date(dayslong[0])
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
         lastday = self.str2date(dayslong[1])
-        # 获取起始时间之前一年的数据，否则可能因停牌过长不能计算起涨点相对120均线涨幅
+        # 获取起始时间之前一年的数据，否则可能因停牌过长不能计算起涨点相对60均线涨幅
         data = qa.QA_fetch_stock_day_adv(codelist, firstday - relativedelta(months=12),
                                          lastday + relativedelta(months=2)).to_qfq()
         while date_after_month <= lastday:
             # 每个月计算单独一次
-            print("首板...")
+            print("计算首板... {}-{}".format(firstday, date_after_month))
             df = self.getShouBan(codelist, data, startday=firstday, endday=date_after_month)
             if len(df) == 0:
                 print("no data {}".format(self.date2str(firstday)))
-                firstday = firstday + relativedelta(months=1)
-                date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
+                date_after_month, firstday = self.nextMonth(firstday)
                 continue
             # 按照代码顺序
             codelist = sorted(df.code.drop_duplicates())
             startdate, enddate = self.date2str(firstday), self.date2str(date_after_month)
             print("首板指标...")
-            sblist = self.getshoubanInd(codelist, df, data, startdate, enddate)
-            firstday = firstday + relativedelta(months=1)
-            date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
+            dataInd = data.select_code(codelist).select_time_with_gap(date_after_month + relativedelta(months=1), 9999,
+                                                                      "<=")
+            sblist = self.getshoubanInd(codelist, df, dataInd, startdate, enddate)
+            date_after_month, firstday = self.nextMonth(firstday)
             self.assertTrue((isTesting or len(sblist) >= 0) or len(sblist) > 0, "首板个数为零")
+
+    def nextMonth(self, firstday):
+        """计算firstday的下一个月
+        返回下月底、下月初
+        """
+        firstday = firstday + relativedelta(months=1)
+        date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
+        return date_after_month, firstday
 
     def str2date(self, dayStr):
         if isinstance(dayStr, str):
@@ -285,14 +296,14 @@ class testShouBan(TestCase):
 
     def getshoubanInd(self, codelist, df, data, startdate, enddate):
         print(startdate, enddate)
-        inc = self.cache.get('shoubanDataIndcator')
-        if inc is None:
-            if len(data) == 0:
-                # 没有数据则返回空
-                return pd.DataFrame()
-            ind = data.add_func(shoubanData)
-            inc = qa.QA_DataStruct_Indicators(ind)
-            self.cache.set('shoubanDataIndcator', inc)
+        # inc = self.cache.get('shoubanDataIndcator')
+        # if inc is None:
+        if len(data) == 0:
+            # 没有数据则返回空
+            return pd.DataFrame()
+        ind = data.add_func(shoubanData)
+        inc = qa.QA_DataStruct_Indicators(ind)
+        # self.cache.set('shoubanDataIndcator', inc)
         # ind = data.add_func(shoubanData)
         # inc = qa.QA_DataStruct_Indicators(ind)
         print("code   次日均涨	位置 次日开盘 次日高幅 次日低幅 次日涨幅 次日量比 次日量比10均 首板类型")
@@ -321,13 +332,13 @@ class testShouBan(TestCase):
             print(code, ", %.4f" * len(d) % tuple(d))
         dfc = pd.DataFrame(alist,
                            columns=["股票代码", "首板日期", "次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比10均",
-                                    "首板类型"])
-        self.roundData(dfc, ['次日量比', '次日量比10均'], 2)
+                                    "开盘价", "均价", "首板类型"])
+        self.roundData(dfc, ['次日量比', '次日量比10均', "开盘价", "均价"], 2)
         self.roundData(dfc, ['次日均涨', "位置", '次日开盘', "次日高幅", "次日低幅", "次日涨幅"], 4)
         dfc['首板类型'] = dfc['首板类型'].astype('int')
         dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
         # print("inc", inc.get_code(codelist[-1]))
-        self.assertTrue(len(ind) > 0, "{}-{} 无数据".format(startdate, enddate))
+        # self.assertTrue(len(ind) > 0, "{}-{} 无数据".format(startdate, enddate))
         return alist
 
     def roundData(self, dfc, columns, n=2):

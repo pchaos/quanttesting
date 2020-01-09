@@ -34,6 +34,7 @@ def shoubanData(dataFrame):
 
     """
     close = dataFrame['close']
+    op = dataFrame['open']  # 开盘价
     H = dataFrame['high']
     L = dataFrame['low']
     V = dataFrame['volume']
@@ -51,13 +52,17 @@ def shoubanData(dataFrame):
     lb = qa.REF(V, n) / V
     # 次日量比v10
     crlbv10 = qa.REF(V, -1) / qa.MA(V, 10)
-
     cjjj = AMO / V / 100
     # 次日均涨
     jjzf = qa.REF(cjjj, n) / close - 1
+    # 首板次日开盘涨幅
+    # crkpzf = (op / qa.REF(close, 1) - 1).shift(-1)
+    crkpzf = op.shift(-1) / close - 1
+    # 涨停板日的均价
+    jj = AMO/V
     sbType = shoubanType(dataFrame)
-    dict = {'JJZF': jjzf, 'WZ': wz, 'CRKPZF': sbType.CRKFZF, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
-            "CRLBV10": crlbv10, 'TYPE': sbType['TYPE']}
+    dict = {'JJZF': jjzf, 'WZ': wz, 'CRKPZF': crkpzf, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
+            "CRLBV10": crlbv10, 'OPEN':op, 'JJ':jj, 'TYPE': sbType['TYPE']}
     return pd.DataFrame(dict)
 
 
@@ -111,7 +116,7 @@ def shoubanType(dataFrame):
             return x.t2
 
     close = dataFrame['close']
-    op = dataFrame['open']  # 开盘价
+    # op = dataFrame['open']  # 开盘价
     # 首板
     tj1 = close > qa.REF(close, 1) * 1.098
     tj2 = qa.COUNT(tj1, 30) == 1
@@ -134,6 +139,6 @@ def shoubanType(dataFrame):
     dict = {'TYPE': sbt}
     # 返回整数类型
     df = pd.DataFrame(dict).fillna(0).astype('int')
-    # 首板次日开盘涨幅
-    df['CRKFZF'] = (op / qa.REF(close, 1) - 1).shift(-1)
+    # # 首板次日开盘涨幅
+    # df['CRKFZF'] = (op / qa.REF(close, 1) - 1).shift(-1)
     return df
