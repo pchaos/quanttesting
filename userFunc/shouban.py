@@ -24,10 +24,14 @@ def shouban(dataFrame):
 
 def shoubanData(dataFrame):
     """ 首板指标计算
+    首板指标的计算指标都放在首板当天。（便于查询）
     次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
+
+    2020 01 08
     位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
     次日量比10均：v/ma（v，10） ; v10日均算的是涨停日
+
     """
     close = dataFrame['close']
     H = dataFrame['high']
@@ -51,8 +55,9 @@ def shoubanData(dataFrame):
     cjjj = AMO / V / 100
     # 次日均涨
     jjzf = qa.REF(cjjj, n) / close - 1
-    dict = {'JJZF': jjzf, 'WZ': wz, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
-            "CRLBV10": crlbv10}
+    sbType = shoubanType(dataFrame)
+    dict = {'JJZF': jjzf, 'WZ': wz, 'CRKPZF': sbType.CRKFZF, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
+            "CRLBV10": crlbv10, 'TYPE': sbType['TYPE']}
     return pd.DataFrame(dict)
 
 
