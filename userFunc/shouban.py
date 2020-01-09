@@ -52,17 +52,16 @@ def shoubanData(dataFrame):
     lb = qa.REF(V, n) / V
     # 次日量比v10
     crlbv10 = qa.REF(V, -1) / qa.MA(V, 10)
+    # 涨停板日的均价
     cjjj = AMO / V / 100
     # 次日均涨
     jjzf = qa.REF(cjjj, n) / close - 1
     # 首板次日开盘涨幅
     # crkpzf = (op / qa.REF(close, 1) - 1).shift(-1)
     crkpzf = op.shift(-1) / close - 1
-    # 涨停板日的均价
-    jj = AMO/V
     sbType = shoubanType(dataFrame)
     dict = {'JJZF': jjzf, 'WZ': wz, 'CRKPZF': crkpzf, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
-            "CRLBV10": crlbv10, 'OPEN':op, 'JJ':jj, 'TYPE': sbType['TYPE']}
+            "CRLBV10": crlbv10, 'OPEN':op, 'JJ':cjjj, 'TYPE': sbType['TYPE']}
     return pd.DataFrame(dict)
 
 
