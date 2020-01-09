@@ -176,7 +176,7 @@ class testShouBan(TestCase):
         """测试2018年8月首板数据
         """
         # 获取股票代码列表（最多num个）
-        num = 5000
+        num = 500
         # codelist = self.getCodeList(count=num)
         codelist = self.getCodeList(count=num, isTesting=False)
         startdate = datetime.strptime('2017-08-01', '%Y-%m-%d')
@@ -220,8 +220,9 @@ class testShouBan(TestCase):
         dfc = pd.DataFrame(alist,
                            columns=["次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比v10均", "开盘价", "均价",
                                     "首板类型", "股票代码"])
-        self.roundData(dfc, ["开盘价", "均价"], 2)
-        dfc['首板类型'] = dfc['首板类型'].astype('int')
+        # self.roundData(dfc, ['次日量比', '次日量比10均', "开盘价", "均价"], 2)
+        # self.roundData(dfc, ['次日均涨', "位置", '次日开盘', "次日高幅", "次日低幅", "次日涨幅"], 4)
+        # dfc['首板类型'] = dfc['首板类型'].astype('int')
         dfc.to_csv("/tmp/d.csv", index=False)
         print("inc", inc.get_code(codelist[-1]))
         self.assertTrue(len(ind) > 0, "")
@@ -253,8 +254,8 @@ class testShouBan(TestCase):
         codelist = self.getCodeList(isTesting=isTesting, count=num)
         # codelist = self.getCodeList(isSB=False, count=1000)
         # codelist = self.getCodeList(isSB=True)
-        dayslong = ['2018-01-01', '2018-12-31']
-        # dayslong = ['2019-01-01', '2019-12-31']
+        # dayslong = ['2018-01-01', '2018-12-31']
+        dayslong = ['2019-01-01', '2019-12-31']
         # 月初 月末
         firstday = self.str2date(dayslong[0])
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
