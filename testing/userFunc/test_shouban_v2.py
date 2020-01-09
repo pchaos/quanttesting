@@ -252,16 +252,16 @@ class testShouBan(TestCase):
         isTesting = False
         # codelist = self.getCodeList(count=num)
         codelist = self.getCodeList(isTesting=isTesting, count=num)
-        # codelist = self.getCodeList(isSB=False, count=1000)
         # codelist = self.getCodeList(isSB=True)
-        # dayslong = ['2018-01-01', '2018-12-31']
-        dayslong = ['2019-01-01', '2019-12-31']
+        # dayslong = ['2018-01-01', '2018-12-31']  # 2018年
+        # dayslong = ['2019-01-01', '2019-12-31']  # 2019年
+        dayslong = ['2020-01-01', '2020-01-31']
         # 月初 月末
         firstday = self.str2date(dayslong[0])
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
         lastday = self.str2date(dayslong[1])
         # 获取起始时间之前一年的数据，否则可能因停牌过长不能计算起涨点相对60均线涨幅
-        data = qa.QA_fetch_stock_day_adv(codelist, firstday - relativedelta(months=12),
+        data = qa.QA_fetch_stock_day_adv(codelist, firstday - relativedelta(months=7),
                                          lastday + relativedelta(months=2)).to_qfq()
         while date_after_month <= lastday:
             # 每个月计算单独一次

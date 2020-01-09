@@ -137,7 +137,4 @@ def shoubanType(dataFrame):
                                                                axis=1)
     dict = {'TYPE': sbt}
     # 返回整数类型
-    df = pd.DataFrame(dict).fillna(0).astype('int')
-    # # 首板次日开盘涨幅
-    # df['CRKFZF'] = (op / qa.REF(close, 1) - 1).shift(-1)
-    return df
+    return pd.DataFrame(dict).fillna(0).astype('int')
