@@ -20,11 +20,10 @@ class testShouBan(TestCase):
     首板测试类
     """
 
-    # cache = None
-
     def setUp(self):
         print("starting")
         qa.QA_util_log_info('首板')
+        # 缓存首板指标，计算一次，选择性使用多次
         self.cache = qacache()
 
     def tearDown(self):
@@ -307,7 +306,7 @@ class testShouBan(TestCase):
         # self.cache.set('shoubanDataIndcator', inc)
         # ind = data.add_func(shoubanData)
         # inc = qa.QA_DataStruct_Indicators(ind)
-        print("code   次日均涨	位置 次日开盘 次日高幅 次日低幅 次日涨幅 次日量比 次日量比10均 首板类型")
+        print("code   次日均涨	位置 次日开盘 次日高幅 次日低幅 次日涨幅 次日量比 次日量比10均 开盘价 均价 首板类型")
         alist = []
         edate = self.date2str(self.str2date(enddate) + relativedelta(days=10))
         for code in codelist:
@@ -339,7 +338,6 @@ class testShouBan(TestCase):
         dfc['首板类型'] = dfc['首板类型'].astype('int')
         dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
         # print("inc", inc.get_code(codelist[-1]))
-        # self.assertTrue(len(ind) > 0, "{}-{} 无数据".format(startdate, enddate))
         return alist
 
     def roundData(self, dfc, columns, n=2):
