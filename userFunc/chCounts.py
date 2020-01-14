@@ -56,7 +56,7 @@ def CHCOUNTS3(data):
     """
     nlist = [5, 13, 21, 34, 55, 89, 144, 233]
     close = data.close
-    dict = {'MA{}'.format(n): close > qa.MA(data.close, n) for n in nlist}
+    dict = {'MA{}'.format(n): close >= qa.MA(data.close, n) for n in nlist}
     return pd.DataFrame({'chCounts': pd.DataFrame(dict).sum(axis=1)})
 
 

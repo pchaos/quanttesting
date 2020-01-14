@@ -19,6 +19,7 @@ import QUANTAXIS as qa
 import matplotlib.pyplot as plt
 import talib as ta
 import pandas as pd
+from userFunc import getCodeList
 
 
 def read_zxg(fname='zxg.txt'):
@@ -87,7 +88,12 @@ class TestCHCOUNTS(TestCase):
 
     def test_CHCOUNTS3(self):
         code = '000001'
-        df = qa.QA_fetch_stock_day_adv(code).to_qfq()
+        data = qa.QA_fetch_stock_day_adv(code).to_qfq()
+        chCounts, chCounts2 = self.__checkIndicator(data)
+        diffs=self.diffOneByOne(chCounts, chCounts2)
+        self.assertTrue(chCounts.equals(chCounts2), '两种方式返回结果不相等 {}'.format(diffs))
+
+    def __checkIndicator(self, df):
         print(df.data.columns, type(df.data))
         chCounts = df.add_func(CHCOUNTS)
         chc = qa.QA_DataStruct_Indicators(chCounts)
@@ -95,8 +101,13 @@ class TestCHCOUNTS(TestCase):
         chc2 = qa.QA_DataStruct_Indicators(chCounts2)
         self.assertTrue(len(chCounts2) > 0, '指标为零')
         self.assertTrue(len(chCounts2) == len(chCounts), '计算结果个数不同')
-        diffs=self.diffOneByOne(chCounts, chCounts2)
+        return chCounts, chCounts2
 
+    def test_CHCOUNTS3_codelist(self):
+        code = getCodeList(count=10, isTesting=False)
+        df = qa.QA_fetch_stock_day_adv(code).to_qfq()
+        chCounts, chCounts2 = self.__checkIndicator(df)
+        diffs = self.diffOneByOne(chCounts, chCounts2)
         self.assertTrue(chCounts.equals(chCounts2), '两种方式返回结果不相等 {}'.format(diffs))
 
     def diffOneByOne(self, chCounts, chCounts2):
