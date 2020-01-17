@@ -150,7 +150,7 @@ class testShouBan(TestCase):
         codelist = self.getCodeList(count=num, isTesting=False)
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         ind = data.add_func(shoubanData)
-        print("ind:", ind.tail(10))
+        print("ind:\n", ind.head(10))
         inc = qa.QA_DataStruct_Indicators(ind)
         startdate, enddate = '2018-08-01', '2018-08-31'
         # inc.get_timerange('2018-08-01','2018-08-31',codelist[0])
@@ -172,10 +172,16 @@ class testShouBan(TestCase):
         self.assertTrue(len(df) > 0, "")
 
     def testShouOutput201808(self):
-        """测试2018年8月首板数据
+        """测试2018年8月首板数据            codelist = ['000023', '000068', '000407', '000561', '000590', '000593', '000608', '000610', '000626',
+                        '000638',
+                        '000657', '000659', '000663', '000669', '000677', '000705', '000759', '000766', '000780',
+                        '000792',
+                        '000815', '000852', '000885', '000909', '000913', '000921', '000928', '000931', '002006',
+                        '002012',
+                        '002034']
         """
         # 获取股票代码列表（最多num个）
-        num = 500
+        num = 100
         # codelist = self.getCodeList(count=num)
         codelist = self.getCodeList(count=num, isTesting=False)
         startdate = datetime.strptime('2017-08-01', '%Y-%m-%d')
@@ -214,11 +220,11 @@ class testShouBan(TestCase):
             a.append(code)
             alist.append(a)
             # alist.append("{}{}".format(code, ", %.2f"*len(d) % tuple(d)))
-            print(code, ", %.4f" * len(d) % tuple(d))
+            print(code, d1.date.values[0], ", %.4f" * len(d) % tuple(d))
 
         dfc = pd.DataFrame(alist,
                            columns=["次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比v10均", "开盘价", "均价",
-                                    "首板类型", "股票代码"])
+                                    "10日之内的最低价/涨停板日涨停价", "10日之内的最高价/涨停板日涨停价", "首板类型", "股票代码"])
         # self.roundData(dfc, ['次日量比', '次日量比10均', "开盘价", "均价"], 2)
         # self.roundData(dfc, ['次日均涨', "位置", '次日开盘', "次日高幅", "次日低幅", "次日涨幅"], 4)
         # dfc['首板类型'] = dfc['首板类型'].astype('int')
@@ -251,10 +257,11 @@ class testShouBan(TestCase):
         isTesting = False
         # codelist = self.getCodeList(count=num)
         codelist = self.getCodeList(isTesting=isTesting, count=num)
+        print(codelist[:20])
         # codelist = self.getCodeList(isSB=True)
         # dayslong = ['2018-01-01', '2018-12-31']  # 2018年
-        # dayslong = ['2019-01-01', '2019-12-31']  # 2019年
-        dayslong = ['2020-01-01', '2020-01-31']
+        dayslong = ['2019-01-01', '2019-12-31']  # 2019年
+        # dayslong = ['2020-01-01', '2020-01-31']
         # 月初 月末
         firstday = self.str2date(dayslong[0])
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
@@ -326,15 +333,15 @@ class testShouBan(TestCase):
             # code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB, d.CRLBV10))
             # 涨停板位置
             a = [item for item in d]
-            a.insert(0, code)
+            a.insert(0, code), "开盘价", "均价"
             a.insert(1, self.date2str(d1date))
             alist.append(a)
             print(code, ", %.4f" * len(d) % tuple(d))
         dfc = pd.DataFrame(alist,
                            columns=["股票代码", "首板日期", "次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比10均",
-                                    "开盘价", "均价", "首板类型"])
-        self.roundData(dfc, ['次日量比', '次日量比10均', "开盘价", "均价"], 2)
-        self.roundData(dfc, ['次日均涨', "位置", '次日开盘', "次日高幅", "次日低幅", "次日涨幅"], 4)
+                                    "开盘价", "均价", "首板类型", "10日最低价/涨停板", "10日最高价/涨停板"])
+        self.roundData(dfc, ['次日量比', '次日量比10均'], 2)
+        self.roundData(dfc, ['次日均涨', "位置", '次日开盘', "次日高幅", "次日低幅", "次日涨幅", "开盘价", "均价", "10日最低价/涨停板", "10日最高价/涨停板"], 4)
         dfc['首板类型'] = dfc['首板类型'].astype('int')
         dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
         # print("inc", inc.get_code(codelist[-1]))
@@ -349,7 +356,7 @@ class testShouBan(TestCase):
             for col in columns:
                 dfc[col] = dfc[col].apply(lambda x: round(x, n))
 
-    def getTimeRange(self, inc, startdate, enddate, code=None, isBugfixed=False):
+    def getTimeRange(self, inc, startdate, enddate, code=None, isBugfixed=True):
         if isBugfixed:
             # 源码中bug修复时，使用以下代码
             dfindicator = inc.get_timerange(startdate, enddate, code)  # QAUANTAXIS源码中有bug，code不起作用
@@ -390,36 +397,23 @@ class testShouBan(TestCase):
             startday = startday.strftime('%Y-%m-%d')
         return startday
 
-    def testAddPercent(self):
-        """保存的csv重新计算（原百分数数字，变为纯数字）后保存
-            保存的文件名后加上“.num"
-        """
-        import os
-        path = '/tmp'
-
-        files = []
-        # 获取path目录下csv文件列表
-        # r=root, d=directories, f = files
-        for r, d, f in os.walk(path):
-            for file in f:
-                if '.csv' in file:
-                    if not file.endswith('.csv#'):
-                        files.append(os.path.join(r, file))
-
-        if len(files) > 0:
-            # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100，另存为"原文件名.num.csv“
-            for f in files:
-                print(f)
-                df = pd.read_csv(f, converters={'股票代码': str})
-                df['次日均涨'] = round(df['次日均涨'] / 100, 4)
-                df['位置'] = round(df['位置'] / 100, 4)
-                df['次日高幅'] = round(df['次日高幅'] / 100, 4)
-                df['次日低幅'] = round(df['次日低幅'] / 100, 4)
-                df['次日涨幅'] = round(df['次日涨幅'] / 100, 4)
-                df.to_csv("{}.num.csv".format(os.path.splitext(f)[0]), index=False)
-
-            self.assertTrue(len(files) > 0)
-
+    def test_qa_pickle(self):
+        import pickle
+        fn = "/tmp/filename.pickle"
+        f = open(fn, 'w')
+        num = 100
+        isTesting = True
+        codelist = self.getCodeList(isTesting=isTesting, count=num)
+        dayslong = ['2020-01-01', '2020-01-31']
+        # 月初 月末
+        firstday = self.str2date(dayslong[0])
+        date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
+        lastday = self.str2date(dayslong[1])
+        # 获取起始时间之前一年的数据，否则可能因停牌过长不能计算起涨点相对60均线涨幅
+        data = qa.QA_fetch_stock_day_adv(codelist, firstday - relativedelta(months=7),
+                                         lastday + relativedelta(months=2)).to_qfq()
+        # data.data.to_pickle(fn)
+        # pickle.dumps(data.data, f, pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
     unittest.main()

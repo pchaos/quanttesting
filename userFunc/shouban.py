@@ -25,10 +25,25 @@ def shouban(dataFrame):
 def shoubanData(dataFrame):
     """ 首板指标计算
     首板指标的计算指标都放在首板当天。（便于查询）
-    次日均涨	位置 次日高幅 次日低幅 次日涨幅 次日量比
+    次日均涨	位置 次日开盘涨幅 次日高幅 次日低幅 次日涨幅 次日量比 次日量比v10 次日开盘价 涨停板日的均价 类型
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
 
     2020 01 08
+    1、首板后10日之内的最低价/涨停板日涨停价，2、首板后10日之内最高价/涨停板日涨停板最高价
+
+    最大跌幅
+    SBLV:=IF(1<SBJL AND SBJL<11,L,DRAWNULL);{取距离涨停日后10日每天的低价}
+    SBHV:=IF(0<=SBJL AND SBJL<11,HHV(H,SBJL+1),DRAWNULL);{取距离涨停日后10日内当日到涨停日的最高价}
+    SBDFLV:=IF(1<SBJL AND SBJL<11,(SBLV/REF(SBHV,1)-1)*100,DRAWNULL);{距离涨停日后10日跌幅=当日最低价/上日最高价}
+    SBDF:=IF(1<SBJL AND SBJL<11,LLV(SBDFLV,SBJL),DRAWNULL);{距离涨停日后10日跌幅的最大值}
+    SBDFX:={跌幅记录点}
+    (SBDF<REF(SBDF,1) AND SBDF=REFX(SBDF,1)){最大跌幅大于昨日 且等于明日}
+    OR (SBJL=2 AND SBDF=REFX(SBDF,1) AND SBDF<0){或涨停后第二日 且最大等于明日，且小于0}
+    OR(SBJL=2 AND REFX(H,1)>REFX(H,2)){或涨停后第二日 且明日最高价高于后日最高价}
+    OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最高价}
+    DRAWNUMBER(SBDFX=1 AND SBDFLV<0 ,L,SBDF) COLORGREEN;{记录跌幅}
+
+    2020 01 17
     位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
     次日量比10均：v/ma（v，10） ; v10日均算的是涨停日
 
@@ -51,17 +66,21 @@ def shoubanData(dataFrame):
     # 次日量比
     lb = qa.REF(V, n) / V
     # 次日量比v10
-    crlbv10 = qa.REF(V, -1) / qa.MA(V, 10)
+    crlbv10 = qa.REF(V, n) / qa.MA(V, 10)
     # 涨停板日的均价
-    cjjj = AMO / V / 100
+    cjjj = AMO / V / 100 / qa.REF(close, 1)
     # 次日均涨
-    jjzf = qa.REF(cjjj, n) / close - 1
+    jjzf = qa.REF(cjjj, n) - 1
     # 首板次日开盘涨幅
-    # crkpzf = (op / qa.REF(close, 1) - 1).shift(-1)
-    crkpzf = op.shift(-1) / close - 1
+    crkpzf = op.shift(n) / close - 1
+    # 涨停类型
     sbType = shoubanType(dataFrame)
+    # 首板后10日之内的最低价/涨停板日涨停价
+    ll10 = qa.LLV(L, 10).shift(-10) / close - 1
+    # 首板后10日之内最高价/涨停板日涨停板最高价
+    hh10 = qa.HHV(H, 10).shift(-10) / close - 1
     dict = {'JJZF': jjzf, 'WZ': wz, 'CRKPZF': crkpzf, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
-            "CRLBV10": crlbv10, 'OPEN':op, 'JJ':cjjj, 'TYPE': sbType['TYPE']}
+            "CRLBV10": crlbv10, 'OPEN': op / qa.REF(close, 1), 'JJ': cjjj, 'TYPE': sbType['TYPE'], "LL10": ll10, "HH10": hh10}
     return pd.DataFrame(dict)
 
 
@@ -106,7 +125,7 @@ def shoubanType(dataFrame):
             # 非首板 不用判断类型
             if x.t1 == 10 and x.t2 != 0:
                 # 连续涨停的，第二个不用标记
-                print("", x.t2)
+                # print("", x.t2)
                 return 10
             else:
                 return 0
