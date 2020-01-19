@@ -19,5 +19,6 @@ from .chCounts import FOURWEEK
 from .shouban import shouban
 from .shouban import shoubanData
 from .shouban import shoubanType
+from .shouban import shoubanZDZG
 
 from .comm import ifupMA

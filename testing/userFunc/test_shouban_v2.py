@@ -5,14 +5,14 @@
 """
 from unittest import TestCase
 import unittest
-#  import datetime
+import os
 import QUANTAXIS as qa
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 #  import numpy as np
 import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from userFunc import shouban, shoubanData, shoubanType
+from userFunc import shouban, shoubanData, shoubanType, getCodeList, shoubanZDZG
 
 
 class testShouBan(TestCase):
@@ -414,6 +414,27 @@ class testShouBan(TestCase):
                                          lastday + relativedelta(months=2)).to_qfq()
         # data.data.to_pickle(fn)
         # pickle.dumps(data.data, f, pickle.HIGHEST_PROTOCOL)
+
+    def test_ZDZG(self):
+        n = 10  # 计算周期
+        num = 80
+        isTesting = True
+        codelist = getCodeList(isTesting=isTesting, count=num)[13:]
+        dayslong = ['2018-08-01', '2018-08-31']
+        data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
+        fn = '/tmp/sb2018-08-01.csv'
+        self.assertTrue(os.path.exists(fn), "文件({})不存在，请先确保文件存在！".format(fn))
+        df = pd.read_csv(fn, converters={'股票代码': str})
+        for i in df.index:
+            item = df.iloc[i]
+            code, sbDate = item.股票代码, item.首板日期
+            if code in codelist:
+                # 股票读取过日线数据
+                dfa = data.select_code(code).select_time_with_gap(sbDate, n * 2 + 1, '>=')
+                sbZGZD = shoubanZDZG(dataFrame=dfa.data, sbDate=sbDate, n=n)
+                self.assertTrue(len(sbZGZD) > 0, "计算最大跌幅个数：{}".format(len(sbZGZD)))
+                print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.highK[0])
+
 
 if __name__ == '__main__':
     unittest.main()

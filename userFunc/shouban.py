@@ -1,11 +1,11 @@
-from unittest import TestCase
-import unittest
 #  import datetime
 import QUANTAXIS as qa
-#  import numpy as np
+import numpy as np
 import pandas as pd
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+
+
+# from dateutil.relativedelta import relativedelta
 
 
 def shouban(dataFrame):
@@ -28,22 +28,11 @@ def shoubanData(dataFrame):
     次日均涨	位置 次日开盘涨幅 次日高幅 次日低幅 次日涨幅 次日量比 次日量比v10 次日开盘价 涨停板日的均价 类型
     JJZF, WZ, ZGZF, ZDDF, ZF, LB
 
-    2020 01 08
-    1、首板后10日之内的最低价/涨停板日涨停价，2、首板后10日之内最高价/涨停板日涨停板最高价
-
-    最大跌幅
-    SBLV:=IF(1<SBJL AND SBJL<11,L,DRAWNULL);{取距离涨停日后10日每天的低价}
-    SBHV:=IF(0<=SBJL AND SBJL<11,HHV(H,SBJL+1),DRAWNULL);{取距离涨停日后10日内当日到涨停日的最高价}
-    SBDFLV:=IF(1<SBJL AND SBJL<11,(SBLV/REF(SBHV,1)-1)*100,DRAWNULL);{距离涨停日后10日跌幅=当日最低价/上日最高价}
-    SBDF:=IF(1<SBJL AND SBJL<11,LLV(SBDFLV,SBJL),DRAWNULL);{距离涨停日后10日跌幅的最大值}
-    SBDFX:={跌幅记录点}
-    (SBDF<REF(SBDF,1) AND SBDF=REFX(SBDF,1)){最大跌幅大于昨日 且等于明日}
-    OR (SBJL=2 AND SBDF=REFX(SBDF,1) AND SBDF<0){或涨停后第二日 且最大等于明日，且小于0}
-    OR(SBJL=2 AND REFX(H,1)>REFX(H,2)){或涨停后第二日 且明日最高价高于后日最高价}
-    OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最高价}
-    DRAWNUMBER(SBDFX=1 AND SBDFLV<0 ,L,SBDF) COLORGREEN;{记录跌幅}
-
     2020 01 17
+    1、首板后10日之内的最低价/涨停板日涨停价
+    2、首板后10日之内最高价/涨停板日涨停板最高价
+
+    2020 01 08
     位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
     次日量比10均：v/ma（v，10） ; v10日均算的是涨停日
 
@@ -80,7 +69,8 @@ def shoubanData(dataFrame):
     # 首板后10日之内最高价/涨停板日涨停板最高价
     hh10 = qa.HHV(H, 10).shift(-10) / close - 1
     dict = {'JJZF': jjzf, 'WZ': wz, 'CRKPZF': crkpzf, 'ZGZF': zgzf, 'ZDDF': zddf, 'ZF': zf, 'LB': lb,
-            "CRLBV10": crlbv10, 'OPEN': op / qa.REF(close, 1), 'JJ': cjjj, 'TYPE': sbType['TYPE'], "LL10": ll10, "HH10": hh10}
+            "CRLBV10": crlbv10, 'OPEN': op / qa.REF(close, 1), 'JJ': cjjj, 'TYPE': sbType['TYPE'], "LL10": ll10,
+            "HH10": hh10}
     return pd.DataFrame(dict)
 
 
@@ -147,13 +137,138 @@ def shoubanType(dataFrame):
     L = dataFrame['low']
     # 首板第二天收盘价涨幅
     zf = close / qa.REF(close, 1)
-    # 计算首板第一天、第二天的类型
+    # 计算首板第一天、第二天的类型教程
     sbt = pd.DataFrame({'zf': zf, 'H': H, "L": L, "preH": qa.REF(H, 1), "preL": qa.REF(L, 1), 'close': close,
                         'SB': sb + sb.shift(1).fillna(0)}).apply(lambda row: sbtype(row),
                                                                  axis=1)
     # 合并首板类型技术指标到首板当天
-    sbt = pd.DataFrame({'t1': sbt, 't2': sbt.shift(-1)}).apply(lambda row: sbtype2(row),
-                                                               axis=1)
+    sbt = pd.DataFrame({'t1': sbt, 't2': sbt.shift(-1)}).apply(lambda row: sbtype2(row), axis=1)
     dict = {'TYPE': sbt}
     # 返回整数类型
     return pd.DataFrame(dict).fillna(0).astype('int')
+
+
+def shoubanZDZG1(dataFrame, sbDate, n=10):
+    """ 首板后n天最大跌幅 最大涨幅
+    dataFrame: 当个股票的pandas数据
+    dbDate : 首板日期
+    n： 首板后n天最大跌幅 最大涨幅
+
+    最大跌幅(TDX公式)
+    SBJL:BARSLAST(SB),NODRAW;
+    SBLV:=IF(1<SBJL AND SBJL<11,L,DRAWNULL);{取距离涨停日后10日每天的低价}
+    SBHV:=IF(0<=SBJL AND SBJL<11,HHV(H,SBJL+1),DRAWNULL);{取距离涨停日后10日内当日到涨停日的最高价}
+    SBDFLV:=IF(1<SBJL AND SBJL<11,(SBLV/REF(SBHV,1)-1)*100,DRAWNULL);{距离涨停日后10日跌幅=当日最低价/上日最高价}
+    SBDF:=IF(1<SBJL AND SBJL<11,LLV(SBDFLV,SBJL),DRAWNULL);{距离涨停日后10日跌幅的最大值}
+    SBDFX:={跌幅记录点}
+    (SBDF<REF(SBDF,1) AND SBDF=REFX(SBDF,1)){最大跌幅大于昨日 且等于明日}
+    OR (SBJL=2 AND SBDF=REFX(SBDF,1) AND SBDF<0){或涨停后第二日 且最大等于明日，且小于0}
+    OR(SBJL=2 AND REFX(H,1)>REFX(H,2)){或涨停后第二日 且明日最高价高于后日最高价}
+    OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最高价}
+    DRAWNUMBER(SBDFX=1 AND SBDFLV<0 ,L,SBDF) COLORGREEN;{记录跌幅}
+    """
+    # 首板n天的数据
+    data = dataFrame[['high', 'low']].loc[(slice(pd.Timestamp(sbDate), datetime.now())), :][:n + 1]
+    j = 0
+    # 2维numpy array
+    tmp = np.array([(np.NaN, np.nan, np.nan, np.nan)] * len(dataFrame))
+    for i in data.index:
+        # 取距离涨停日后10日内当日到涨停日的最高价
+        tmp[j, 0] = qa.HHV(data.high[:j + 1], j + 1)[j]
+        if j > 1:
+            tmp[j, 1] = qa.LLV(data.low[1:j + 1], j)[j - 1] / tmp[j - 1, 0] - 1
+        j += 1
+    # data['SBDFLV'] = 0
+    data['SBHV'] = list(tmp[:, 0])
+    # 距离涨停日后10日跌幅=当日最低价/上日最高价
+    data['SBDFLV'] = (qa.REF(data.low, -1) / data['SBHV']).shift(1) - 1
+    # 距离涨停日后10日跌幅的最大值
+    j = 0
+    for i in data.index:
+        if j > 1:
+            # 距离涨停日后10日跌幅的最大值
+            tmp[j, 2] = qa.LLV(data.SBDFLV[1:j + 1], j)[j - 1]
+        j += 1
+    data['SBDF'] = list(tmp[:, 2])
+    sbdf = data.SBDF
+    j = 2
+    # (SBJL=2 AND SBDF=REFX(SBDF,1) AND SBDF<0){或涨停后第二日 且最大等于明日，且小于0}
+    #     OR(SBJL=2 AND REFX(H,1)>REFX(H,2)){或涨停后第二日 且明日最高价高于后日最高价}
+    #     OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最高价}
+    tmp[j, 3] = (data.SBDF[j] == data.SBDF[j + 1] and data.SBDF[j] < 0) | (data.high[j + 1] > data.high[j + 2]) \
+                | (data.low[j] < data.low[j + 1])
+    # 跌幅记录点 最大跌幅大于昨日 且等于明日
+    data['SBDFX'] = (qa.REF(sbdf, -1) < sbdf).shift(1).fillna(False) & (
+            sbdf == qa.REF(sbdf, -1)).fillna(False)
+    data['SBDFX'][j] | True if tmp[j, 3] else False
+
+    dict = {'SBDF': data.SBDF}
+    return pd.DataFrame(dict)
+
+
+def shoubanZDZG(dataFrame, sbDate, n=10):
+    """ 首板后n天最大跌幅 最大涨幅
+    dataFrame: 当个股票的pandas数据
+    dbDate : 首板日期
+    n： 首板后n天最大跌幅、最大涨幅; 默认值：10
+
+    计算n周期内最大跌幅：
+    计算n周期内最大跌幅、最大涨幅
+
+    最大跌幅(TDX公式)
+    SBJL:BARSLAST(SB),NODRAW;
+    SBLV:=IF(1<SBJL AND SBJL<11,L,DRAWNULL);{取距离涨停日后10日每天的低价}
+    SBHV:=IF(0<=SBJL AND SBJL<11,HHV(H,SBJL+1),DRAWNULL);{取距离涨停日后10日内当日到涨停日的最高价}
+    SBDFLV:=IF(1<SBJL AND SBJL<11,(SBLV/REF(SBHV,1)-1)*100,DRAWNULL);{距离涨停日后10日跌幅=当日最低价/上日最高价}
+    SBDF:=IF(1<SBJL AND SBJL<11,LLV(SBDFLV,SBJL),DRAWNULL);{距离涨停日后10日跌幅的最大值}
+    SBDFX:={跌幅记录点}
+    (SBDF<REF(SBDF,1) AND SBDF=REFX(SBDF,1)){最大跌幅大于昨日 且等于明日}
+    OR (SBJL=2 AND SBDF=REFX(SBDF,1) AND SBDF<0){或涨停后第二日 且最大等于明日，且小于0}
+    OR(SBJL=2 AND REFX(H,1)>REFX(H,2)){或涨停后第二日 且明日最高价高于后日最高价}
+    OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最高价}
+    DRAWNUMBER(SBDFX=1 AND SBDFLV<0 ,L,SBDF) COLORGREEN;{记录跌幅}
+    """
+    # 首板n天的数据
+    data = dataFrame[['high', 'low']].loc[(slice(pd.Timestamp(sbDate), datetime.now())), :][:2 * n + 1]
+    j = 0
+    k = 0  # 最高价时的顺序号
+    h, l = 0, 0  # 临时保存最高价、最低价
+    ll = 0
+    dfx = False  # 是否出现底分型
+    # 2维numpy array
+    tmp = np.array([(np.NaN, np.NaN, np.NaN, np.NaN)] * len(data))
+    for i in range(len(data) - 1):
+        # 取距离涨停日后n日内当日到涨停日的最高价  # 碰到新低，高点重新开始计数
+        tmp[j, 0] = qa.HHV(data.high[ll:j + 1], j - ll + 1)[j - ll]
+        if j > 0:
+            #
+            tmp[j, 1] = qa.LLV(data.low[1:j + 1], j)[j - 1]
+            if tmp[j, 1] < tmp[j - 1, 1]:
+                # 创新低
+                ll = j
+            # data.high[li:j + 1]
+            # 某天最低价/截止前一天最高价
+            preh = max(tmp[:j, 0])
+            # tmp[j, 2] = data.low[j] / tmp[j - 1, 0]
+            tmp[j, 2] = data.low[j] / preh
+            # 某天最高价/截止前一天最低价
+            # tmp[j, 3] = tmp[j, 0] / tmp[j - 1, 1]
+            tmp[j, 3] = data.high[j] / tmp[j - 1, 1]
+            if (not dfx) and (tmp[j - 1, 1] >= tmp[j, 1]) and (data.low[j] < data.low[j - 1]) and (
+                    data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j]):
+                # 判断底分型
+                dfx = True
+        if j > 2 and dfx and (j - ll + 1) < n:
+            if tmp[j, 3] > h:
+                # if (tmp[j - 1, 1] >= tmp[j, 1]) and (tmp[j, 0] >= tmp[j - 1, 0]):
+                k, h = j, tmp[j, 3]
+                ll = k
+        j += 1
+    if k > 0:
+        # 能计算最大跌幅
+        l = min(tmp[1:k, 2]) - 1
+        h -= 1
+
+    dict = {'SBDF': [l], 'SBZF': [h], 'highK': [k]}
+    # print(dict, k)
+    return pd.DataFrame(dict)
