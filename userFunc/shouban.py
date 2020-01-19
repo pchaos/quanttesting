@@ -265,10 +265,8 @@ def shoubanZDZG(dataFrame, sbDate, n=10):
                 ll = k
         j += 1
     if k > 0:
-        # 能计算最大跌幅
+        # 能计算最大跌幅 连板的会找不出最大涨幅 返回 0,0
         l = min(tmp[1:k, 2]) - 1
         h -= 1
-
     dict = {'SBDF': [l], 'SBZF': [h], 'highK': [k]}
-    # print(dict, k)
     return pd.DataFrame(dict)
