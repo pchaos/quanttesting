@@ -441,7 +441,8 @@ class testShouBan(TestCase):
     def test_ZDZG_csv(self):
         # 从csv文件读入数据，计算相应的最大涨跌幅
         path = '/tmp'
-
+        n = 10  # 计算周期
+        num = 5000  # 计算股票数量
         files = []
         # 获取path目录下csv文件列表
         # r=root, d=directories, f = files
@@ -457,10 +458,6 @@ class testShouBan(TestCase):
                 if len(os.path.basename(f)) == 16:
                     # 类似“sb2018-08-01.csv”，这样的文件名
                     df = pd.read_csv(f, converters={'股票代码': str})
-                    df.to_csv("{}.num.csv".format(os.path.splitext(f)[0]), index=False)
-
-                    n = 10  # 计算周期
-                    num = 30  # 计算股票数量
                     isTesting = True
                     codelist = list(df.股票代码[:num])
                     startDate = f[7:][:-4]
@@ -468,6 +465,7 @@ class testShouBan(TestCase):
                     startDate = self.str2date(startDate) + relativedelta(months=-12)
                     data = qa.QA_fetch_stock_day_adv(codelist, self.date2str(startDate),
                                                      self.date2str(endDate)).to_qfq()
+                    result = []
                     for i in df.index:
                         item = df.iloc[i]
                         code, sbDate = item.股票代码, item.首板日期
@@ -476,9 +474,22 @@ class testShouBan(TestCase):
                             dfa = data.select_code(code).select_time_with_gap(sbDate, n * 2 + 1, '>=')
                             sbZGZD = shoubanZDZG(dataFrame=dfa.data, sbDate=sbDate, n=n)
                             self.assertTrue(len(sbZGZD) > 0, "计算最大跌幅个数：{}".format(len(sbZGZD)))
-                            print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.highK[0])
-
-                    # df.to_csv("{}.ZFZF.csv".format(os.path.splitext(f)[0]), index=False)
+                            print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.lowK[0],
+                                  sbZGZD.highK[0])
+                            result.append(
+                                [round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.lowK[0], sbZGZD.highK[0]])
+                    dfb = pd.DataFrame(result, columns=['最大跌幅', '最大丈夫是', '最大跌幅位置', '最大涨幅位置'])
+                    if len(df) == len(dfb):
+                        for col in reversed(dfb.columns):
+                            df.insert(2, col, dfb[col])
+                        df.to_csv("{}.ZFZF{}.csv".format(os.path.splitext(f)[0], n), index=False)
+                    else:
+                        dfc = df[:len(dfb)]
+                        oldColumnsLen = len(dfc.columns)
+                        for col in reversed(dfb.columns):
+                            dfc.insert(2, col, dfb[col])
+                        self.assertTrue(len(dfb.columns) + oldColumnsLen == len(dfc.columns),
+                                    "{},插入不成功".format(dfb.columns))
 
 
 if __name__ == '__main__':
