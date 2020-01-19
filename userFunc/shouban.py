@@ -206,7 +206,7 @@ def shoubanZDZG1(dataFrame, sbDate, n=10):
     return pd.DataFrame(dict)
 
 
-def shoubanZDZG(dataFrame, sbDate, n=10):
+def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
     """ 首板后n天最大跌幅 最大涨幅
     dataFrame: 当个股票的pandas数据
     dbDate : 首板日期
@@ -214,6 +214,11 @@ def shoubanZDZG(dataFrame, sbDate, n=10):
 
     计算n周期内最大跌幅：
     计算n周期内最大跌幅、最大涨幅
+
+逻辑：
+1.低点比第二日低，就用低点除以前一日到涨停日的最高点算跌幅，如果跌幅大于-3%，就记为低点
+2.以此低点后的交易日，只要高点比第二天高，就计算涨幅，在限定日期内，取最大值为限定日期的最大涨幅
+在首板后n个交易日（这里先取n=10），每次超过3%的跌幅，算日后的反弹，在n个交易日里面，找到反弹涨幅最大的，然后在找出这个涨幅对应的跌幅
 
     最大跌幅(TDX公式)
     SBJL:BARSLAST(SB),NODRAW;
@@ -225,24 +230,26 @@ def shoubanZDZG(dataFrame, sbDate, n=10):
     (SBDF<REF(SBDF,1) AND SBDF=REFX(SBDF,1)){最大跌幅大于昨日 且等于明日}
     OR (SBJL=2 AND SBDF=REFX(SBDF,1) AND SBDF<0){或涨停后第二日 且最大等于明日，且小于0}
     OR(SBJL=2 AND REFX(H,1)>REFX(H,2)){或涨停后第二日 且明日最高价高于后日最高价}
-    OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最高价}
+    OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最num高价}
     DRAWNUMBER(SBDFX=1 AND SBDFLV<0 ,L,SBDF) COLORGREEN;{记录跌幅}
     """
     # 首板n天的数据
-    data = dataFrame[['high', 'low']].loc[(slice(pd.Timestamp(sbDate), datetime.now())), :][:2 * n + 1]
+    data = dataFrame[['high', 'low']].loc[(slice(pd.Timestamp(sbDate), datetime.now())), :][: n + 2]
     j = 0
     k = 0  # 最高价时的顺序号
-    h, l = 0, 0  # 临时保存最高价、最低价
+    h, l = 0.0, 0.0  # 临时保存最高价、最低价
     ll = 0
-    dfx = False  # 是否出现底分型
+    lowk = 0  # 低点所在位置顺序号
+    dd = False  # 是否出现低点
     # 2维numpy array
-    tmp = np.array([(np.NaN, np.NaN, np.NaN, np.NaN)] * len(data))
-    for i in range(len(data) - 1):
+    tmp = np.array([(np.NaN, np.NaN, np.NaN, np.NaN, np.NaN)] * len(data))
+    for i in range(len(data)):
         # 取距离涨停日后n日内当日到涨停日的最高价  # 碰到新低，高点重新开始计数
         tmp[j, 0] = qa.HHV(data.high[ll:j + 1], j - ll + 1)[j - ll]
         if j > 0:
             #
             tmp[j, 1] = qa.LLV(data.low[1:j + 1], j)[j - 1]
+            tmp[j, 4] = tmp[j, 1]
             if tmp[j, 1] < tmp[j - 1, 1]:
                 # 创新低
                 ll = j
@@ -254,19 +261,37 @@ def shoubanZDZG(dataFrame, sbDate, n=10):
             # 某天最高价/截止前一天最低价
             # tmp[j, 3] = tmp[j, 0] / tmp[j - 1, 1]
             tmp[j, 3] = data.high[j] / tmp[j - 1, 1]
-            if (not dfx) and (tmp[j - 1, 1] >= tmp[j, 1]) and (data.low[j] < data.low[j - 1]) and (
-                    data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j]):
-                # 判断底分型
-                dfx = True
-        if j > 2 and dfx and (j - ll + 1) < n:
+            cona = (tmp[j - 1, 1] >= tmp[j, 1]) and (data.low[j] < data.low[j - 1]) and (
+                    data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j])
+            if ((not dd) and cona and j > 1) or (not dd and tmp[j, 2] < 1 - percent and j > 2):
+                # 判断低点
+                dd = True
+                if (not cona) and tmp[j, 2] < 1 - percent:
+                    # 第一次低点，需要重新计算最低最高价
+                    for ii in range(1, j + 1):
+                        tmp[ii, 1] = data.low[j]
+                        preh = max(tmp[:ii, 0])
+                        # tmp[j, 2] = data.low[j] / tmp[j - 1, 0]
+                        tmp[ii, 2] = data.low[ii] / preh
+                        tmp[ii, 3] = 1
+
+        if j > 2 and dd and (j - ll + 1) < n:
             if tmp[j, 3] > h:
                 # if (tmp[j - 1, 1] >= tmp[j, 1]) and (tmp[j, 0] >= tmp[j - 1, 0]):
                 k, h = j, tmp[j, 3]
                 ll = k
         j += 1
+        if j > n:
+            # 大于n天,不计算
+            break
     if k > 0:
         # 能计算最大跌幅 连板的会找不出最大涨幅 返回 0,0
-        l = min(tmp[1:k, 2]) - 1
+        l = min(tmp[1:k, 2])
+        for i in range(1, len(data)):
+            if l == tmp[i, 2]:
+                lowk = i
+                break
         h -= 1
-    dict = {'SBDF': [l], 'SBZF': [h], 'highK': [k]}
+        l -= 1
+    dict = {'SBDF': [l], 'SBZF': [h], 'lowK': lowk, 'highK': [k]}
     return pd.DataFrame(dict)

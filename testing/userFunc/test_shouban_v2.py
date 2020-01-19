@@ -275,7 +275,7 @@ class testShouBan(TestCase):
             df = self.getShouBan(codelist, data, startday=firstday, endday=date_after_month)
             if len(df) == 0:
                 print("no data {}".format(self.date2str(firstday)))
-                date_after_month, firstday = self.nextMonth(firstday)
+                date_after_month, firstday = self.endOfMonth(firstday)
                 continue
             # 按照代码顺序
             codelist = sorted(df.code.drop_duplicates())
@@ -284,12 +284,13 @@ class testShouBan(TestCase):
             dataInd = data.select_code(codelist).select_time_with_gap(date_after_month + relativedelta(months=1), 9999,
                                                                       "<=")
             sblist = self.getshoubanInd(codelist, df, dataInd, startdate, enddate)
-            date_after_month, firstday = self.nextMonth(firstday)
+            date_after_month, firstday = self.endOfMonth(firstday)
             self.assertTrue((isTesting or len(sblist) >= 0) or len(sblist) > 0, "首板个数为零")
 
-    def nextMonth(self, firstday):
+    def endOfMonth(self, firstday):
         """计算firstday的下一个月
-        返回下月底、下月初
+        firstday: datetime
+        返回下月底、下月初  (类型：datetime）
         """
         firstday = firstday + relativedelta(months=1)
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
@@ -393,6 +394,8 @@ class testShouBan(TestCase):
         return df
 
     def date2str(self, startday):
+        """将datetime类型转换成字符串：YYYY-MM-DD
+        """
         if isinstance(startday, datetime):
             startday = startday.strftime('%Y-%m-%d')
         return startday
@@ -417,10 +420,10 @@ class testShouBan(TestCase):
 
     def test_ZDZG(self):
         n = 10  # 计算周期
-        num = 80
+        num = 80  # 计算股票数量
         isTesting = True
-        codelist = getCodeList(isTesting=isTesting, count=num)[13:]
-        dayslong = ['2018-08-01', '2018-08-31']
+        codelist = getCodeList(isTesting=isTesting, count=num)[:]
+        #  计算周期 ['2018-08-01', '2018-08-31']
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         fn = '/tmp/sb2018-08-01.csv'
         self.assertTrue(os.path.exists(fn), "文件({})不存在，请先确保文件存在！".format(fn))
@@ -433,7 +436,49 @@ class testShouBan(TestCase):
                 dfa = data.select_code(code).select_time_with_gap(sbDate, n * 2 + 1, '>=')
                 sbZGZD = shoubanZDZG(dataFrame=dfa.data, sbDate=sbDate, n=n)
                 self.assertTrue(len(sbZGZD) > 0, "计算最大跌幅个数：{}".format(len(sbZGZD)))
-                print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.highK[0])
+                print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.lowK[0], sbZGZD.highK[0])
+
+    def test_ZDZG_csv(self):
+        # 从csv文件读入数据，计算相应的最大涨跌幅
+        path = '/tmp'
+
+        files = []
+        # 获取path目录下csv文件列表
+        # r=root, d=directories, f = files
+        for r, d, f in os.walk(path):
+            for file in f:
+                if '.csv' in file:
+                    if not file.endswith('.csv#'):
+                        files.append(os.path.join(r, file))
+
+        if len(files) > 0:
+            # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100，另存为"原文件名.num.csv“
+            for f in files:
+                if len(os.path.basename(f)) == 16:
+                    # 类似“sb2018-08-01.csv”，这样的文件名
+                    df = pd.read_csv(f, converters={'股票代码': str})
+                    df.to_csv("{}.num.csv".format(os.path.splitext(f)[0]), index=False)
+
+                    n = 10  # 计算周期
+                    num = 30  # 计算股票数量
+                    isTesting = True
+                    codelist = list(df.股票代码[:num])
+                    startDate = f[7:][:-4]
+                    endDate = self.str2date(startDate) + relativedelta(months=3)
+                    startDate = self.str2date(startDate) + relativedelta(months=-12)
+                    data = qa.QA_fetch_stock_day_adv(codelist, self.date2str(startDate),
+                                                     self.date2str(endDate)).to_qfq()
+                    for i in df.index:
+                        item = df.iloc[i]
+                        code, sbDate = item.股票代码, item.首板日期
+                        if code in codelist:
+                            # 股票读取过日线数据
+                            dfa = data.select_code(code).select_time_with_gap(sbDate, n * 2 + 1, '>=')
+                            sbZGZD = shoubanZDZG(dataFrame=dfa.data, sbDate=sbDate, n=n)
+                            self.assertTrue(len(sbZGZD) > 0, "计算最大跌幅个数：{}".format(len(sbZGZD)))
+                            print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.highK[0])
+
+                    # df.to_csv("{}.ZFZF.csv".format(os.path.splitext(f)[0]), index=False)
 
 
 if __name__ == '__main__':
