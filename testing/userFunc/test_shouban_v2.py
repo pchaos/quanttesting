@@ -261,8 +261,8 @@ class testShouBan(TestCase):
         # dayslong = ['2016-01-01', '2016-12-31']  # 2016年
         # dayslong = ['2017-01-01', '2017-12-31']  # 2017年
         # dayslong = ['2018-01-01', '2018-12-31']  # 2018年
-        dayslong = ['2019-01-01', '2019-12-31']  # 2019年
-        # dayslong = ['2020-01-01', '2020-01-31']
+        # dayslong = ['2019-01-01', '2019-12-31']  # 2019年
+        dayslong = ['2020-01-01', '2020-01-31']
         # 月初 月末
         firstday = self.str2date(dayslong[0])
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
@@ -335,8 +335,8 @@ class testShouBan(TestCase):
             # code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB, d.CRLBV10))
             # 涨停板位置
             a = [item for item in d]
-            a.insert(0, code), "开盘价", "均价"
-            a.insert(1, self.date2str(d1date))
+            a.insert(0, code) # 代码
+            a.insert(1, self.date2str(d1date)) # 首板日期
             alist.append(a)
             print(code, ", %.4f" * len(d) % tuple(d))
         dfc = pd.DataFrame(alist,
@@ -344,6 +344,60 @@ class testShouBan(TestCase):
                                     "开盘价", "均价", "首板类型", "10日最低价/涨停板", "10日最高价/涨停板"])
         self.roundData(dfc, ['次日量比', '次日量比10均'], 2)
         self.roundData(dfc, ['次日均涨', "位置", '次日开盘', "次日高幅", "次日低幅", "次日涨幅", "开盘价", "均价", "10日最低价/涨停板", "10日最高价/涨停板"], 4)
+        dfc['首板类型'] = dfc['首板类型'].astype('int')
+        dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
+        # print("inc", inc.get_code(codelist[-1]))
+        return alist
+
+
+    def getshoubanZDZGInd(self, codelist, df, data, startdate, enddate, n=10):
+        print(startdate, enddate)
+        # inc = self.cache.get('shoubanDataIndcator')
+        # if inc is None:
+        if len(data) == 0:
+            # 没有数据则返回空
+            return pd.DataFrame()
+        ind = data.add_func(shoubanData)
+        inc = qa.QA_DataStruct_Indicators(ind)
+        # self.cache.set('shoubanDataIndcator', inc)
+        # ind = data.add_func(shoubanData)
+        # inc = qa.QA_DataStruct_Indicators(ind)
+        print("code   次日均涨	位置 次日开盘 次日高幅 次日低幅 次日涨幅 次日量比 次日量比10均 开盘价 均价 首板类型")
+        alist = []
+        edate = self.date2str(self.str2date(enddate) + relativedelta(days=10))
+        for code in codelist:
+            # dfind = self.getTimeRange(inc, startdate, self.str2date(enddate) + relativedelta(days=15), code)
+            dfind = self.getTimeRange(inc, startdate, self.str2date(enddate), code)
+            d1 = df.loc[df.code == code]
+            if (len(d1)) == 0:
+                continue
+            assert len(d1) == 1, "首板个数：{}".format(len(d1))
+            # 首板日期
+            d1date = pd.to_datetime(d1.date.values[0])
+            if not (self.str2date(startdate) <= d1date <= self.str2date(enddate)):
+                continue
+            d = dfind.loc[(d1date.strftime('%Y-%m-%d'), d1.code.values[0])]
+            # print("{} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f} {0:0.2f}".format(dfind
+            # code, d.JJZF, d.WZ, d.ZGZF, d.ZDDF, d.ZF, d.LB, d.CRLBV10))
+            # 涨停板位置
+            a = [item for item in d]
+            a.insert(0, code) # 股票代码
+            a.insert(1, self.date2str(d1date)) # 首板日期
+            # 首板后n交易日内最大涨跌幅
+            sbZGZD = self.getZDZGFromCodeSBDate(data, code, d1date, n)
+            # '最大跌幅', '最大涨幅', '最大跌幅位置', '最大涨幅位置'
+            # round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.lowK[0], sbZGZD.highK[0]
+            a.insert(2, sbZGZD.highK[0])
+            a.insert(2, sbZGZD.lowK[0])
+            a.insert(2, sbZGZD.SBZF[0])
+            a.insert(2, sbZGZD.SBDF[0])
+            alist.append(a)
+            print(code, ", %.4f" * len(d) % tuple(d))
+        dfc = pd.DataFrame(alist,
+                           columns=["股票代码", "首板日期", '最大跌幅', '最大涨幅', '最大跌幅位置', '最大涨幅位置',"次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比10均",
+                                    "开盘价", "均价", "首板类型", "10日最低价/涨停板", "10日最高价/涨停板"])
+        self.roundData(dfc, ['次日量比', '次日量比10均'], 2)
+        self.roundData(dfc, ['最大跌幅', '最大涨幅', '次日均涨', "位置", '次日开盘', "次日高幅", "次日低幅", "次日涨幅", "开盘价", "均价", "10日最低价/涨停板", "10日最高价/涨停板"], 4)
         dfc['首板类型'] = dfc['首板类型'].astype('int')
         dfc.to_csv("/tmp/sb{}.csv".format(self.date2str(startdate)), index=False)
         # print("inc", inc.get_code(codelist[-1]))
@@ -437,10 +491,22 @@ class testShouBan(TestCase):
             code, sbDate = item.股票代码, item.首板日期
             if code in codelist:
                 # 股票读取过日线数据
-                dfa = data.select_code(code).select_time_with_gap(sbDate, n * 2 + 1, '>=')
-                sbZGZD = shoubanZDZG(dataFrame=dfa.data, sbDate=sbDate, n=n)
+                sbZGZD = self.getZDZGFromCodeSBDate(data, code, sbDate, n)
                 self.assertTrue(len(sbZGZD) > 0, "计算最大跌幅个数：{}".format(len(sbZGZD)))
                 print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.lowK[0], sbZGZD.highK[0])
+
+    def getZDZGFromCodeSBDate(self, data, code, sbDate, n):
+        """返回code sbDate对应的最大涨跌幅
+        data： QAStruct
+        code： 股票代码
+        sbDate: 首板日期
+        n： 计算天数
+
+        返回DataFrame
+        """
+        dfa = data.select_code(code).select_time_with_gap(sbDate, n * 2 + 1, '>=')
+        sbZGZD = shoubanZDZG(dataFrame=dfa.data, sbDate=sbDate, n=n)
+        return sbZGZD
 
     def test_ZDZG_csv(self):
         # 从csv文件读入数据，计算相应的最大涨跌幅
@@ -469,8 +535,7 @@ class testShouBan(TestCase):
                         code, sbDate = item.股票代码, item.首板日期
                         if code in codelist:
                             # 股票读取过日线数据
-                            dfa = data.select_code(code).select_time_with_gap(sbDate, n * 2 + 1, '>=')
-                            sbZGZD = shoubanZDZG(dataFrame=dfa.data, sbDate=sbDate, n=n)
+                            sbZGZD = self.getZDZGFromCodeSBDate(data, code, sbDate, n)
                             self.assertTrue(len(sbZGZD) > 0, "计算最大跌幅个数：{}".format(len(sbZGZD)))
                             print(code, sbDate, round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.lowK[0],
                                   sbZGZD.highK[0])
@@ -480,20 +545,20 @@ class testShouBan(TestCase):
                     if len(df) == len(dfb):
                         for col in reversed(dfb.columns):
                             df.insert(2, col, dfb[col])
-                        df.to_csv("{}.ZFZF{}.csv".format(os.path.splitext(f)[0], n), index=False)
+                        df.to_csv("{}.ZDZG{}.csv".format(os.path.splitext(f)[0], n), index=False)
                     else:
                         dfc = df[:len(dfb)]
                         oldColumnsLen = len(dfc.columns)
                         for col in reversed(dfb.columns):
                             dfc.insert(2, col, dfb[col])
-                        dfc.to_csv("{}.ZFZF{}.csv".format(os.path.splitext(f)[0], n), index=False)
+                        dfc.to_csv("{}.ZDZG{}.csv".format(os.path.splitext(f)[0], n), index=False)
                         self.assertTrue(len(dfb.columns) + oldColumnsLen == len(dfc.columns),
                                     "{},插入不成功".format(dfb.columns))
 
     def getCvsFilelist(self, path):
         """获取path目录下csv文件列表
         不包含后缀为'.csv#'的文件
-        """'.csv#'
+        """
         files = []
         # 获取path目录下csv文件列表
         # r=root, d=directories, f = files
@@ -504,6 +569,45 @@ class testShouBan(TestCase):
                         files.append(os.path.join(r, file))
         return files
 
+
+    def testShouZDZGOutput(self):
+        # 获取股票代码列表（最多num个）
+        num = 8000
+        # num = 500
+        isTesting = False  # 是否使用测试数据
+        # codelist = self.getCodeList(count=num)
+        codelist = self.getCodeList(isTesting=isTesting, count=num)
+        print(codelist[:20])
+        # dayslong = ['2016-01-01', '2016-12-31']  # 2016年
+        # dayslong = ['2017-01-01', '2017-12-31']  # 2017年
+        # dayslong = ['2018-01-01', '2018-12-31']  # 2018年
+        # dayslong = ['2019-01-01', '2019-12-31']  # 2019年
+        # dayslong = ['2020-01-01', '2020-01-31']
+        dayslong = ['2019-11-01', '2019-12-31']  # 2019年
+        # 月初 月末
+        firstday = self.str2date(dayslong[0])
+        date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
+        lastday = self.str2date(dayslong[1])
+        # 获取起始时间之前一年的数据，否则可能因停牌过长不能计算起涨点相对60均线涨幅
+        data = qa.QA_fetch_stock_day_adv(codelist, firstday - relativedelta(months=7),
+                                         lastday + relativedelta(months=2)).to_qfq()
+        while date_after_month <= lastday:
+            # 每个月计算单独一次
+            print("计算首板... {}-{}".format(firstday, date_after_month))
+            df = self.getShouBan(codelist, data, startday=firstday, endday=date_after_month)
+            if len(df) == 0:
+                print("no data {}".format(self.date2str(firstday)))
+                date_after_month, firstday = self.endOfMonth(firstday)
+                continue
+            # 按照代码顺序
+            codelist = sorted(df.code.drop_duplicates())
+            startdate, enddate = self.date2str(firstday), self.date2str(date_after_month)
+            print("首板指标...")
+            dataInd = data.select_code(codelist).select_time_with_gap(date_after_month + relativedelta(months=1), 9999,
+                                                                      "<=")
+            sblist = self.getshoubanZDZGInd(codelist, df, dataInd, startdate, enddate)
+            date_after_month, firstday = self.endOfMonth(firstday)
+            self.assertTrue((isTesting or len(sblist) >= 0) or len(sblist) > 0, "首板个数为零")
 
 if __name__ == '__main__':
     unittest.main()
