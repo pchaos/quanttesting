@@ -218,11 +218,11 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
 逻辑：
 1.低点比第二日低，就用低点除以前一日到涨停日的最高点算跌幅，如果跌幅大于-3%，就记为低点
 2.以此低点后的交易日，只要高点比第二天高，就计算涨幅，在限定日期内，取最大值为限定日期的最大涨幅
-在首板后n个交易日（这里先取n=10），每次超过3%的跌幅，算日后的反弹，在n个交易日里面，找到反弹涨幅最大的，然后在找出这个涨幅对应的跌幅
+在首板后n个交易日（这里先取n=10），每次超过5%(可调整)的跌幅，算日后的反弹，在n个交易日里面，找到反弹涨幅最大的，然后在找出这个涨幅对应的跌幅
 
 涨停板第二天，我们是判断日，这天就算跌幅大于5%，也是不能买入了，所以从涨停板第三日也就是T+2开始判断是否较高点跌幅大于5%，然后判断从这个跌幅的最低点反弹，看反弹的涨幅，我们取涨幅最大的那个，对应的跌幅，记录下来
 
-    最大跌幅(TDX公式)
+    最大跌幅(TDX公式) (供参考，此公式有点不准）
     SBJL:BARSLAST(SB),NODRAW;
     SBLV:=IF(1<SBJL AND SBJL<11,L,DRAWNULL);{取距离涨停日后10日每天的低价}
     SBHV:=IF(0<=SBJL AND SBJL<11,HHV(H,SBJL+1),DRAWNULL);{取距离涨停日后10日内当日到涨停日的最高价}
@@ -269,11 +269,15 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
             # 某天最高价/截止前一天最低价
             # tmp[j, 3] = tmp[j, 0] / tmp[j - 1, 1]
             tmp[j, 3] = data.high[j] / tmp[j - 1, 1]
-            # 类似底分型
-            cona = (tmp[j - 1, 1] >= tmp[j, 1]) and (data.low[j] < data.low[j - 1]) and (
-                    data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j])
-            # T+2开始判断是否较高点跌幅大于5%
-            conb =tmp[j, 2] < 1 - percent and j > 1
+            try:
+                # 类似底分型
+                cona = (tmp[j - 1, 1] >= tmp[j, 1]) and (data.low[j] < data.low[j - 1]) and (
+                        data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j])
+                # T+2开始判断是否较高点跌幅大于5%
+                conb =tmp[j, 2] < 1 - percent and j > 1
+            except Exception as e:
+                # 数据不完整时，设置判断条件为False， 不作为低点
+                cona = conb = False
             if ((not dd) and cona and j > 1) or (not dd and conb):
                 # 判断低点
                 dd = True
