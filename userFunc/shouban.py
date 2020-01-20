@@ -243,7 +243,7 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
     ll = 0
     lowk = 0  # 低点所在位置顺序号
     dd = False  # 是否出现低点
-    # 2维numpy array; 相对最高价 相对最低价 相对前高跌幅 相对前低涨幅
+    # 2维numpy array; 相对最高价 相对最低价 相对前高跌幅 相对前低涨幅 原始的最大跌幅
     tmp = np.array([(np.NaN, np.NaN, np.NaN, np.NaN, np.NaN)] * len(data))
     for i in range(len(data)):
         # 取距离涨停日后n日内当日到涨停日的最高价  # 碰到新低，高点重新开始计数
@@ -253,7 +253,7 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
             if dd:
                 # 有低点以后，低点判断要以修改低点后的数据为准
                 minlow = tmp[j - 1, 1]
-                tmp[j, 1] = qa.LLV(data.low[lowk:j + 1], j-lowk)[j - lowk]
+                tmp[j, 1] = qa.LLV(data.low[lowk:j + 1], j - lowk)[j - lowk]
                 tmp[j, 1] = minlow if minlow < tmp[j, 1] else tmp[j, 1]
             else:
                 tmp[j, 1] = qa.LLV(data.low[1:j + 1], j)[j - 1]
@@ -271,10 +271,12 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
             tmp[j, 3] = data.high[j] / tmp[j - 1, 1]
             try:
                 # 类似底分型
-                cona = (tmp[j - 1, 1] >= tmp[j, 1]) and (data.low[j] < data.low[j - 1]) and (
-                        data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j])
+                cona = (tmp[j - 1, 1] >= tmp[j, 1]) and (
+                            data.low[j] < data.low[j - 1] or (data.low[j] == data.low[j - 1]) and data.high[j] <
+                            data.high[j - 1]) and (
+                               data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j])
                 # T+2开始判断是否较高点跌幅大于5%
-                conb =tmp[j, 2] < 1 - percent and j > 1
+                conb = tmp[j, 2] < 1 - percent and j > 1
             except Exception as e:
                 # 数据不完整时，设置判断条件为False， 不作为低点
                 cona = conb = False

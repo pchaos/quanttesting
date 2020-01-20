@@ -425,12 +425,13 @@ class testShouBan(TestCase):
         isTesting = True
         codelist = getCodeList(isTesting=isTesting, count=num)[11:]
         # fn = '/tmp/sb2018-08-01.csv'
-        fn = '/tmp/sb2019-03-01.csv'
+        fn = '/tmp/sb2019-08-01.csv'
         self.assertTrue(os.path.exists(fn), "文件({})不存在，请先确保文件存在！".format(fn))
         df = pd.read_csv(fn, converters={'股票代码': str})
-        codelist = list(df.股票代码[100:100+num][5:]) # 测试20190311 000990
+        # codelist = list(df.股票代码[100:100+num][5:]) # 测试20190311 000990 连板
+        codelist = list(df.股票代码[60:100+num][3:num]) # 测试20190830 002050
         #  计算周期 ['2018-08-01', '2018-08-31']
-        data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2019-10-21').to_qfq()
+        data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2019-12-21').to_qfq()
         for i in df.index:
             item = df.iloc[i]
             code, sbDate = item.股票代码, item.首板日期
