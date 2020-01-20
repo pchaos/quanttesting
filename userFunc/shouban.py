@@ -234,6 +234,10 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
     OR(SBJL=2 AND REFX(H,1)>REFX(H,2)){或涨停后第二日 且明日最高价高于后日最高价}
     OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最num高价}
     DRAWNUMBER(SBDFX=1 AND SBDFLV<0 ,L,SBDF) COLORGREEN;{记录跌幅}
+
+    todo
+     000603,2019-12-04,-0.0645,0.0981,8,10,-0.0036,0.1433,-0.024,0.021,-0.0248,0.0158,1.29,3.77,1.0355,1.0678,21,-0.036,0.0586
+     最大跌幅位置计算有误，8应为3 -0.0645应为 -0.0593 or 0.0981应为0.0922？
     """
     # 首板n天的数据
     data = dataFrame[['high', 'low']].loc[(slice(pd.Timestamp(sbDate), datetime.now())), :][: n + 2]
@@ -254,7 +258,12 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
                 # 有低点以后，低点判断要以修改低点后的数据为准
                 minlow = tmp[j - 1, 1]
                 tmp[j, 1] = qa.LLV(data.low[lowk:j + 1], j - lowk)[j - lowk]
-                tmp[j, 1] = minlow if minlow < tmp[j, 1] else tmp[j, 1]
+                # 历史最低价小于当前最低价 并且 历史跌幅小于当天相对于历史高点的跌幅 则使用前一天最低价，否则使用当天最低价
+                if minlow < tmp[j, 1] and min(tmp[1:j, 2]) < data.low[j] / max(tmp[:j, 0]):
+                    tmp[j, 1] = minlow
+                else:
+                    # 更新最新最大跌幅位置
+                    lowk = j
             else:
                 tmp[j, 1] = qa.LLV(data.low[1:j + 1], j)[j - 1]
             if tmp[j, 1] < tmp[j - 1, 1]:
@@ -272,8 +281,8 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
             try:
                 # 类似底分型
                 cona = (tmp[j - 1, 1] >= tmp[j, 1]) and (
-                            data.low[j] < data.low[j - 1] or (data.low[j] == data.low[j - 1]) and data.high[j] <
-                            data.high[j - 1]) and (
+                        data.low[j] < data.low[j - 1] or (data.low[j] == data.low[j - 1]) and data.high[j] <
+                        data.high[j - 1]) and (
                                data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j])
                 # T+2开始判断是否较高点跌幅大于5%
                 conb = tmp[j, 2] < 1 - percent and j > 1

@@ -22,12 +22,12 @@ class testShouBan(TestCase):
 
     def setUp(self):
         print("starting")
-        qa.QA_util_log_info('首板')
+        qa.QA_util_log_info('首板 {}'.format(datetime.now()))
         # 缓存首板指标，计算一次，选择性使用多次
         self.cache = qacache()
 
     def tearDown(self):
-        print("done")
+        print("done {}".format(datetime.now()))
         self.cache = None
 
     def testshoubanType(self):
@@ -392,7 +392,7 @@ class testShouBan(TestCase):
             a.insert(2, sbZGZD.SBZF[0])
             a.insert(2, sbZGZD.SBDF[0])
             alist.append(a)
-            print(code, ", %.4f" * len(d) % tuple(d))
+            # print(code, ", %.4f" * len(d) % tuple(d))
         dfc = pd.DataFrame(alist,
                            columns=["股票代码", "首板日期", '最大跌幅', '最大涨幅', '最大跌幅位置', '最大涨幅位置',"次日均涨", "位置", "次日开盘", "次日高幅", "次日低幅", "次日涨幅", "次日量比", "次日量比10均",
                                     "开盘价", "均价", "首板类型", "10日最低价/涨停板", "10日最高价/涨停板"])
@@ -576,14 +576,15 @@ class testShouBan(TestCase):
         # num = 500
         isTesting = False  # 是否使用测试数据
         # codelist = self.getCodeList(count=num)
-        codelist = self.getCodeList(isTesting=isTesting, count=num)
+        # codelist = self.getCodeList(isTesting=isTesting, count=num)
+        codelist = self.getCodeList(isTesting=isTesting, count=num)[150:200][27:]
         print(codelist[:20])
         # dayslong = ['2016-01-01', '2016-12-31']  # 2016年
         # dayslong = ['2017-01-01', '2017-12-31']  # 2017年
         # dayslong = ['2018-01-01', '2018-12-31']  # 2018年
         # dayslong = ['2019-01-01', '2019-12-31']  # 2019年
         # dayslong = ['2020-01-01', '2020-01-31']
-        dayslong = ['2019-11-01', '2019-12-31']  # 2019年
+        dayslong = ['2019-12-01', '2019-12-31']  # 2019年
         # 月初 月末
         firstday = self.str2date(dayslong[0])
         date_after_month = firstday + relativedelta(months=1) + relativedelta(days=-1)
@@ -593,7 +594,7 @@ class testShouBan(TestCase):
                                          lastday + relativedelta(months=2)).to_qfq()
         while date_after_month <= lastday:
             # 每个月计算单独一次
-            print("计算首板... {}-{}".format(firstday, date_after_month))
+            print("计算首板... {}-{} ... 开始计算时间：{}".format(firstday, date_after_month, datetime.now()))
             df = self.getShouBan(codelist, data, startday=firstday, endday=date_after_month)
             if len(df) == 0:
                 print("no data {}".format(self.date2str(firstday)))
