@@ -265,7 +265,7 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
             preh = max(tmp[:j, 0])
             # tmp[j, 2] = data.low[j] / tmp[j - 1, 0]
             tmp[j, 2] = data.low[j] / preh
-            # tmp[j, 4] = tmp[j, 2]
+            tmp[j, 4] = tmp[j, 2]  # 原始的最大跌幅
             # 某天最高价/截止前一天最低价
             # tmp[j, 3] = tmp[j, 0] / tmp[j - 1, 1]
             tmp[j, 3] = data.high[j] / tmp[j - 1, 1]
@@ -282,7 +282,7 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
                 # 判断低点
                 dd = True
                 # if (not cona) and tmp[j, 2] < 1 - percent:
-                if conb:
+                if 1 or conb:
                     # 第一次低点，需要重新计算最低最高价
                     for ii in range(1, j + 1):
                         tmp[ii, 1] = data.low[j]
@@ -305,7 +305,7 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
         # 能计算最大跌幅 连板的会找不出最大涨幅 返回 0,0
         l = min(tmp[1:k, 2])
         for i in range(1, len(data)):
-            if l == tmp[i, 2]:
+            if l == tmp[i, 4]:
                 lowk = i
                 break
         h -= 1

@@ -258,7 +258,8 @@ class testShouBan(TestCase):
         # codelist = self.getCodeList(count=num)
         codelist = self.getCodeList(isTesting=isTesting, count=num)
         print(codelist[:20])
-        # codelist = self.getCodeList(isSB=True)
+        # dayslong = ['2016-01-01', '2016-12-31']  # 2016年
+        # dayslong = ['2017-01-01', '2017-12-31']  # 2017年
         # dayslong = ['2018-01-01', '2018-12-31']  # 2018年
         dayslong = ['2019-01-01', '2019-12-31']  # 2019年
         # dayslong = ['2020-01-01', '2020-01-31']
@@ -420,14 +421,16 @@ class testShouBan(TestCase):
 
     def test_ZDZG(self):
         n = 10  # 计算周期
-        num = 20  # 计算股票数量
+        num = 10  # 计算股票数量
         isTesting = True
         codelist = getCodeList(isTesting=isTesting, count=num)[11:]
-        #  计算周期 ['2018-08-01', '2018-08-31']
-        data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
-        fn = '/tmp/sb2018-08-01.csv'
+        # fn = '/tmp/sb2018-08-01.csv'
+        fn = '/tmp/sb2019-03-01.csv'
         self.assertTrue(os.path.exists(fn), "文件({})不存在，请先确保文件存在！".format(fn))
         df = pd.read_csv(fn, converters={'股票代码': str})
+        codelist = list(df.股票代码[100:100+num][5:]) # 测试20190311 000990
+        #  计算周期 ['2018-08-01', '2018-08-31']
+        data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2019-10-21').to_qfq()
         for i in df.index:
             item = df.iloc[i]
             code, sbDate = item.股票代码, item.首板日期
@@ -443,14 +446,7 @@ class testShouBan(TestCase):
         path = '/tmp'
         n = 10  # 计算周期
         num = 5000  # 计算股票数量
-        files = []
-        # 获取path目录下csv文件列表
-        # r=root, d=directories, f = files
-        for r, d, f in os.walk(path):
-            for file in f:
-                if '.csv' in file:
-                    if not file.endswith('.csv#'):
-                        files.append(os.path.join(r, file))
+        files = self.getCvsFilelist(path)
 
         if len(files) > 0:
             # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100，另存为"原文件名.num.csv“
@@ -492,6 +488,20 @@ class testShouBan(TestCase):
                         dfc.to_csv("{}.ZFZF{}.csv".format(os.path.splitext(f)[0], n), index=False)
                         self.assertTrue(len(dfb.columns) + oldColumnsLen == len(dfc.columns),
                                     "{},插入不成功".format(dfb.columns))
+
+    def getCvsFilelist(self, path):
+        """获取path目录下csv文件列表
+        不包含后缀为'.csv#'的文件
+        """'.csv#'
+        files = []
+        # 获取path目录下csv文件列表
+        # r=root, d=directories, f = files
+        for r, d, f in os.walk(path):
+            for file in f:
+                if '.csv' in file:
+                    if not file.endswith('.csv#'):
+                        files.append(os.path.join(r, file))
+        return files
 
 
 if __name__ == '__main__':
