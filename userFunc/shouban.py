@@ -220,6 +220,8 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
 2.以此低点后的交易日，只要高点比第二天高，就计算涨幅，在限定日期内，取最大值为限定日期的最大涨幅
 在首板后n个交易日（这里先取n=10），每次超过3%的跌幅，算日后的反弹，在n个交易日里面，找到反弹涨幅最大的，然后在找出这个涨幅对应的跌幅
 
+涨停板第二天，我们是判断日，这天就算跌幅大于5%，也是不能买入了，所以从涨停板第三日也就是T+2开始判断是否较高点跌幅大于5%，然后判断从这个跌幅的最低点反弹，看反弹的涨幅，我们取涨幅最大的那个，对应的跌幅，记录下来
+
     最大跌幅(TDX公式)
     SBJL:BARSLAST(SB),NODRAW;
     SBLV:=IF(1<SBJL AND SBJL<11,L,DRAWNULL);{取距离涨停日后10日每天的低价}
@@ -241,15 +243,20 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
     ll = 0
     lowk = 0  # 低点所在位置顺序号
     dd = False  # 是否出现低点
-    # 2维numpy array
+    # 2维numpy array; 相对最高价 相对最低价 相对前高跌幅 相对前低涨幅
     tmp = np.array([(np.NaN, np.NaN, np.NaN, np.NaN, np.NaN)] * len(data))
     for i in range(len(data)):
         # 取距离涨停日后n日内当日到涨停日的最高价  # 碰到新低，高点重新开始计数
         tmp[j, 0] = qa.HHV(data.high[ll:j + 1], j - ll + 1)[j - ll]
         if j > 0:
             #
-            tmp[j, 1] = qa.LLV(data.low[1:j + 1], j)[j - 1]
-            tmp[j, 4] = tmp[j, 1]
+            if dd:
+                # 有低点以后，低点判断要以修改低点后的数据为准
+                minlow = tmp[j - 1, 1]
+                tmp[j, 1] = qa.LLV(data.low[lowk:j + 1], j-lowk)[j - lowk]
+                tmp[j, 1] = minlow if minlow < tmp[j, 1] else tmp[j, 1]
+            else:
+                tmp[j, 1] = qa.LLV(data.low[1:j + 1], j)[j - 1]
             if tmp[j, 1] < tmp[j - 1, 1]:
                 # 创新低
                 ll = j
@@ -258,15 +265,20 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
             preh = max(tmp[:j, 0])
             # tmp[j, 2] = data.low[j] / tmp[j - 1, 0]
             tmp[j, 2] = data.low[j] / preh
+            # tmp[j, 4] = tmp[j, 2]
             # 某天最高价/截止前一天最低价
             # tmp[j, 3] = tmp[j, 0] / tmp[j - 1, 1]
             tmp[j, 3] = data.high[j] / tmp[j - 1, 1]
+            # 类似底分型
             cona = (tmp[j - 1, 1] >= tmp[j, 1]) and (data.low[j] < data.low[j - 1]) and (
                     data.low[j + 1] > data.low[j] or data.high[j + 1] >= data.high[j])
-            if ((not dd) and cona and j > 1) or (not dd and tmp[j, 2] < 1 - percent and j > 2):
+            # T+2开始判断是否较高点跌幅大于5%
+            conb =tmp[j, 2] < 1 - percent and j > 1
+            if ((not dd) and cona and j > 1) or (not dd and conb):
                 # 判断低点
                 dd = True
-                if (not cona) and tmp[j, 2] < 1 - percent:
+                # if (not cona) and tmp[j, 2] < 1 - percent:
+                if conb:
                     # 第一次低点，需要重新计算最低最高价
                     for ii in range(1, j + 1):
                         tmp[ii, 1] = data.low[j]
@@ -274,6 +286,7 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
                         # tmp[j, 2] = data.low[j] / tmp[j - 1, 0]
                         tmp[ii, 2] = data.low[ii] / preh
                         tmp[ii, 3] = 1
+                lowk = j
 
         if j > 2 and dd and (j - ll + 1) < n:
             if tmp[j, 3] > h:

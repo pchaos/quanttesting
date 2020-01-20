@@ -420,9 +420,9 @@ class testShouBan(TestCase):
 
     def test_ZDZG(self):
         n = 10  # 计算周期
-        num = 80  # 计算股票数量
+        num = 20  # 计算股票数量
         isTesting = True
-        codelist = getCodeList(isTesting=isTesting, count=num)[:]
+        codelist = getCodeList(isTesting=isTesting, count=num)[11:]
         #  计算周期 ['2018-08-01', '2018-08-31']
         data = qa.QA_fetch_stock_day_adv(codelist, '2017-08-01', '2018-10-21').to_qfq()
         fn = '/tmp/sb2018-08-01.csv'
@@ -456,6 +456,7 @@ class testShouBan(TestCase):
             # "次日均涨", "位置", "次日高幅", "次日低幅", "次日涨幅"除以100，另存为"原文件名.num.csv“
             for f in files:
                 if len(os.path.basename(f)) == 16:
+                    print('计算文件{}'.format(f))
                     # 类似“sb2018-08-01.csv”，这样的文件名
                     df = pd.read_csv(f, converters={'股票代码': str})
                     isTesting = True
@@ -478,7 +479,7 @@ class testShouBan(TestCase):
                                   sbZGZD.highK[0])
                             result.append(
                                 [round(sbZGZD.SBDF[0], 4), round(sbZGZD.SBZF[0], 4), sbZGZD.lowK[0], sbZGZD.highK[0]])
-                    dfb = pd.DataFrame(result, columns=['最大跌幅', '最大丈夫是', '最大跌幅位置', '最大涨幅位置'])
+                    dfb = pd.DataFrame(result, columns=['最大跌幅', '最大涨幅', '最大跌幅位置', '最大涨幅位置'])
                     if len(df) == len(dfb):
                         for col in reversed(dfb.columns):
                             df.insert(2, col, dfb[col])
@@ -488,6 +489,7 @@ class testShouBan(TestCase):
                         oldColumnsLen = len(dfc.columns)
                         for col in reversed(dfb.columns):
                             dfc.insert(2, col, dfb[col])
+                        dfc.to_csv("{}.ZFZF{}.csv".format(os.path.splitext(f)[0], n), index=False)
                         self.assertTrue(len(dfb.columns) + oldColumnsLen == len(dfc.columns),
                                     "{},插入不成功".format(dfb.columns))
 
