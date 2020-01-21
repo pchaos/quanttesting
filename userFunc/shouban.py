@@ -36,6 +36,8 @@ def shoubanData(dataFrame):
     位置：涨停日收盘价相对60日最低收盘价涨幅（c涨停/C60日最低-1）*100%
     次日量比10均：v/ma（v，10） ; v10日均算的是涨停日
 
+    todo
+    连续涨停板 次日的收盘价好像不对
     """
     close = dataFrame['close']
     op = dataFrame['open']  # 开盘价
@@ -235,9 +237,10 @@ def shoubanZDZG(dataFrame, sbDate, n=10, percent=0.05):
     OR (SBJL=2 AND L<REFX(L,1)),NODRAW;{或涨停后第二日 且明日最高价高于后日最num高价}
     DRAWNUMBER(SBDFX=1 AND SBDFLV<0 ,L,SBDF) COLORGREEN;{记录跌幅}
 
-    todo
+    done：
      000603,2019-12-04,-0.0645,0.0981,8,10,-0.0036,0.1433,-0.024,0.021,-0.0248,0.0158,1.29,3.77,1.0355,1.0678,21,-0.036,0.0586
      最大跌幅位置计算有误，8应为3 -0.0645应为 -0.0593 or 0.0981应为0.0922？
+     已验证：0.0981应为0.0922
     """
     # 首板n天的数据
     data = dataFrame[['high', 'low']].loc[(slice(pd.Timestamp(sbDate), datetime.now())), :][: n + 2]
