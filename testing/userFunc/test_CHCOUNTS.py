@@ -79,8 +79,9 @@ class TestCHCOUNTS(TestCase):
         code = '000001'
         df = qa.QA_fetch_stock_day_adv(code)
         print(df.data.columns, type(df.data))
-        chCounts = df.to_qfq().add_func(CHCOUNTS)
-        chCounts2 = df.to_qfq().add_func(CHCOUNTS2)
+        data = df.to_qfq()
+        chCounts = data.add_func(CHCOUNTS)
+        chCounts2 = data.add_func(CHCOUNTS2)
         self.assertTrue(len(chCounts2) > 0, '指标为零')
         self.assertTrue(chCounts.equals(chCounts2), '两种方式返回结果不相等')
 
@@ -90,7 +91,7 @@ class TestCHCOUNTS(TestCase):
         code = '000001'
         data = qa.QA_fetch_stock_day_adv(code).to_qfq()
         chCounts, chCounts2 = self.__checkIndicator(data)
-        diffs=self.diffOneByOne(chCounts, chCounts2)
+        diffs = self.diffOneByOne(chCounts, chCounts2)
         self.assertTrue(chCounts.equals(chCounts2), '两种方式返回结果不相等 {}'.format(diffs))
 
     def __checkIndicator(self, df):
@@ -206,7 +207,7 @@ class TestCHCOUNTS(TestCase):
                          chcounts.chCounts.loc[d].mean() +
                          chcountsstd.loc[d]]
             self.assertTrue(len(df) > 3 * len(stdHigh),
-                            '当天各指数个数/len(当天各指数缠中说禅均质平均值+STD)>3')
+                            '当天各指数个数/len(当天各指数缠中说禅均质平均值+STD) > 3')
 
     def test_readstkData(self):
         # https://zhuanlan.zhihu.com/p/29519040
@@ -243,6 +244,10 @@ class TestCHCOUNTS(TestCase):
         daysreshape['dates'] = np.arange(0, len(daysreshape))
 
         date_tickers = daysreshape.DateTime
+
+        # 汉字
+        plt.rcParams['font.family'] = ['sans-serif']
+        plt.rcParams['font.sans-serif'] = ['SimHei']
 
         Av1 = qa.MA(daysreshape.close, MA1)
         Av2 = qa.MA(daysreshape.close, MA2)
@@ -318,16 +323,29 @@ class TestCHCOUNTS(TestCase):
     def test_FOURWEEK(self):
         code = '000001'
         days = 600
+        m, n = 20, 10
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(10)
         data = qa.QA_fetch_index_day_adv(code, start, end)
         # print(data.data.columns, type(data.data))
-        dfind = data.add_func(FOURWEEK)
+        dfind = data.add_func(FOURWEEK, m, n)
         self.assertTrue(len(dfind) > 0, '指标个数为零')
         if days > 300:
-            self.assertTrue(len(dfind) > len(dfind[dfind['flag'] ==1]) > 0, '指标个数为零')
+            # 出现标志的个数大于零
+            self.assertTrue(len(dfind) > len(dfind[dfind['flag'] == 1]) > 0, '指标个数为零')
+            self.assertTrue(len(dfind) == len(dfind[dfind['flag'] == 1]) + len(dfind[dfind['flag'] == -1]) + len(
+                dfind[dfind['flag'] == 0]), '指标个数不匹配')
         print(dfind.iloc[-1])
 
+    def test_FOURWEEK_plot(self):
+        code = '000300'
+        days = 600
+        m, n = 20, 10
+        start = datetime.datetime.now() - datetime.timedelta(days)
+        end = datetime.datetime.now() - datetime.timedelta(10)
+        # 获取指数数据
+        data = qa.QA_fetch_index_day_adv(code, start, end)
+        pltFourWeek(code, data, m, n)
 
 if __name__ == '__main__':
     unittest.main()
