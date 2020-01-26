@@ -15,7 +15,7 @@ __author__ = 'pchaos'
 from .myFunction import getCodeList
 from .chCounts import CHCOUNTS, CHCOUNTS2
 from .chCounts import CHCOUNTS3
-from .chCounts import FOURWEEK
+from .chCounts import FOURWEEK, pltFourWeek
 from .shouban import shouban
 from .shouban import shoubanData
 from .shouban import shoubanType
