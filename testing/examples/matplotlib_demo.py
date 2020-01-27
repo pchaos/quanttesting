@@ -34,6 +34,7 @@ mpl.rcParams['axes.unicode_minus'] = False
 import tushare as ts
 import QUANTAXIS as qa
 
+date_tickers = None
 
 # 代码和数据获取
 def get_data(code, start='20190101', end='20190712'):
@@ -50,7 +51,7 @@ def format_date(x, pos):
     return date_tickers[int(x)]
 
 
-def showall(df):
+def showall(df, nrows=3):
     # 提取原始日期格式
     df['dates'] = np.arange(0, len(df))
     df = df.reset_index()
@@ -59,10 +60,12 @@ def showall(df):
     global date_tickers
     date_tickers = (df.date2).apply(lambda x: x.strftime('%Y%m%d')).values
     # 画子图
-    figure = plt.figure(figsize=(12, 9))
-    gs = GridSpec(3, 1)
+    figure = plt.figure(figsize=(16, 9))
+    gs = GridSpec(nrows, 1)
+    gs.update(wspace=0.05, hspace=0.05)
     ax1 = plt.subplot(gs[:2, :])
     ax2 = plt.subplot(gs[2, :])
+    ax3 = plt.subplot(gs[nrows-1, :])
     # 画K线图
     mpf.candlestick_ochl(
         ax=ax1,
@@ -81,26 +84,31 @@ def showall(df):
     ax1.set_ylabel('指数')
     # 画成交量
     ax2.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+    # 收阳线;收盘价大于等于开盘价=1
     df['up'] = df.apply(lambda row: 1 if row['close'] >= row['open'] else 0, axis=1)
     ax2.bar(df.query('up == 1')['dates'], df.query('up == 1')['vol'], color='r', alpha=0.7)
     ax2.bar(df.query('up == 0')['dates'], df.query('up == 0')['vol'], color='g', alpha=0.7)
     ax2.set_ylabel('成交量')
+    ax2.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+    plt.show()
+    time.sleep(2)
+
+
+def showDefault(df):
+    df[['open', 'close', 'high', 'low']].plot(figsize=(12, 5))
+    plt.title('沪深300指数', size=15)
     plt.show()
     time.sleep(2)
 
 
 if __name__ == '__main__':
-    date_tickers = None
+    # date_tickers = None
     start, end = '2019-01-01', '2019-07-12'
     code = '000300'
     data = qa.QA_fetch_index_day_adv(code, start=start, end=end)
     df = data.data.reset_index().set_index(['date'])
     df = df.sort_index()[['open', 'close', 'high', 'low', 'vol']]
     print(df.head())
-    # sns.set()
-    df[['open', 'close', 'high', 'low']].plot(figsize=(12, 5))
-    plt.title('沪深300指数', size=15)
-    plt.show()
-    time.sleep(2)
+    # showDefault(df)
 
-    showall(df)
+    showall(df, 4)
