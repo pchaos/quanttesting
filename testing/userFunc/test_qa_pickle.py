@@ -31,7 +31,6 @@ class testQAPickle(unittest.TestCase):
 
         # 获取指数数据
         data = qa.QA_fetch_index_day_adv(code, start, end)
-        df = data.add_func(cal_ret)
         fileName = '/tmp/data.pickle'
         full_pickle(fileName, data.data)
         data2 = loosen_pickle(fileName)
