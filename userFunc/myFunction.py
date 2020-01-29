@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import bz2
+import pickle
+import _pickle as cPickle
 import QUANTAXIS as qa
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
@@ -19,3 +22,33 @@ def getCodeList(isTesting=True, count=5000):
     else:
         codelist = qa.QA_fetch_stock_list_adv().code.tolist()
     return codelist[:count]
+
+
+def full_pickle(title, data):
+    """Saves the "data" with the "title" and adds the .pickle
+    """
+    pikd = open(title, 'wb')
+    pickle.dump(data, pikd)
+    pikd.close()
+
+def loosen_pickle(file):
+    """loads and returns a pickled objects
+    """
+    pikd = open(file, 'rb')
+    data = pickle.load(pikd)
+    pikd.close()
+    return data
+
+
+def compressed_pickle(title, data):
+    """Pickle a file and then compress it into a file with extension
+    """
+    with bz2.BZ2File(title + '.pbz2', 'w') as f:
+        cPickle.dump(data, f)
+
+def decompress_pickle(file):
+    """Load any compressed pickle file
+    """
+    data = bz2.BZ2File(file, 'rb')
+    data = cPickle.load(data)
+    return data
