@@ -62,7 +62,7 @@ class testRPS(unittest.TestCase):
         data = qa.QA_DataStruct_Index_day(self.data2)
         df = data.add_func(cal_ret, *rpsday)
         matching = [s for s in df.columns if "MARKUP" in s]
-        self.assertTrue(len(matching == len(rpsday)), '计算周期不在返回的字段中')
+        self.assertTrue(len(matching) == len(rpsday), '计算周期不在返回的字段中')
         print(df.head())
 
 
