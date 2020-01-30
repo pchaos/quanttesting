@@ -18,6 +18,12 @@ def cal_ret(dataFrame, *args, **kwargs):
     if len(args) == 0:
         args = tuple([20])
     close = dataFrame.close
+    colName ='MARKUP'
+    cols =[]
     for num in args:
-        dataFrame['MARKUP{}'.format(num)] = close / close.shift(num)
-    return dataFrame.iloc[-max(args):, :].fillna(0)
+        coln = '{}{}'.format(colName, num)
+        dataFrame[coln] = close / close.shift(num)
+        cols.append(coln)
+    # return dataFrame.iloc[-max(args):, :].fillna(0)
+    return dataFrame[cols].iloc[-max(args):, :]
+

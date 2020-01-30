@@ -5,6 +5,7 @@ import _pickle as cPickle
 import QUANTAXIS as qa
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
+
 def getCodeList(isTesting=True, count=5000):
     """
     isTesting: 是否使用测试数据
@@ -31,6 +32,7 @@ def full_pickle(title, data):
     pickle.dump(data, pikd)
     pikd.close()
 
+
 def loosen_pickle(file):
     """loads and returns a pickled objects
     """
@@ -46,9 +48,22 @@ def compressed_pickle(title, data):
     with bz2.BZ2File(title + '.pbz2', 'w') as f:
         cPickle.dump(data, f)
 
+
 def decompress_pickle(file):
     """Load any compressed pickle file
     """
     data = bz2.BZ2File(file, 'rb')
     data = cPickle.load(data)
     return data
+
+
+def somefunc(cls):
+    instances = {}
+
+    def _wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+
+        return instances[cls]
+
+    return _wrapper
