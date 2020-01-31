@@ -23,5 +23,6 @@ from .shouban import shoubanData
 from .shouban import shoubanType
 from .shouban import shoubanZDZG
 from .rps import cal_ret
+from .rps import get_RPS
 
 from .comm import ifupMA

@@ -2,6 +2,7 @@
 import bz2
 import pickle
 import _pickle as cPickle
+import os
 import QUANTAXIS as qa
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
@@ -52,6 +53,8 @@ def compressed_pickle(title, data):
 def decompress_pickle(file):
     """Load any compressed pickle file
     """
+    if not os.path.exists(file):
+        file = file +'.pbz2'
     data = bz2.BZ2File(file, 'rb')
     data = cPickle.load(data)
     return data
