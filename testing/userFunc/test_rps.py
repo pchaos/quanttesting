@@ -11,7 +11,7 @@
 import unittest
 import datetime
 import QUANTAXIS as qa
-from userFunc import cal_ret
+from userFunc import cal_ret, get_RPS
 from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_pickle
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
@@ -25,20 +25,21 @@ class testRPS(unittest.TestCase):
             self.code = list(qa.QA_fetch_index_list_adv()['code'][:])
             compressed_pickle(fileName, self.code)
 
-        # days = 365 * 2
-        days = 365 * 10
+        days = 365 * 1.2
+        # days = 365 * 10
         self.start = datetime.datetime.now() - datetime.timedelta(days)
         self.end = datetime.datetime.now() - datetime.timedelta(10)
         try:
             # 获取指数数据
             fileName = '/tmp/data{}.pickle'.format(days)
-            self.data2 = loosen_pickle(fileName)
+            # self.data2 = loosen_pickle(fileName)
+            self.data2 = decompress_pickle(fileName)
         except Exception as e:
             data = qa.QA_fetch_index_day_adv(self.code, self.start, self.end)
             df = data.add_func(cal_ret)
-            full_pickle(fileName, data.data)
-            self.data2 = loosen_pickle(fileName)
-            data2 = loosen_pickle(fileName)
+            compressed_pickle(fileName, data.data)
+            self.data2 = decompress_pickle(fileName)
+            data2 = self.data2
 
     def tearDown(self) -> None:
         pass
@@ -54,16 +55,26 @@ class testRPS(unittest.TestCase):
         df = data.add_func(cal_ret)
         self.assertTrue(df.equals(df2))
         print(df.head(), "\n", df2.head())
+        # 截断数据的数量
+        cutted = (len(qadata.data) - len(df)) / len(qadata.code)
+        self.assertTrue(19 <= cutted <= 20, "截断数据数量不是默认值（20）：{}".format(cutted))
 
     def test_cal_ret_withargs(self):
         # code = '000300'
         code = self.code
+        print('code counts: {}'.format(len(code)))
         rpsday = [20, 50]
         data = qa.QA_DataStruct_Index_day(self.data2)
         df = data.add_func(cal_ret, *rpsday)
         matching = [s for s in df.columns if "MARKUP" in s]
         self.assertTrue(len(matching) == len(rpsday), '计算周期不在返回的字段中')
         print(df.head())
+        # 计算RPS
+        dfg = df.groupby(level=0).apply(get_RPS, *rpsday)
+        print(dfg.head(10))
+        print(dfg.tail(10))
+        print(dfg[dfg['RPS20'] > 90][dfg['RPS50'] > 90][dfg['RPS50'] > 95].tail(10))
+        # 保存计算的RPS
 
 
 if __name__ == '__main__':

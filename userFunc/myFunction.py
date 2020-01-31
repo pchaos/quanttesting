@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 import bz2
 import pickle
-import _pickle as cPickle
+try:
+    # 在python3.x上已从cPickle更改cPickle为_pickle
+    import _pickle as cPickle
+except ImportError:
+    import cpickle as cPickle
 import os
 import QUANTAXIS as qa
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
