@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import datetime
 import QUANTAXIS as qa
 
 
@@ -13,3 +14,10 @@ def ifupMA(data, n=[20]):
     elif isinstance(n, list):
         dict = {'MA{}'.format(i): data.close - qa.MA(data.close, i) for i in n}
         return pd.DataFrame(dict).dropna() > 0
+
+
+def str2date(dayStr, format='%Y-%m-%d'):
+    if isinstance(dayStr, str):
+        return datetime.strptime(dayStr, format)
+    else:
+        return dayStr

@@ -27,3 +27,4 @@ from .rps import cal_ret
 from .rps import get_RPS
 
 from .comm import ifupMA
+from .comm import str2date

@@ -10,9 +10,11 @@
 """
 import unittest
 import datetime
+import pandas as pd
 import QUANTAXIS as qa
 from userFunc import cal_ret, get_RPS
 from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_pickle
+from userFunc import str2date
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
 
@@ -62,8 +64,15 @@ class testRPS(unittest.TestCase):
     def test_cal_ret_withargs(self):
         # code = '000300'
         code = self.code
-        print('code counts: {}'.format(len(code)))
         rpsday = [20, 50]
+        print('code counts: {}'.format(len(code)))
+        dfrps = self.getRPS(rpsday)
+        print(dfrps.head(10))
+        print(dfrps.tail(10))
+        print(dfrps[dfrps['RPS20'] > 90][dfrps['RPS50'] > 90][dfrps['RPS50'] > 95].tail(10))
+        # 保存计算的RPS
+
+    def getRPS(self, rpsday):
         data = qa.QA_DataStruct_Index_day(self.data2)
         df = data.add_func(cal_ret, *rpsday)
         matching = [s for s in df.columns if "MARKUP" in s]
@@ -71,10 +80,31 @@ class testRPS(unittest.TestCase):
         print(df.head())
         # 计算RPS
         dfg = df.groupby(level=0).apply(get_RPS, *rpsday)
-        print(dfg.head(10))
-        print(dfg.tail(10))
-        print(dfg[dfg['RPS20'] > 90][dfg['RPS50'] > 90][dfg['RPS50'] > 95].tail(10))
-        # 保存计算的RPS
+        return dfg
+
+    def test_rps_name(self):
+        # 显示rps排名前10%的中文名称
+        code = self.code
+        rpsday = [20, 50]
+        dfrps = self.getRPS(rpsday)
+        theday = datetime.date.today()
+        while 1:
+            # 定位最近的rps数据
+            try:
+                df = dfrps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(theday))), :]
+                if len(df) > 0:
+                    # 排名前10%的指数
+                    dftop10 = df.reset_index().head(int(len(df) / 10))
+                    print(dftop10)
+                    code = list(dftop10['code'])
+                    break
+                theday = theday - datetime.timedelta(1)
+            except Exception as e:
+                pass
+        indexList = qa.QA_fetch_index_list_adv()
+        print(indexList.columns)
+        for c in code:
+            print(c, indexList.loc[c]['name'])
 
 
 if __name__ == '__main__':
