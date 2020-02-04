@@ -30,18 +30,21 @@ class testRPS(unittest.TestCase):
         days = 365 * 1.2
         # days = 365 * 10
         self.start = datetime.datetime.now() - datetime.timedelta(days)
-        self.end = datetime.datetime.now() - datetime.timedelta(10)
+        self.end = datetime.datetime.now() - datetime.timedelta(0)
+        fileName = '/tmp/data{}.pickle'.format(days)
+        self.data2 = self.getIndexCalret(fileName, self.code, self.start, self.end)
+
+    def getIndexCalret(self, readFromfile, code, startDate, endDate):
         try:
             # 获取指数数据
-            fileName = '/tmp/data{}.pickle'.format(days)
-            # self.data2 = loosen_pickle(fileName)
-            self.data2 = decompress_pickle(fileName)
+            dataCalret = decompress_pickle(readFromfile)
         except Exception as e:
-            data = qa.QA_fetch_index_day_adv(self.code, self.start, self.end)
+            data = qa.QA_fetch_index_day_adv(code, startDate, endDate)
             df = data.add_func(cal_ret)
-            compressed_pickle(fileName, data.data)
-            self.data2 = decompress_pickle(fileName)
-            data2 = self.data2
+            compressed_pickle(readFromfile, data.data)
+            dataCalret = decompress_pickle(readFromfile)
+            data2 = dataCalret
+        return dataCalret
 
     def tearDown(self) -> None:
         pass
