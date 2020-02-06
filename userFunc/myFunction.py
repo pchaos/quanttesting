@@ -7,9 +7,21 @@ try:
 except ImportError:
     import cpickle as cPickle
 import os
+import numpy as np
 import QUANTAXIS as qa
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
+def setdiff_sorted(array1,array2,assume_unique=False):
+    """find elements in one list that are not in the other
+    list_1 = ["a", "b", "c", "d", "e"]
+    list_2 = ["a", "f", "c", "m"]
+    main_list = setdiff_sorted(list_2,list_1)
+    main_list = setdiff_sorted(list_2,list_1, assume_unique=True)
+    """
+    ans = np.setdiff1d(array1,array2,assume_unique).tolist()
+    if assume_unique:
+        return sorted(ans)
+    return ans
 
 def getCodeList(isTesting=True, count=5000):
     """
@@ -54,6 +66,8 @@ def read_zxg(filename='zxg.txt', length=6):
     for a in alist:
         resultList.append(a.strip()[0:length])
     return resultList
+
+# def read_zxg_not_in_file(filename='zxg.txt', length=6):
 
 def full_pickle(title, data):
     """Saves the "data" with the "title" and adds the .pickle

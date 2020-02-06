@@ -15,6 +15,8 @@ import QUANTAXIS as qa
 from userFunc import cal_ret, get_RPS
 from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_pickle
 from userFunc import str2date
+from userFunc import read_zxg
+from userFunc import setdiff_sorted
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
 
@@ -69,14 +71,15 @@ class testRPS(unittest.TestCase):
         code = self.code
         rpsday = [20, 50]
         print('code counts: {}'.format(len(code)))
-        dfrps = self.getRPS(rpsday)
+        dfrps = self._getRPS(rpsday, self.data2)
         print(dfrps.head(10))
         print(dfrps.tail(10))
         print(dfrps[dfrps['RPS20'] > 90][dfrps['RPS50'] > 90][dfrps['RPS50'] > 95].tail(10))
         # 保存计算的RPS
 
-    def getRPS(self, rpsday):
-        data = qa.QA_DataStruct_Index_day(self.data2)
+    def _getRPS(self, rpsday, dataFrame):
+        # data = qa.QA_DataStruct_Index_day(self.data2)
+        data = qa.QA_DataStruct_Index_day(dataFrame)
         df = data.add_func(cal_ret, *rpsday)
         matching = [s for s in df.columns if "MARKUP" in s]
         self.assertTrue(len(matching) == len(rpsday), '计算周期不在返回的字段中')
@@ -89,24 +92,52 @@ class testRPS(unittest.TestCase):
         # 显示rps排名前10%的中文名称
         code = self.code
         rpsday = [20, 50]
-        dfrps = self.getRPS(rpsday)
+        dfrps = self._getRPS(rpsday, self.data2)
         theday = datetime.date.today()
-        while 1:
-            # 定位最近的rps数据
-            try:
-                df = dfrps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(theday))), :]
-                if len(df) > 0:
-                    # 排名前10%的指数
-                    dftop10 = df.reset_index().head(int(len(df) / 10))
-                    print(dftop10)
-                    code = list(dftop10['code'])
-                    break
-                theday = theday - datetime.timedelta(1)
-            except Exception as e:
-                pass
+        dftop10 = self._getRPSTopN(code, dfrps, theday)
+        code = list(dftop10['code'])
         indexList = qa.QA_fetch_index_list_adv()
         print(indexList.columns)
         for c in code:
+            print(c, indexList.loc[c]['name'])
+
+    def _getRPSTopN(self, code, dfrps, theday, N=10):
+        """"""
+        while 1:
+            # 定位最近的rps数据
+            dfn =[]
+            try:
+                df = dfrps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(theday))), :]
+                if len(df) > 0:
+                    # 排名前N%的指数
+                    for col in df.columns:
+                        dfn.append(df.sort_values(by=col, ascending=False).reset_index().head(int(len(df) / (100 / N))))
+                    dftopn = pd.concat(dfn, ignore_index=True).drop_duplicates()
+
+                    # print(dftopn)
+                    break
+                theday = theday - datetime.timedelta(1)
+            except Exception as e:
+                theday = theday - datetime.timedelta(1)
+        return dftopn
+
+    def test_rps_name_exclude(self):
+        # 显示rps排名前10%的中文名称(去除某些品种)
+        code = self.code
+        codeexclude = read_zxg('zxgExclude.txt')
+        # 排除某些股票
+        code = setdiff_sorted(code, codeexclude)
+        rpsday = [20, 50]
+        data = self.data2
+        data = data.loc[(slice(None), code), :]
+        dfrps = self._getRPS(rpsday, data)
+        theday = datetime.date.today()
+        # rps排名前5%
+        dftopn = self._getRPSTopN(code, dfrps, theday, N =5)
+        code = list(dftopn['code'])
+        indexList = qa.QA_fetch_index_list_adv()
+        for c in code:
+            # 打印股票代码及中文名
             print(c, indexList.loc[c]['name'])
 
 
