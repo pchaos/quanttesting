@@ -21,8 +21,9 @@ import pylab
 
 def CHCOUNTS(data):
     """ 均线强弱
+
     :param data:
-    :return:
+    :return: pandas DataFrame
     """
     nlist = [5, 13, 21, 34, 55, 89, 144, 233]
     counts = pd.DataFrame([0] * len(data), columns=['counts'])
@@ -38,6 +39,7 @@ def CHCOUNTS(data):
 def CHCOUNTS2(data):
     """ 均线强弱
     （和CHCOUNTS返回结果相同）
+
     :param data:
     :return:
     """
@@ -54,8 +56,8 @@ def CHCOUNTS2(data):
 
 def CHCOUNTS3(data):
     """ 均线强弱
-
     （和CHCOUNTS返回结果相同）
+
     :param data:
     :return:
     """
