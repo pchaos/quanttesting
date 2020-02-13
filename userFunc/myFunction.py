@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import bz2
 import pickle
+
 try:
     # 在python3.x上已从cPickle更改cPickle为_pickle
     import _pickle as cPickle
@@ -8,20 +9,23 @@ except ImportError:
     import cpickle as cPickle
 import os
 import numpy as np
+import pandas as pd
 import QUANTAXIS as qa
 from QUANTAXIS.QAUtil.QACache import QA_util_cache as qacache
 
-def setdiff_sorted(array1,array2,assume_unique=False):
+
+def setdiff_sorted(array1, array2, assume_unique=False):
     """find elements in one list that are not in the other
     list_1 = ["a", "b", "c", "d", "e"]
     list_2 = ["a", "f", "c", "m"]
     main_list = setdiff_sorted(list_2,list_1)
     main_list = setdiff_sorted(list_2,list_1, assume_unique=True)
     """
-    ans = np.setdiff1d(array1,array2,assume_unique).tolist()
+    ans = np.setdiff1d(array1, array2, assume_unique).tolist()
     if assume_unique:
         return sorted(ans)
     return ans
+
 
 def getCodeList(isTesting=True, count=5000):
     """
@@ -41,11 +45,36 @@ def getCodeList(isTesting=True, count=5000):
         codelist = qa.QA_fetch_stock_list_adv().code.tolist()
     return codelist[:count]
 
+
 def read_zxg(filename='zxg.txt', length=6):
     """从文件filename读取自选股列表
     返回每行前length(默认：6）个字符（自动去除行首、行尾空格）;
 
     :param filename: 自选股文件名（默认：zxg.txt)
+    """
+    filename = getRealFilename(filename)
+    resultList = alist = []
+    if os.path.isfile(filename):
+        with open(filename, 'r', encoding='UTF-8') as zxg:
+            alist = zxg.readlines()
+    for a in alist:
+        resultList.append(a.strip()[0:length])
+    return resultList
+
+
+def xls2zxg(xlsfile, zxgFile):
+    """xls转换成文本
+    """
+    xlsfile = getRealFilename(xlsfile)
+    try:
+        df = pd.read_excel(xlsfile)
+    except Exception as e:
+        df = pd.read_csv(xlsfile, sep="\t", encoding ="gbk", dtype={'证券代码': str})
+    df.to_csv(zxgFile, index=False, sep=" ")
+
+
+def getRealFilename(filename):
+    """返回第一个filename存在的文件名
     """
     try:
         # 当前目录
@@ -59,13 +88,8 @@ def read_zxg(filename='zxg.txt', length=6):
         else:
             # 如果文件名（fname）没有目录，则加上当前目录
             filename = os.path.join(dir_path, filename)
-    resultList= alist = []
-    if os.path.isfile(filename):
-        with open(filename, 'r', encoding='UTF-8') as zxg:
-            alist = zxg.readlines()
-    for a in alist:
-        resultList.append(a.strip()[0:length])
-    return resultList
+    return filename
+
 
 # def read_zxg_not_in_file(filename='zxg.txt', length=6):
 
@@ -99,7 +123,7 @@ def decompress_pickle(file):
     :param file: 文件名
     """
     if not os.path.exists(file):
-        file = file +'.pbz2'
+        file = file + '.pbz2'
     data = bz2.BZ2File(file, 'rb')
     data = cPickle.load(data)
     return data
