@@ -69,8 +69,8 @@ def xls2zxg(xlsfile, zxgFile):
     try:
         df = pd.read_excel(xlsfile)
     except Exception as e:
-        df = pd.read_csv(xlsfile, sep="\t", encoding ="gbk", dtype={'证券代码': str})
-    df.to_csv(zxgFile, index=False, sep=" ")
+        df = pd.read_csv(xlsfile, sep="\t", encoding="gbk", dtype={'证券代码': str})
+    df.to_csv(zxgFile, index=False, sep=" ", header=None)
 
 
 def getRealFilename(filename):

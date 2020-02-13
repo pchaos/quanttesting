@@ -42,15 +42,16 @@ class testReadZXG(unittest.TestCase):
             print(c, data.loc[c]['name'])
 
     def test_xls2zxg(self):
-        xlsfile ="担保品20200210.xls"
-        zxgfile= "/tmp/{}.txt".format(xlsfile)
+        xlsfile = "担保品20200210.xls"
+        zxgfile = "/tmp/{}.txt".format(xlsfile)
         xls2zxg(xlsfile, zxgfile)
-        codes=read_zxg(zxgfile, length=6)
-        self.assertTrue(len(codes)> 10, "读取数量太少：{}".format(codes))
+        codes = read_zxg(zxgfile, length=15)
+        self.assertTrue(len(codes) > 10, "读取数量太少：{}".format(codes))
         print(codes[:10])
         for code in codes:
             if code.startswith("159"):
                 print(code)
+
 
 if __name__ == '__main__':
     unittest.main()
