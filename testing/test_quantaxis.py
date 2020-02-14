@@ -27,20 +27,23 @@ import pandas as pd
 """
 QA.QA_util_log_info('日线数据')
 QA.QA_util_log_info('不复权')  
-data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('00001','2017-01-01','2017-01-31')
+data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('000001','2017-01-01','2017-01-31')
 
 QA.QA_util_log_info('前复权')
-data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('00001','2017-01-01','2017-01-31','01')
+data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('000001','2017-01-01','2017-01-31','01')
 
 QA.QA_util_log_info('后复权')
-data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('00001','2017-01-01','2017-01-31','02')
+data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('000001','2017-01-01','2017-01-31','02')
 
 QA.QA_util_log_info('定点前复权')
-data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('00001','2017-01-01','2017-01-31','03')
+# 新版本中不支持实时前复权
+data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('000001','2017-01-01','2017-01-31','03')
+
+data = QA.QA_fetch_stock_day_adv('000001', '2017-01-01','2017-01-31','03')
 
 
 QA.QA_util_log_info('定点后复权')
-data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('00001','2017-01-01','2017-01-31','04')
+data=QA.QAFetch.QATdx.QA_fetch_get_stock_day('000001','2017-01-01','2017-01-31','04')
 """
 
 
@@ -50,7 +53,7 @@ class testQuantaxis(TestCase):
         qa.QAFetch.QATdx.QA_fetch_get_stock_list('stock')
         qa.QAFetch.QATdx.QA_fetch_get_index_day(code, '2017-01-01', '2017-09-01')
         qa.QAFetch.QATdx.QA_fetch_get_stock_list('index')
-        qa.QA_fetch_index_day_adv(a.code, '1990-01-01', str(datetime.date.today()))
+        qa.QA_fetch_index_day_adv(code, '1990-01-01', str(datetime.date.today()))
 
     """
 
@@ -305,7 +308,7 @@ class testQuantaxis(TestCase):
 
         '''
 
-    def test_QA_indicator_stocklist(self):
+    def test_QA_fetch_stocklist(self):
         # 获取股票代码列表
         qa.QA_util_log_info('stock列表')
         data = qa.QAFetch.QATdx.QA_fetch_get_stock_list('stock')
@@ -332,7 +335,7 @@ class testQuantaxis(TestCase):
         self.assertTrue(data.loc[a, 'code'].count() > 0, '未找到分级基金')
 
     def test_QA_indicator_tradedate(self):
-        """测试易日期
+        """测试交易日期
 
         :return:
         """
@@ -400,96 +403,6 @@ class testQuantaxis(TestCase):
            {'tdx'}
         """
         self.assertTrue(set(data.source) == {'tdx'}, '版块来源数大于一个，为 {}'.format(set(data.source)))
-
-    def test_useraddfunc(self):
-
-        def cmpfunc(df):
-            # 标记创新高
-            return pd.DataFrame(df.high == df.high.max())
-
-        def cmpfunc120(df):
-            # 标记创半年新高
-            return pd.DataFrame(df.high == df.high.rolling(120).max())
-
-        def cmpfuncPeriod(df, days):
-            # 标记创半年新高
-            return pd.DataFrame(df.high == df.high.rolling(days).max())
-
-        def higher(df):
-
-            return ind[ind['high']]
-
-        # tdate = HSGTCGHold.getNearestTradedate(days=-120)
-        tdate = '2018-1-2'
-        end = datetime.datetime.now().date()
-        code = qa.QA_fetch_stock_list_adv().code.tolist()
-        data = qa.QA_fetch_stock_day_adv(code, start=tdate, end=end).to_qfq()
-        ind = data.add_func(lambda x: x.tail(20).high.max() == x.high.max())
-        code = list(ind[ind].reset_index().code)
-        # 半年新高
-        code = pd.DataFrame(list(RPS.getlist().filter(tradedate__gte='2018-1-1').filter(
-            (Q(rps120__gte=90) & Q(rps250__gte=80)) | (Q(rps120__gte=80) & Q(rps250__gte=90))). \
-                                 values('code__code').distinct()))['code__code'].values.tolist()
-        n = 120
-        m = 120  # 新高范围
-        df = self.firstHigh(code, end, m, n)
-        for v in [df.iloc[a] for a in df.index]:
-            print(v.code, v.date)
-            try:
-                day_data = qa.QA_fetch_stock_day_adv(v.code, v.date, end).to_qfq()
-                ddf = day_data.data[['high', 'close', 'low']].reset_index()
-            except Exception as e:
-                print(e.args)
-
-        n = 120
-        m = 250
-        # tdate = Listing.getNearestTradedate(days=-(n * 2))
-        tdate = Listing.getNearestTradedate(days=-(n + m + 2))
-        data = qa.QA_fetch_stock_day_adv(code, start=tdate, end=end).to_qfq()
-        ind = data.add_func(cmpfunc120)
-        # ind1 = data.add_func(lambda x: cmpfuncPeriod(x, n))
-        ind1 = data.add_func(lambda x: cmpfuncPeriod(x, m))
-        results = ind[ind['high']]
-        assert ind[ind['high']].equals(ind1[ind1['high']])
-
-        df = data[ind.high].data.high.reset_index()
-        usedcode = []
-        for v in [df.iloc[a] for a in df.index]:
-            if not (v.code in usedcode):
-                # 创新高的股票代码
-                usedcode.append([v.date, v.code, v.high])
-
-        data = qa.QA_fetch_stock_day_adv(code, start=tdate, end=end).to_qfq()
-        # 收盘在50日线之上
-        ind = data.add_func(lambda x: float(qa.QA_indicator_MA(x.tail(50), 50)[-1:].MA) <= float(x.tail(1).close))
-        code = list(ind[ind].reset_index().code)
-
-        # 前100日内有连续两天wr==0
-        day_data = qa.QA_fetch_stock_day_adv(code, '2018-01-03', '2018-07-04')
-        ind = day_data.add_func(qa.QA_indicator_WR, 10, 6)
-        res = ind.groupby(level=1, as_index=False, sort=False, group_keys=False).apply(
-            lambda x: (x.tail(100))['WR1'].rolling(2).sum() == 0)
-        print(res[res])
-
-    def firstHigh(self, code, end, m, n):
-        def cmpfuncPeriod(df, days):
-            # 标记创半年新高
-            return pd.DataFrame(df.high == df.high.rolling(days).max())
-
-        tdate = Listing.getNearestTradedate(days=-(n + m))
-        data = qa.QA_fetch_stock_day_adv(code, start=tdate, end=end).to_qfq()
-        ind = data.add_func(lambda x: cmpfuncPeriod(x, m))
-        results = ind[ind['high']]
-        df = data[ind.high].data.high.reset_index()
-        # gg = df.groupby('code').date.first() # 更快速？
-        usedcode = []
-        fh = []
-        for v in [df.iloc[a] for a in df.index]:
-            if not (v.code in usedcode):
-                # 创新高的股票代码
-                usedcode.append(v.code)
-                fh.append([v.date, v.code])
-        return pd.DataFrame(fh, columns=['date', 'code'])
 
     def test_QATdx_QA_fetch_get_stock_day(self):
         code = '000002'
@@ -815,9 +728,6 @@ def QA_indicator_MAS(DataFrame, *args, **kwargs):
         df['MAS'] = df.sum(axis=1)
         return df['MAS']
 
-    days = [5, 13, 21, 34, 55, 89, 144, 233]
-    CLOSE = DataFrame['close']
-    MAS = MAS(CLOSE, days)
     return pd.DataFrame(MAS)
 
 
