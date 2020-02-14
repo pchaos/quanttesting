@@ -17,6 +17,7 @@ from .myFunction import full_pickle, loosen_pickle
 from .myFunction import compressed_pickle, decompress_pickle
 from .myFunction import read_zxg
 from .myFunction import xls2zxg
+from .myFunction import xls2Code
 from .myFunction import getRealFilename
 from .myFunction import setdiff_sorted
 from .chCounts import CHCOUNTS, CHCOUNTS2

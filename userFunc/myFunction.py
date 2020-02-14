@@ -72,6 +72,12 @@ def xls2zxg(xlsfile, zxgFile):
         df = pd.read_csv(xlsfile, sep="\t", encoding="gbk", dtype={'证券代码': str})
     df.to_csv(zxgFile, index=False, sep=" ", header=None)
 
+def xls2Code(xlsfile):
+    """提取xlsfile文件中的股票代码
+    """
+    zxgfile = "/tmp/{}.txt".format(xlsfile)
+    xls2zxg(xlsfile, zxgfile)
+    return read_zxg(zxgfile, length=6)
 
 def getRealFilename(filename):
     """返回第一个filename存在的文件名

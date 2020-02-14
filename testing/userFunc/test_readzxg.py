@@ -12,7 +12,7 @@ import unittest
 import os
 import QUANTAXIS as qa
 from userFunc import read_zxg
-from userFunc import xls2zxg
+from userFunc import xls2zxg, xls2Code
 
 
 class testReadZXG(unittest.TestCase):
@@ -51,6 +51,18 @@ class testReadZXG(unittest.TestCase):
         for code in codes:
             if code.startswith("159"):
                 print(code)
+
+    def test_xls2Code(self):
+        xlsfile = "担保品20200210.xls"
+        zxgfile = "/tmp/{}.txt".format(xlsfile)
+        xls2zxg(xlsfile, zxgfile)
+        codes = read_zxg(zxgfile)
+        self.assertTrue(len(codes) > 10, "读取数量太少：{}".format(codes))
+        print(codes[:10])
+        codes2 = xls2Code(xlsfile)
+        self.assertTrue(codes == codes2, "返回结果不想等")
+        for code in codes2:
+            self.assertTrue(len(code) == 6)
 
 
 if __name__ == '__main__':
