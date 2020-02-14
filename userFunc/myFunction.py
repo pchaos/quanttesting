@@ -87,6 +87,12 @@ def code2ETF(codes=[], filterStart=['159', '510']):
     return [item for item in codes if item.startswith(tuple(filterStart))]
 
 
+def etfAmountGreater(code, startDate, endDate=None, amount=1000):
+    """成交额大于等于amount(万元）"""
+    df = qa.QA_fetch_index_day_adv(code, startDate, endDate)
+    return df[df['amount'] >= amount * 10000]
+
+
 def getRealFilename(filename):
     """返回第一个filename存在的文件名
     """

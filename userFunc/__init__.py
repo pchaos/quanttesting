@@ -19,6 +19,7 @@ from .myFunction import read_zxg
 from .myFunction import xls2zxg
 from .myFunction import xls2Code
 from .myFunction import code2ETF
+from .myFunction import etfAmountGreater
 from .myFunction import getRealFilename
 from .myFunction import setdiff_sorted
 from .chCounts import CHCOUNTS, CHCOUNTS2

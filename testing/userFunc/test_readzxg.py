@@ -12,7 +12,7 @@ import unittest
 import os
 import QUANTAXIS as qa
 from userFunc import read_zxg
-from userFunc import xls2zxg, xls2Code, code2ETF
+from userFunc import xls2zxg, xls2Code, code2ETF, etfAmountGreater
 
 
 class testReadZXG(unittest.TestCase):
@@ -67,9 +67,26 @@ class testReadZXG(unittest.TestCase):
     def test_code2ETF(self):
         xlsfile = "担保品20200210.xls"
         codes = xls2Code(xlsfile)
+        # ETF列表
         codeETF = code2ETF(codes)
         self.assertTrue(len(codes) > len(codeETF))
         print(len(codeETF), codeETF[:10], codeETF[-10:])
+
+    def test_etfAmountGreater(self):
+        # 成交额大于等于amount(万元）
+        xlsfile = "担保品20200210.xls"
+        codes = xls2Code(xlsfile)
+        # ETF列表
+        codeETF = code2ETF(codes)
+        # 日期
+        startDate = '2020-02-07'
+        # 成交金额大于amount
+        amount = 1100
+        df = etfAmountGreater(codeETF, startDate, amount=amount)
+        df2 = qa.QA_fetch_index_day_adv(codeETF, startDate)
+        self.assertTrue(len(df2.data) > len(df.data))
+        print("{} :{}".format(len(df), len(df2)), df[:10], df2[-10:])
+        print(df.code)
 
 
 if __name__ == '__main__':
