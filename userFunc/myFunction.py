@@ -92,6 +92,12 @@ def etfAmountGreater(code, startDate, endDate=None, amount=1000):
     df = qa.QA_fetch_index_day_adv(code, startDate, endDate)
     return df[df['amount'] >= amount * 10000]
 
+def codeInfo(codes):
+    """返回指数或etf对应的股票信息"""
+    index = qa.QA_fetch_index_list_adv()
+    etf = qa.QA_fetch_etf_list()
+    return pd.concat([index[index['code'].isin(codes)],  etf[etf['code'].isin(codes)]], axis=0)
+
 
 def getRealFilename(filename):
     """返回第一个filename存在的文件名

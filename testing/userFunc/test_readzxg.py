@@ -12,7 +12,7 @@ import unittest
 import os
 import QUANTAXIS as qa
 from userFunc import read_zxg
-from userFunc import xls2zxg, xls2Code, code2ETF, etfAmountGreater
+from userFunc import xls2zxg, xls2Code, code2ETF, etfAmountGreater, codeInfo
 
 
 class testReadZXG(unittest.TestCase):
@@ -40,6 +40,9 @@ class testReadZXG(unittest.TestCase):
         # print(data[['code', 'name']])
         for c in code:
             print(c, data.loc[c]['name'])
+        df =codeInfo(code)
+        print(df.head())
+        self.assertTrue(len(code) == len(df), "股票代码个数和股票信息的个数相同")
 
     def test_xls2zxg(self):
         xlsfile = "担保品20200210.xls"
