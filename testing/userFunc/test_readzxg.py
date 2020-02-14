@@ -12,7 +12,7 @@ import unittest
 import os
 import QUANTAXIS as qa
 from userFunc import read_zxg
-from userFunc import xls2zxg, xls2Code
+from userFunc import xls2zxg, xls2Code, code2ETF
 
 
 class testReadZXG(unittest.TestCase):
@@ -63,6 +63,13 @@ class testReadZXG(unittest.TestCase):
         self.assertTrue(codes == codes2, "返回结果不想等")
         for code in codes2:
             self.assertTrue(len(code) == 6)
+
+    def test_code2ETF(self):
+        xlsfile = "担保品20200210.xls"
+        codes = xls2Code(xlsfile)
+        codeETF = code2ETF(codes)
+        self.assertTrue(len(codes) > len(codeETF))
+        print(len(codeETF), codeETF[:10], codeETF[-10:])
 
 
 if __name__ == '__main__':
