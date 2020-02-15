@@ -8,7 +8,10 @@
 @license : Copyright(C), pchaos
 @Contact : p19992003#gmail.com
 """
+import datetime
 import pandas as pd
+from abc import ABC, abstractmethod
+import QUANTAXIS as qa
 
 
 # 计算收益率
@@ -31,12 +34,14 @@ def cal_ret(dataFrame, *args, **kwargs):
 
 # 计算RPS
 def get_RPS(dataFrame, *args, **kwargs):
+    """收益率dataFrame计算RPS
+    """
     i = 0
     # print("日期：{} 数量：{}".format(dataFrame.index.get_level_values(0)[0], len(dataFrame)))
     for col in dataFrame.columns:
         newcol = col.replace("MARKUP", "RPS", 1)
         if i > 0:
-            df2= getSingleRPS(dataFrame, col, newcol)
+            df2 = getSingleRPS(dataFrame, col, newcol)
             df[newcol] = df2[newcol]
         else:
             df = getSingleRPS(dataFrame, col, newcol)
@@ -52,3 +57,67 @@ def getSingleRPS(dataFrame, col, newcol):
     df[newcol] = df['n'] / dfcount
     # 删除index date
     return df.reset_index().set_index(['code'])[[newcol]]
+
+
+class RPSAbs(ABC):
+    """计算RPS基础类
+    """
+
+    def __init__(self, codes=[], startDate=datetime.date.today(), endDate=None, rpsday=[20, 50]):
+        self._codes = codes
+        self._startDate = startDate
+        self._endDate = endDate
+        self._rpsday = rpsday
+        self._rps = None
+
+    @property
+    def codes(self):
+        """代码列表（list）"""
+        return self._codes
+
+    @codes.setter
+    def codes(self, value):
+        self._codes = value
+
+    def __repr__(self):
+        return '{0}->{1}'.format(self._codes, len(self._codes))
+
+    @abstractmethod
+    def _fetchData(self):
+        """获取"""
+        # data = qa.QA_fetch_index_day_adv(self.__codes, self.__startDate, self.__endDate)
+        return None
+
+    def rps(self):
+        data = self._fetchData()
+        df = data.add_func(cal_ret, *(self._rpsday))
+        self._rps = df.groupby(level=0).apply(get_RPS, *(self._rpsday))
+        return self._rps
+
+    def rpsTopN(self, theday, N=10):
+        """RPS排名前N%的数据
+        """
+        if self._rps is None:
+            self.rps()
+        while 1:
+            # 定位最近的rps数据
+            dfn = []
+            try:
+                df = self._rps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(theday))), :]
+                if len(df) > 0:
+                    # 排名前N%的指数
+                    for col in df.columns:
+                        dfn.append(df.sort_values(by=col, ascending=False).reset_index().head(int(len(df) / (100 / N))))
+                    dftopn = pd.concat(dfn, ignore_index=True).drop_duplicates()
+                    # print(dftopn)
+                    break
+                theday = theday - datetime.timedelta(1)
+            except Exception as e:
+                theday = theday - datetime.timedelta(1)
+        return dftopn
+
+
+class RPSIndex(RPSAbs):
+    def _fetchData(self):
+        data = qa.QA_fetch_index_day_adv(self._codes, self._startDate, self._endDate)
+        return data

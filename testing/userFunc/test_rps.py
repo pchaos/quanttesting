@@ -101,8 +101,9 @@ class testRPS(unittest.TestCase):
         for c in code:
             print(c, indexList.loc[c]['name'])
 
+
     def _getRPSTopN(self, code, dfrps, theday, N=10):
-        """"""
+        """RPS排名前N%的数据"""
         while 1:
             # 定位最近的rps数据
             dfn = []

@@ -32,6 +32,7 @@ from .shouban import shoubanType
 from .shouban import shoubanZDZG
 from .rps import cal_ret
 from .rps import get_RPS
+from .rps import RPSIndex
 
 from .comm import ifupMA
 from .comm import str2date
