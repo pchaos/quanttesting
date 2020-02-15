@@ -14,22 +14,29 @@ https://www.lizenghai.com/archives/24933.html
 import pandas as pd
 from selenium import webdriver
 from retrying import retry
+import time
 
 
 def jisilu(*args, **kwargs):
+    # global driver
     options = webdriver.ChromeOptions()
+    # options = webdriver.FirefoxOptions()
     # options.headless = True
-    # options.add_argument("–no-sandbox")
-    options.add_argument("–disable-dev-shm-usage")
+    options.add_argument("–no-sandbox")
+    # options.add_argument("–disable-dev-shm-usage") # 占用内存大，会崩溃时，启用该项
     driver = webdriver.Chrome("chromedriver", options=options)
+    # driver = webdriver.Firefox(options=options)
     try:
-        return _jsl(driver, kwargs)
+        driver.maximize_window()
+        return _jsl(driver, **kwargs)
     finally:
+        driver.close()
         driver.quit()
+        driver = None
 
 
 @retry(stop_max_attempt_number=5, wait_random_min=1000, wait_random_max=3000)
-def _jsl(driver, kwargs):
+def _jsl(driver, **kwargs):
     url = kwargs['url']
     cssSelector = kwargs['cssSelector']
     cols = kwargs['cols']
@@ -66,7 +73,7 @@ def _jsl(driver, kwargs):
     df1.drop(dropcols, axis=1, inplace=True)
     try:
         # 转换为float或者百分比转换成float
-        df1[sortedby]=df1[sortedby].apply(lambda x: float(x) if "%" not in x else float(x.replace("%", ""))/100)
+        df1[sortedby] = df1[sortedby].apply(lambda x: float(x) if "%" not in x else float(x.replace("%", "")) / 100)
         # df1[sortedby]=df1[sortedby].astype('float')
     except Exception as e:
         pass
@@ -108,7 +115,8 @@ if __name__ == "__main__":
     df.to_excel("/tmp/jisilu.xls")
     print(df)
 
-    # # 指数ETF
-    # df = jslindex()
-    # df.to_excel("/tmp/jisiluindex.xls")
-    # print(df)
+    # time.sleep(3)
+    # 指数ETF
+    df = jslindex()
+    df.to_excel("/tmp/jisiluindex.xls")
+    print(df)
