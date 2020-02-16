@@ -10,6 +10,8 @@
 """
 import unittest
 import datetime
+import time
+import matplotlib.pyplot as plt
 import QUANTAXIS as qa
 from userFunc import cal_ret, get_RPS
 from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_pickle
@@ -44,9 +46,6 @@ class TestRPSIndex(unittest.TestCase):
             data2 = dataCalret
         return dataCalret
 
-    def test_something(self):
-        self.assertEqual(True, False)
-
     def test_rps_class(self):
         # 显示rps排名前10%的中文名称
         code = self.code
@@ -54,7 +53,29 @@ class TestRPSIndex(unittest.TestCase):
         dfrps = self._getRPS(rpsday, self.data2)
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
         rps = rpsIndex.rps()
-        self.assertTrue(dfrps.equals(rps),"{} {}".format(dfrps.head(),rps.head()))
+        self.assertTrue(dfrps.equals(rps), "{} {}".format(dfrps.head(), rps.head()))
+
+    def test_rps_class_multi_rpsday(self):
+        # 显示rps排名前10%的中文名称
+        code = self.code
+        rpsday = [20, 50, 120]
+        dfrps = self._getRPS(rpsday, self.data2)
+        rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
+        rps = rpsIndex.rps()
+        self.assertTrue(dfrps.equals(rps), "RPS计算不匹配：\n{} {}".format(dfrps.head(), rps.head()))
+        print(rps.tail())
+
+    def test_rps_class_selectCode(self):
+        # 显示rps排名前10%的中文名称
+        code = self.code
+        rpsday = [20, 50, 89]
+        rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
+        rps = rpsIndex.selectCode(code[0])
+        print(rps.tail())
+        rps.plot()
+        rps.plot(x='RPS20', y='RPS{}'.format(rpsday[1]))
+        rps.plot(x='RPS20', y='RPS{}'.format(rpsday[2]))
+        plt.show()
 
     def _getRPS(self, rpsday, dataFrame):
         # data = qa.QA_DataStruct_Index_day(self.data2)

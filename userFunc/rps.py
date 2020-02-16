@@ -94,16 +94,15 @@ class RPSAbs(ABC):
         self._rps = df.groupby(level=0).apply(get_RPS, *(self._rpsday))
         return self._rps
 
-    def rpsTopN(self, theday, N=10):
+    def rpsTopN(self, theday, N=5):
         """RPS排名前N%的数据
         """
-        if self._rps is None:
-            self.rps()
+        rps = self._getRPS()
         while 1:
             # 定位最近的rps数据
             dfn = []
             try:
-                df = self._rps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(theday))), :]
+                df = rps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(theday))), :]
                 if len(df) > 0:
                     # 排名前N%的指数
                     for col in df.columns:
@@ -116,6 +115,17 @@ class RPSAbs(ABC):
                 theday = theday - datetime.timedelta(1)
         return dftopn
 
+    def _getRPS(self):
+        if self._rps is None:
+            # 未计算rps，则先计算rps
+            self.rps()
+        return self._rps
+
+    def selectCode(self, code):
+        """查询相应的代码
+        """
+        rps = self._getRPS()
+        return rps.loc[(slice(None), code), :]
 
 class RPSIndex(RPSAbs):
     def _fetchData(self):
