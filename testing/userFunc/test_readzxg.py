@@ -95,6 +95,15 @@ class testReadZXG(unittest.TestCase):
         zxgFile = "zxgETF.txt"
         pd.DataFrame(df.code).to_csv(zxgFile, index=False, sep=" ", header=None)
 
+    def test_ETFName(self):
+        """增加中文名称
+        """
+        zxgFile = "zxgETF.txt"
+        code = read_zxg(zxgFile)
+        dfInfo = codeInfo(list(code))
+        print(dfInfo)
+        dfInfo[['code', 'name']].to_csv(zxgFile, index=False, sep=" ", header=None)
+
 
 if __name__ == '__main__':
     unittest.main()
