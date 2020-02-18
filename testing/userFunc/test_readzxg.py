@@ -10,6 +10,7 @@
 """
 import unittest
 import os
+import pandas as pd
 import QUANTAXIS as qa
 from userFunc import read_zxg
 from userFunc import xls2zxg, xls2Code, code2ETF, etfAmountGreater, codeInfo
@@ -89,7 +90,10 @@ class testReadZXG(unittest.TestCase):
         df2 = qa.QA_fetch_index_day_adv(codeETF, startDate)
         self.assertTrue(len(df2.data) > len(df.data))
         print("{} :{}".format(len(df), len(df2)), df[:10], df2[-10:])
-        print(df.code)
+        print("code: ", df.code)
+        # 保存到文件
+        zxgFile = "zxgETF.txt"
+        pd.DataFrame(df.code).to_csv(zxgFile, index=False, sep=" ", header=None)
 
 
 if __name__ == '__main__':
