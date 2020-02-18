@@ -16,6 +16,7 @@ import QUANTAXIS as qa
 from userFunc import cal_ret, get_RPS
 from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_pickle
 from userFunc import RPSIndex
+from userFunc import read_zxg
 
 
 class TestRPSIndex(unittest.TestCase):
@@ -87,6 +88,17 @@ class TestRPSIndex(unittest.TestCase):
         # 计算RPS
         dfg = df.groupby(level=0).apply(get_RPS, *rpsday)
         return dfg
+
+    def test_rps_ETF_selectCode(self):
+        # 显示rps排名前10%的中文名称
+        fn = 'zxgETF.txt'
+        # code列表
+        code = read_zxg(fn)
+        rpsday = [20, 50]
+        rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
+        rps = rpsIndex.selectCode(code)
+        # print(rps.tail())
+        print(rps)
 
 
 if __name__ == '__main__':
