@@ -80,36 +80,16 @@ positions.open_cost_short  # 基于开仓价计算的多头开仓价空头成本
 import datetime
 import QUANTAXIS as QA
 from QAStrategy.qastockbase import QAStrategyStockBase
-from QUANTAXIS.QAARP import QA_Risk, QA_User
-from QUANTAXIS.QAEngine.QAThreadEngine import QA_Thread
-from QUANTAXIS.QAUtil.QAParameter import MARKET_TYPE, RUNNING_ENVIRONMENT, ORDER_DIRECTION
-from QAPUBSUB.consumer import subscriber_topic, subscriber_routing
-from QAPUBSUB.producer import publisher_routing
-from QAStrategy.qactabase import QAStrategyCTABase
-from QIFIAccount import QIFI_Account
+# from QUANTAXIS.QAARP import QA_Risk, QA_User
+# from QUANTAXIS.QAEngine.QAThreadEngine import QA_Thread
+# from QUANTAXIS.QAUtil.QAParameter import MARKET_TYPE, RUNNING_ENVIRONMENT, ORDER_DIRECTION
+# from QAPUBSUB.consumer import subscriber_topic, subscriber_routing
+# from QAPUBSUB.producer import publisher_routing
+# from QAStrategy.qactabase import QAStrategyCTABase
+# from QIFIAccount import QIFI_Account
 from qaenv import (eventmq_ip, eventmq_password, eventmq_port,
                    eventmq_username, mongo_ip)
-
-
-class strategyETF(QAStrategyStockBase):
-    def __init__(self, code=['159901'], frequence='1min', strategy_id='QA_STRATEGY', risk_check_gap=1,
-                 portfolio='default',
-                 start='2019-01-01', end='2019-10-21', init_cash=100000, send_wx=False, market_type='index_cn',
-                 data_host=eventmq_ip, data_port=eventmq_port, data_user=eventmq_username,
-                 data_password=eventmq_password,
-                 trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username,
-                 trade_password=eventmq_password,
-                 taskid=None, mongo_ip=mongo_ip):
-        super().__init__(code=code, frequence=frequence, strategy_id=strategy_id, risk_check_gap=risk_check_gap,
-                         portfolio=portfolio,
-                         start=start, end=end, send_wx=send_wx, market_type=market_type,
-                         data_host=eventmq_ip, data_port=eventmq_port, data_user=eventmq_username,
-                         data_password=eventmq_password,
-                         trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username,
-                         trade_password=eventmq_password,
-                         taskid=taskid, mongo_ip=mongo_ip)
-        self.market_type = market_type
-        # self.init_cash = init_cash
+from userFunc import strategyETF
 
 
 class strategy(strategyETF):
@@ -155,23 +135,30 @@ class strategy(strategyETF):
             # 买
             # if self.acc.get_position(code).volume_long == 0:
             self.send_order('BUY', 'OPEN', code=code, price=data['close'], volume=self.getPerVolume(data.close))
-            print("buy:{} {} vol:{} cci: {} {} {}".format(code, data['close'], self.getPerVolume(data.close),
-                                                     round(res.CCI[-1], 1), round(res.CCI[-2], 1), self.running_time))
-            print(self.get_code_marketdata(code)[['close', 'vol']].tail(2))
-            print(self.get_positions(code))
+            print('---------------under is buy info --------------')
+            self.accuntInfo(code, data, res)
         elif self.sellCondition(res):
             # 卖
             if self.acc.get_position(code).volume_long > 0:
+                # 计算成交股数
+                vol = self.getPerVolume(data.close)
+                vol = vol if vol <= self.acc.get_position(code).volume_long else self.acc.get_position(code).volume_long
                 self.send_order('SELL', 'CLOSE', code=code, price=data['close'],
-                                volume=self.getPerVolume(data.close))
-                print("sell:{} {} vol:{} cci: {} {} {}".format(code, data['close'], self.getPerVolume(data.close),
-                                                               round(res.CCI[-1], 1), round(res.CCI[-2], 1), datetime.datetime.fromtimestamp(data.date_stamp)))
-                print(self.get_code_marketdata(code)[['close', 'vol']].tail(2))
-                print(self.get_positions(code))
-                # print(self.acc.cash)
+                                volume=vol)
+                print('---------------under is SELL info --------------')
+                self.accuntInfo(code, data, res)
         else:
             # print(res.CCI[-1], end=';')
             pass
+
+    def accuntInfo(self, code, data, res):
+        print("sell:{} {} vol:{} cci: {} {} {}".format(code, data['close'], self.getPerVolume(data.close),
+                                                       round(res.CCI[-1], 1), round(res.CCI[-2], 1),
+                                                       datetime.datetime.fromtimestamp(data.date_stamp)))
+        print(self.get_code_marketdata(code)[['close', 'vol']].tail(2))
+        print(self.get_positions(code))
+        print("交易记录: {}".format(self.acc.trade))
+        print("交易记录: {}".format(self.acc.trade[code].sum()))
 
     def cci(self, code):
         return QA.QA_indicator_CCI(self.market_data, 14).loc[(slice(None), code), :]
@@ -199,10 +186,10 @@ class strategy(strategyETF):
 
 
 if __name__ == '__main__':
-    # s = strategy(code=['000001', '000002'], frequence='day', start='2019-05-01', end='2020-02-10', strategy_id='x')
     s = strategy(code=['515050', '159952'], frequence='day', start='2019-05-01', end='2020-02-10', strategy_id='x')
     s.debug()
-    s.risk_check()
+    # s.run_backtest()
+    # s.risk_check()
     """
     
     portfolio with user_cookie  USER_QoZ8TDrF  already exist!!
