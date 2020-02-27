@@ -91,9 +91,9 @@ from qaenv import (eventmq_ip, eventmq_password, eventmq_port,
 
 
 class strategy(QAStrategyStockBase):
-    def __init__(self, code=['159901'], frequence='1min', strategy_id='QA_STRATEGY', risk_check_gap=1,
+    def __init__(self, code=['000001'], frequence='1min', strategy_id='QA_STRATEGY', risk_check_gap=1,
                  portfolio='default',
-                 start='2019-01-01', end='2019-10-21', send_wx=False, market_type='index_cn',
+                 start='2019-01-01', end='2019-10-21', send_wx=False, market_type='stock_cn',
                  data_host=eventmq_ip, data_port=eventmq_port, data_user=eventmq_username,
                  data_password=eventmq_password,
                  trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username,
