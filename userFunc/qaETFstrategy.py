@@ -22,7 +22,7 @@ from qaenv import (eventmq_ip, eventmq_password, eventmq_port,
                    eventmq_username, mongo_ip)
 
 
-class strategyETF(QAStrategyStockBase):
+class QAStrategyETFBase(QAStrategyStockBase):
     def __init__(self, code=['159901'], frequence='1min', strategy_id='QA_STRATEGY', risk_check_gap=1,
                  portfolio='default',
                  start='2019-01-01', end='2019-10-21', init_cash=1000000, send_wx=False, market_type='index_cn',
