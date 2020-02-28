@@ -76,10 +76,8 @@ positions.open_price_short  # 基于开仓价计算的多头开仓价空头开�
 positions.open_cost_short  # 基于开仓价计算的多头开仓价空头成本
 
 """
-
 import datetime
 import QUANTAXIS as QA
-from QAStrategy.qastockbase import QAStrategyStockBase
 # from QUANTAXIS.QAARP import QA_Risk, QA_User
 # from QUANTAXIS.QAEngine.QAThreadEngine import QA_Thread
 # from QUANTAXIS.QAUtil.QAParameter import MARKET_TYPE, RUNNING_ENVIRONMENT, ORDER_DIRECTION
@@ -139,10 +137,10 @@ class strategy(strategyETF):
             self.accuntInfo(code, data, res)
         elif self.sellCondition(res):
             # 卖
-            if self.acc.get_position(code).volume_long > 0:
+            if self.getPostion(code).volume_long > 0:
                 # 计算成交股数
                 vol = self.getPerVolume(data.close)
-                vol = vol if vol <= self.acc.get_position(code).volume_long else self.acc.get_position(code).volume_long
+                vol = vol if vol <= self.getPostion(code).volume_long else self.getPostion(code).volume_long
                 self.send_order('SELL', 'CLOSE', code=code, price=data['close'],
                                 volume=vol)
                 print('---------------under is SELL info --------------')
@@ -155,7 +153,7 @@ class strategy(strategyETF):
         print("sell:{} {} vol:{} cci: {} {} {}".format(code, data['close'], self.getPerVolume(data.close),
                                                        round(res.CCI[-1], 1), round(res.CCI[-2], 1),
                                                        datetime.datetime.fromtimestamp(data.date_stamp)))
-        print(self.get_code_marketdata(code)[['close', 'vol']].tail(2))
+        print(self.get_code_marketdata(code)[['close', 'vol']].tail(3))
         print(self.get_positions(code))
         print("交易记录: {}".format(self.acc.trade))
         print("交易记录: {}".format(self.acc.trade[code].sum()))
@@ -168,7 +166,7 @@ class strategy(strategyETF):
         """
         return round(self.acc.cash[0] / self.cutsCount / price, -2)
 
-    def buyCondition(self,res):
+    def buyCondition(self, res):
         # CCI升破-100时买入
         try:
             return res.CCI[-1] > -100 and res.CCI[-2] < -100
@@ -177,7 +175,7 @@ class strategy(strategyETF):
             print("res.CCI: {}".format(res.CCI[-1]))
             return False
 
-    def sellCondition(self,res):
+    def sellCondition(self, res):
         # CCI超过100后，跌破100时卖出
         try:
             return res.CCI[-1] < 100 and res.CCI[-2] > 100
@@ -186,7 +184,7 @@ class strategy(strategyETF):
 
 
 if __name__ == '__main__':
-    s = strategy(code=['515050', '159952'], frequence='day', start='2019-05-01', end='2020-02-10', strategy_id='x')
+    s = strategy(code=['515050', '159952'], frequence='day', start='2019-08-01', end='2020-02-10', strategy_id='xetf')
     s.debug()
     # s.run_backtest()
     # s.risk_check()
