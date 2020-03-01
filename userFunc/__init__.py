@@ -33,7 +33,9 @@ from .shouban import shoubanZDZG
 from .rps import cal_ret
 from .rps import get_RPS
 from .rps import RPSIndex
-from .qaETFstrategy import strategyETF
+from .qaETFstrategy import QAStrategyETFBase
+from .qaETFQARisk import QAETF_Risk
+from .qaIndexDatastruct import QAIndex_DataStruct_Day
 from .comm import ifupMA
 from .comm import str2date
 from .comm import is_all_chinese, is_contains_chinese

@@ -184,10 +184,14 @@ class strategy(QAStrategyETFBase):
 
 
 if __name__ == '__main__':
-    s = strategy(code=['515050', '159952'], frequence='day', start='2019-08-01', end='2020-02-10', strategy_id='xetf')
-    s.debug()
-    # s.run_backtest()
+    s = strategy(code=['515050', '159952'], frequence='day', start='2019-08-01', end='2020-02-10', strategy_id='xetf1')
+    # s.debug()
+    s.run_backtest()
+    # print(s.market_data)
     # s.risk_check()
+    s = None
+    print("Done.")
+
     """
     
     portfolio with user_cookie  USER_QoZ8TDrF  already exist!!
@@ -623,7 +627,7 @@ if __name__ == '__main__':
     ---------------under is 当前品种的market_data --------------
                         open   high    low  close     volume        amount
     2019-01-02 000001   9.39   9.42   9.16   9.19   539386.0  4.986951e+08
-    2019-01-03 000001   9.18   9.33   9.15   9.28   415537.0  3.844577e+08
+    2019-01-03 000001   9.18   9.33   9.15   9.28   415537.0  self.account.daily_cash.set_index('date').cash3.844577e+08
     2019-01-04 000001   9.24   9.82   9.22   9.75  1481159.0  1.422150e+09
     2019-01-07 000001   9.84   9.85   9.63   9.74   865687.0  8.411664e+08
     2019-01-08 000001   9.73   9.74   9.62   9.66   402388.0  3.892478e+08

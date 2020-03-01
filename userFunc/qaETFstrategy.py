@@ -17,9 +17,11 @@ import QUANTAXIS as qa
 import QUANTAXIS as QA
 from QUANTAXIS.QAUtil.QAParameter import MARKET_TYPE, RUNNING_ENVIRONMENT, ORDER_DIRECTION
 from QAStrategy.qastockbase import QAStrategyStockBase
-from QUANTAXIS.QAARP import QA_Risk
+# from QUANTAXIS.QAARP import QA_Risk
 from qaenv import (eventmq_ip, eventmq_password, eventmq_port,
                    eventmq_username, mongo_ip)
+from .qaETFQARisk import QAETF_Risk
+from .qaIndexDatastruct import QAIndex_DataStruct_Day
 
 
 class QAStrategyETFBase(QAStrategyStockBase):
@@ -44,8 +46,9 @@ class QAStrategyETFBase(QAStrategyStockBase):
     def run_backtest(self):
         self.debug()
         self.acc.save()
-
-        risk = QA_Risk(self.acc, if_fq=False, market_data=self.market_data)
+        if self.frequence == 'day':
+            md = QAIndex_DataStruct_Day(self.market_data)
+        risk = QAETF_Risk(self.acc, if_fq=False, market_data=md)
         risk.save()
 
     def x1(self, item):
@@ -134,6 +137,6 @@ class QAStrategyETFBase(QAStrategyStockBase):
     def getPostion(self, code):
         # mock
         self.acc.market_type = MARKET_TYPE.STOCK_CN
-        pos= self.acc.get_position(code)
+        pos = self.acc.get_position(code)
         self.acc.market_type = MARKET_TYPE.INDEX_CN
         return pos
