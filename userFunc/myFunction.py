@@ -81,7 +81,7 @@ def xls2Code(xlsfile):
     return read_zxg(zxgfile, length=6)
 
 
-def code2ETF(codes=[], filterStartWith=['159', '510', '512', '515']):
+def codeInETF(codes=[], filterStartWith=['159', '510', '512', '515']):
     """股票代码过滤
     """
     return [item for item in codes if item.startswith(tuple(filterStartWith))]

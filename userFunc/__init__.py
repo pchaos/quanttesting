@@ -18,7 +18,7 @@ from .myFunction import compressed_pickle, decompress_pickle
 from .myFunction import read_zxg
 from .myFunction import xls2zxg
 from .myFunction import xls2Code
-from .myFunction import code2ETF
+from .myFunction import codeInETF
 from .myFunction import etfAmountGreater
 from .myFunction import codeInfo
 from .myFunction import getRealFilename
@@ -37,5 +37,5 @@ from .qaETFstrategy import QAStrategyETFBase
 from .qaETFQARisk import QAETF_Risk
 from .qaIndexDatastruct import QAIndex_DataStruct_Day
 from .comm import ifupMA
-from .comm import str2date
+from .comm import str2date, date2str
 from .comm import is_all_chinese, is_contains_chinese

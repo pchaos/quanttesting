@@ -16,11 +16,16 @@ def ifupMA(data, n=[20]):
         return pd.DataFrame(dict).dropna() > 0
 
 
-def str2date(dayStr, format='%Y-%m-%d'):
-    if isinstance(dayStr, str):
-        return datetime.strptime(dayStr, format)
+def str2date(dateStr, format='%Y-%m-%d'):
+    if isinstance(dateStr, str):
+        return datetime.strptime(dateStr, format)
     else:
-        return dayStr
+        return dateStr
+
+def date2str(startdate, format='%Y-%m-%d'):
+    if isinstance(startdate, datetime):
+        startdate = startdate.strftime(format)
+    return startdate
 
 #检验是否全是中文字符
 def is_all_chinese(strs):
