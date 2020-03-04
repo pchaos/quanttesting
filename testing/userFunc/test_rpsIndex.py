@@ -100,6 +100,18 @@ class TestRPSIndex(unittest.TestCase):
         # print(rps.tail())
         print(rps)
 
+    def test_rps_ETFTOPN(self):
+        # 显示rps排名前10%的中文名称
+        fn = 'zxgETF.txt'
+        # code列表
+        code = read_zxg(fn)
+        rpsday = [20, 50]
+        rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
+        rps = rpsIndex.rpsTopN(self.end)
+        # print(rps.tail())
+
+        # rps['PRS']= rps['']
+        print(rps)
 
 if __name__ == '__main__':
     unittest.main()

@@ -18,12 +18,12 @@ def ifupMA(data, n=[20]):
 
 def str2date(dateStr, format='%Y-%m-%d'):
     if isinstance(dateStr, str):
-        return datetime.strptime(dateStr, format)
+        return datetime.datetime.strptime(dateStr, format)
     else:
         return dateStr
 
 def date2str(startdate, format='%Y-%m-%d'):
-    if isinstance(startdate, datetime):
+    if isinstance(startdate, datetime.datetime):
         startdate = startdate.strftime(format)
     return startdate
 

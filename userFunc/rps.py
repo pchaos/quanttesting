@@ -12,7 +12,7 @@ import datetime
 import pandas as pd
 from abc import ABC, abstractmethod
 import QUANTAXIS as qa
-
+from .comm import str2date, date2str
 
 # 计算收益率
 def cal_ret(dataFrame, *args, **kwargs):
@@ -94,22 +94,25 @@ class RPSAbs(ABC):
         self._rps = df.groupby(level=0).apply(get_RPS, *(self._rpsday))
         return self._rps
 
-    def rpsTopN(self, theday, N=5):
-        """RPS排名前N%的数据
+    def rpsTopN(self, theday: datetime.datetime, percentN=5) -> pd.DataFrame :
+        """RPS排名前percentN%的数据
         """
         rps = self._getRPS()
+        lastday = theday = str2date(date2str(theday))
         while 1:
             # 定位最近的rps数据
             dfn = []
             try:
-                df = rps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(theday))), :]
+                df = rps.loc[(slice(pd.Timestamp(theday), pd.Timestamp(lastday))), :]
                 if len(df) > 0:
                     # 排名前N%的指数
                     for col in df.columns:
-                        dfn.append(df.sort_values(by=col, ascending=False).reset_index().head(int(len(df) / (100 / N))))
-                    dftopn = pd.concat(dfn, ignore_index=True).drop_duplicates()
+                        # dfn.append(df.sort_values(by=col, ascending=False).reset_index().head(int(len(df) / (100 / percentN))))
+                        dfn.append(df[df[col]>= 100 - percentN])
+                    dftopn = pd.concat(dfn).drop_duplicates()
                     # print(dftopn)
                     break
+                lastday = theday
                 theday = theday - datetime.timedelta(1)
             except Exception as e:
                 theday = theday - datetime.timedelta(1)
