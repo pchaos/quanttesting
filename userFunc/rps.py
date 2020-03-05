@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 import QUANTAXIS as qa
 from .comm import str2date, date2str
 
+
 # 计算收益率
 def cal_ret(dataFrame, *args, **kwargs):
     '''计算收益率
@@ -84,7 +85,9 @@ class RPSAbs(ABC):
 
     @abstractmethod
     def _fetchData(self):
-        """获取"""
+        """获取QA_DataStruct
+        @return QA_DataStruct
+        """
         # data = qa.QA_fetch_index_day_adv(self.__codes, self.__startDate, self.__endDate)
         return None
 
@@ -94,7 +97,7 @@ class RPSAbs(ABC):
         self._rps = df.groupby(level=0).apply(get_RPS, *(self._rpsday))
         return self._rps
 
-    def rpsTopN(self, theday: datetime.datetime, percentN=5) -> pd.DataFrame :
+    def rpsTopN(self, theday: datetime.datetime, percentN=5) -> pd.DataFrame:
         """RPS排名前percentN%的数据
         """
         rps = self._getRPS()
@@ -108,7 +111,7 @@ class RPSAbs(ABC):
                     # 排名前N%的指数
                     for col in df.columns:
                         # dfn.append(df.sort_values(by=col, ascending=False).reset_index().head(int(len(df) / (100 / percentN))))
-                        dfn.append(df[df[col]>= 100 - percentN])
+                        dfn.append(round(df[df[col] >= 100 - percentN], 2))
                     dftopn = pd.concat(dfn).drop_duplicates()
                     # print(dftopn)
                     break
@@ -116,6 +119,8 @@ class RPSAbs(ABC):
                 theday = theday - datetime.timedelta(1)
             except Exception as e:
                 theday = theday - datetime.timedelta(1)
+        # rps平均值
+        dftopn['AVERAGERPS'] = round(dftopn.sum(axis=1) / len(df.columns), 2)
         return dftopn
 
     def _getRPS(self):
@@ -130,7 +135,23 @@ class RPSAbs(ABC):
         rps = self._getRPS()
         return rps.loc[(slice(None), code), :]
 
+
 class RPSIndex(RPSAbs):
+    """计算index RPS
+    """
+
     def _fetchData(self):
+        """
+        @return QA_DataStruct_Index_day
+        """
         data = qa.QA_fetch_index_day_adv(self._codes, self._startDate, self._endDate)
+        return data
+
+
+class RPSStock(RPSAbs):
+    def _fetchData(self):
+        """
+        @return QA_DataStruct_stock_day
+        """
+        data = qa.QA_fetch_stock_day_adv(self._codes, self._startDate, self._endDate)
         return data

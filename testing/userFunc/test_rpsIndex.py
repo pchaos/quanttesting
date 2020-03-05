@@ -17,6 +17,7 @@ from userFunc import cal_ret, get_RPS
 from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_pickle
 from userFunc import RPSIndex
 from userFunc import read_zxg
+from userFunc import codeInfo
 
 
 class TestRPSIndex(unittest.TestCase):
@@ -107,11 +108,14 @@ class TestRPSIndex(unittest.TestCase):
         code = read_zxg(fn)
         rpsday = [20, 50]
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
-        rps = rpsIndex.rpsTopN(self.end)
-        # print(rps.tail())
+        n= 10
+        rps = rpsIndex.rpsTopN(self.end, n)
+        self.assertTrue(len(rps) > 0)
 
-        # rps['PRS']= rps['']
         print(rps)
+        print("总数： {}".format(len(rps)))
+        dfInfo = codeInfo(list(rps.index.levels[1]))
+        print(dfInfo.name)
 
 if __name__ == '__main__':
     unittest.main()

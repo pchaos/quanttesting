@@ -13,7 +13,7 @@ import os
 import pandas as pd
 import QUANTAXIS as qa
 from userFunc import read_zxg
-from userFunc import xls2zxg, xls2Code, code2ETF, etfAmountGreater, codeInfo
+from userFunc import xls2zxg, xls2Code, codeInETF, etfAmountGreater, codeInfo
 
 
 class testReadZXG(unittest.TestCase):
@@ -72,7 +72,7 @@ class testReadZXG(unittest.TestCase):
         xlsfile = "担保品20200210.xls"
         codes = xls2Code(xlsfile)
         # ETF列表
-        codeETF = code2ETF(codes)
+        codeETF = codeInETF(codes)
         self.assertTrue(len(codes) > len(codeETF))
         print(len(codeETF), codeETF[:10], codeETF[-10:])
 
@@ -81,7 +81,27 @@ class testReadZXG(unittest.TestCase):
         xlsfile = "担保品20200210.xls"
         codes = xls2Code(xlsfile)
         # ETF列表
-        codeETF = code2ETF(codes)
+        codeETF = codeInETF(codes)
+        # 日期
+        startDate = '2020-02-07'
+        # 成交金额大于amount
+        amount = 1100
+        df = etfAmountGreater(codeETF, startDate, amount=amount)
+        df2 = qa.QA_fetch_index_day_adv(codeETF, startDate)
+        self.assertTrue(len(df2.data) > len(df.data))
+        print("{} :{}".format(len(df), len(df2)), df[:10], df2[-10:])
+        print("code: ", df.code)
+        # 保存到文件
+        zxgFile = "zxgETF.txt"
+        pd.DataFrame(df.code).to_csv(zxgFile, index=False, sep=" ", header=None)
+
+    def test_etfAmountGreater_t0(self):
+        # 成交额大于等于amount(万元）
+        xlsfile = "担保品20200210.xls"
+        codes = xls2Code(xlsfile)
+        # ETF列表
+        etfstartwith = ['159', '510', '512', '515', '513', '160', '161', '162']
+        codeETF = codeInETF(codes, etfstartwith)
         # 日期
         startDate = '2020-02-07'
         # 成交金额大于amount
@@ -96,7 +116,7 @@ class testReadZXG(unittest.TestCase):
         pd.DataFrame(df.code).to_csv(zxgFile, index=False, sep=" ", header=None)
 
     def test_ETFName(self):
-        """增加中文名称
+        """文件zxgFile，增加中文名称
         """
         zxgFile = "zxgETF.txt"
         code = read_zxg(zxgFile)
