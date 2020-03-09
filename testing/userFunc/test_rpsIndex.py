@@ -49,6 +49,9 @@ class TestRPSIndex(unittest.TestCase):
         return dataCalret
 
     def test_rps_class(self):
+        """
+        如果测试有错误，删除临时目录pickle文件
+        """
         # 显示rps排名前10%的中文名称
         code = self.code
         rpsday = [20, 50]
@@ -56,6 +59,7 @@ class TestRPSIndex(unittest.TestCase):
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
         rps = rpsIndex.rps()
         self.assertTrue(dfrps.equals(rps), "{} {}".format(dfrps.head(), rps.head()))
+        print(rps.tail())
 
     def test_rps_class_multi_rpsday(self):
         # 显示rps排名前10%的中文名称
@@ -108,7 +112,7 @@ class TestRPSIndex(unittest.TestCase):
         code = read_zxg(fn)
         rpsday = [20, 50]
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
-        n= 10
+        n = 10
         rps = rpsIndex.rpsTopN(self.end, n)
         self.assertTrue(len(rps) > 0)
 
@@ -116,6 +120,7 @@ class TestRPSIndex(unittest.TestCase):
         print("总数： {}".format(len(rps)))
         dfInfo = codeInfo(list(rps.index.levels[1]))
         print(dfInfo.name)
+
 
 if __name__ == '__main__':
     unittest.main()

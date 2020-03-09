@@ -11,14 +11,15 @@
 import datetime
 import pandas as pd
 from abc import ABC, abstractmethod
+from abc import ABCMeta
 import QUANTAXIS as qa
 from .comm import str2date, date2str
 
 
 # 计算收益率
 def cal_ret(dataFrame, *args, **kwargs):
-    '''计算收益率
-    days:周 5;月:20;半年：120; 一年:250
+    '''计算相对收益率
+    days:   周 5;月:20;半年：120; 一年:250
     '''
     if len(args) == 0:
         args = tuple([20])
@@ -30,7 +31,8 @@ def cal_ret(dataFrame, *args, **kwargs):
         dataFrame[coln] = close / close.shift(num)
         cols.append(coln)
     # return dataFrame.iloc[-max(args):, :].fillna(0)
-    return dataFrame[cols].iloc[max(args):, :]
+    # return dataFrame[cols].iloc[max(args):, :]
+    return dataFrame[cols].iloc[max(args):, :].dropna()
 
 
 # 计算RPS
@@ -60,7 +62,7 @@ def getSingleRPS(dataFrame, col, newcol):
     return df.reset_index().set_index(['code'])[[newcol]]
 
 
-class RPSAbs(ABC):
+class RPSAbs(metaclass=ABCMeta):
     """计算RPS基础类
     """
 
@@ -89,12 +91,17 @@ class RPSAbs(ABC):
         @return QA_DataStruct
         """
         # data = qa.QA_fetch_index_day_adv(self.__codes, self.__startDate, self.__endDate)
-        return None
+        # return None
 
-    def rps(self):
-        data = self._fetchData()
-        df = data.add_func(cal_ret, *(self._rpsday))
-        self._rps = df.groupby(level=0).apply(get_RPS, *(self._rpsday))
+    def rps(self, reCaculate=True) -> pd.DataFrame:
+        """计算rps
+        @return pd.DataFrame
+        """
+        if reCaculate:
+            # 需要重新计算
+            self._rps = None
+        if self._rps is None:
+            self._getRPS()
         return self._rps
 
     def rpsTopN(self, theday: datetime.datetime, percentN=5) -> pd.DataFrame:
@@ -126,7 +133,9 @@ class RPSAbs(ABC):
     def _getRPS(self):
         if self._rps is None:
             # 未计算rps，则先计算rps
-            self.rps()
+            data = self._fetchData()
+            df = data.add_func(cal_ret, *(self._rpsday))
+            self._rps = df.groupby(level=0).apply(get_RPS, *(self._rpsday))
         return self._rps
 
     def selectCode(self, code):
