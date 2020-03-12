@@ -51,23 +51,9 @@ def hma_cross_func(data):
 
 
 class HMA_Strategy(QAStrategyStockBase):
-    def __init__(self, code=['000001'], frequence='1min', strategy_id='QA_STRATEGY', risk_check_gap=1,
-                 portfolio='default',
-                 start='2019-01-01', end='2019-10-21', send_wx=False, market_type='stock_cn',
-                 data_host=eventmq_ip, data_port=eventmq_port, data_user=eventmq_username,
-                 data_password=eventmq_password,
-                 trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username,
-                 trade_password=eventmq_password,
-                 taskid=None, mongo_ip=mongo_ip):
-        super().__init__(code=code, frequence=frequence, strategy_id=strategy_id, risk_check_gap=risk_check_gap,
-                         portfolio=portfolio,
-                         start=start, end=end, send_wx=send_wx, market_type=market_type,
-                         data_host=eventmq_ip, data_port=eventmq_port, data_user=eventmq_username,
-                         data_password=eventmq_password,
-                         trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username,
-                         trade_password=eventmq_password,
-                         taskid=taskid, mongo_ip=mongo_ip)
-        klines = QA.QA_fetch_stock_day_adv(code, start, end)
+
+    def user_init(self):
+        klines = QA.QA_fetch_stock_day_adv(self.code, self.start, self.end)
         self._hma = klines.add_func(hma_cross_func)
 
     def on_bar(self, data):
@@ -77,7 +63,7 @@ class HMA_Strategy(QAStrategyStockBase):
         code = data.name[1]
         if (res['HMA_RETURN'][-1] > 0) and (
                 res['MA30_CROSS_JX'][-1] < res['MA30_CROSS_SX'][-1]):
-            print('LONG')
+            print('LONG', data)
             # if self.positions.volume_long == 0:
             if self.acc.get_position(code).volume_long == 0:
                 self.send_order('BUY', 'OPEN', code=code, price=data['close'], volume=100)
@@ -90,8 +76,7 @@ class HMA_Strategy(QAStrategyStockBase):
                 self.send_order('SELL', 'CLOSE',code=code, price=data['close'], volume=100)
 
     def hma(self, data):
-        # 这里我想加一个add_func的指标，不知道怎么做
-        print(data)
+        # print(data)
         day = data.name[0]
         code = data.name[1]
         return self._hma.loc[(slice(pd.Timestamp(day - datetime.timedelta(60)), pd.Timestamp(day)), code), :]
