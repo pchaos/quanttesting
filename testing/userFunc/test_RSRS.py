@@ -181,56 +181,53 @@ class testRSRS(TestCase):
         plt.legend()
         plt.show()
 
-    def test(self):
+    def test_RSRS_recent(self):
         # 四种策略时间更新到当前
         code = self.code
         dateStart = datetime.date(2005, 3, 1)
         dateEnd = datetime.date(2019, 12, 31)
+        dateEnd = datetime.date(2020, 3, 20)
+        self._RSRS(code, dateStart, dateEnd)
+
+    def _RSRS(self, code, dateStart, dateEnd, label=""):
         N = 18
         M = 600
-        HS300 = getdata(code, dateStart, dateEnd, N, M)
-        HS300 = HS300.loc[2:]
-        HS300 = HS300.reset_index(drop=True)
-        HS300.head()
-
+        rsrsDara = getdata(code, dateStart, dateEnd, N, M)
+        rsrsDara = rsrsDara.loc[2:]
+        rsrsDara = rsrsDara.reset_index(drop=True)
+        rsrsDara.head()
         # 斜率指标策略
-        result = RSRS1(HS300)
+        result = RSRS1(rsrsDara)
         num = result.flag.abs().sum() / 2
         nav = result.nav[result.shape[0] - 1]
-
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
-
         # 标准分策略
-        result2 = RSRS2(HS300)
+        result2 = RSRS2(rsrsDara)
         num = result2.flag.abs().sum() / 2
         nav = result2.nav[result.shape[0] - 1]
         ret_year = (nav - 1)
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
-
         # 修正标准分策略
-        result3 = RSRS3(HS300)
+        result3 = RSRS3(rsrsDara)
         num = result3.flag.abs().sum() / 2
         nav = result3.nav[result.shape[0] - 1]
         ret_year = (nav - 1)
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
-
         N = 16
         M = 300
-        HS300 = getdata(code, dateStart, dateEnd, N, M)
-        HS300 = HS300.loc[2:]
-        HS300 = HS300.reset_index(drop=True)
-        HS300.head()
-
-        result4 = RSRS4(HS300)
+        rsrsDara = getdata(code, dateStart, dateEnd, N, M)
+        rsrsDara = rsrsDara.loc[2:]
+        rsrsDara = rsrsDara.reset_index(drop=True)
+        rsrsDara.head()
+        result4 = RSRS4(rsrsDara)
         num = result4.flag.abs().sum() / 2
         nav = result4.nav[result.shape[0] - 1]
         ret_year = (nav - 1)
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
-
         xtick = np.arange(0, result.shape[0], int(result.shape[0] / 7))
         xticklabel = pd.Series(result.date[xtick])
         plt.figure(figsize=(20, 5))
@@ -239,10 +236,19 @@ class testRSRS(TestCase):
         plt.plot(np.arange(result.shape[0]), result2.nav, label='RSRS2', linewidth=2)
         plt.plot(np.arange(result.shape[0]), result3.nav, label='RSRS3', linewidth=2)
         plt.plot(np.arange(result.shape[0]), result4.nav, label='RSRS4', linewidth=2)
-        plt.plot(np.arange(result.shape[0]), result.close / result.close[0], color='yellow', label='HS300', linewidth=2)
-
+        plt.plot(np.arange(result.shape[0]), result.close / result.close[0], color='yellow', label=label, linewidth=2)
         fig.set_xticks(xtick)
-        fig.set_xticklabels(xticklabel, rotation=45)
+        fig.set_xticklabels(xticklabel, rotation=35)
         plt.legend()
         plt.show()
 
+    def test_RSRS_recent(self):
+        # 四种策略时间更新到当前
+        code = '399001'
+        code = '000016'
+        code = '399975'
+        code = '399006'
+        dateStart = datetime.date(2005, 3, 1)
+        # dateEnd = datetime.date(2019, 12, 31)
+        dateEnd = datetime.date(2020, 3, 20)
+        self._RSRS(code, dateStart, dateEnd, label=code)
