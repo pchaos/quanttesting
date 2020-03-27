@@ -39,3 +39,5 @@ from .qaIndexDatastruct import QAIndex_DataStruct_Day
 from .comm import ifupMA
 from .comm import str2date, date2str
 from .comm import is_all_chinese, is_contains_chinese
+from .RSRS import getdata
+from .RSRS import RSRS1, RSRS2, RSRS3, RSRS4
