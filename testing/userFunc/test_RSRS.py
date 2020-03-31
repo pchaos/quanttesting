@@ -8,6 +8,7 @@
 @license : Copyright(C), pchaos
 @Contact : p19992003#gmail.com
 """
+import unittest
 from unittest import TestCase
 import pandas as pd
 import os
@@ -25,11 +26,11 @@ from userFunc import RSRS1, RSRS2, RSRS3, RSRS4
 class testRSRS(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        cls.code = '000300'
         dateStart = datetime.date(2005, 3, 1)
         dateEnd = datetime.date(2017, 3, 31)
         N = 18
         M = 600
-        cls.code = '000300'
         cls.hs300 = getdata(cls.code, dateStart, dateEnd, N, M)
 
     @classmethod
@@ -125,15 +126,15 @@ class testRSRS(TestCase):
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
 
-        xtick = np.arange(0,result.shape[0],int(result.shape[0]/7))
+        xtick = np.arange(0, result.shape[0], int(result.shape[0] / 7))
         xticklabel = pd.Series(result.date[xtick])
-        plt.figure(figsize=(15,4))
+        plt.figure(figsize=(15, 4))
         fig = plt.axes()
-        plt.plot(np.arange(result.shape[0]),result.nav,label = 'RSRS1',linewidth = 2,color = 'red')
-        plt.plot(np.arange(result.shape[0]),result.close/result.close[0],color = 'yellow',label = 'HS300',linewidth = 2)
+        plt.plot(np.arange(result.shape[0]), result.nav, label='RSRS1', linewidth=2, color='red')
+        plt.plot(np.arange(result.shape[0]), result.close / result.close[0], color='yellow', label='HS300', linewidth=2)
 
         fig.set_xticks(xtick)
-        fig.set_xticklabels(xticklabel,rotation = 45)
+        fig.set_xticklabels(xticklabel, rotation=45)
         plt.legend()
         plt.show()
 
@@ -230,15 +231,15 @@ class testRSRS(TestCase):
         print('策略净值为= ', nav)
         xtick = np.arange(0, result.shape[0], int(result.shape[0] / 7))
         xticklabel = pd.Series(result.date[xtick])
-        plt.figure(figsize=(20, 5))
+        plt.figure(figsize=(25, 8))
         fig = plt.axes()
         plt.plot(np.arange(result.shape[0]), result.nav, label='RSRS1', linewidth=2)
         plt.plot(np.arange(result.shape[0]), result2.nav, label='RSRS2', linewidth=2)
         plt.plot(np.arange(result.shape[0]), result3.nav, label='RSRS3', linewidth=2)
-        plt.plot(np.arange(result.shape[0]), result4.nav, label='RSRS4', linewidth=2)
-        plt.plot(np.arange(result.shape[0]), result.close / result.close[0], color='yellow', label=label, linewidth=2)
+        plt.plot(np.arange(result.shape[0]), result4.nav, label='RSRS4', linewidth=1)
+        plt.plot(np.arange(result.shape[0]), result.close / result.close[0], color='yellow', label=label, linewidth=1.5)
         fig.set_xticks(xtick)
-        fig.set_xticklabels(xticklabel, rotation=35)
+        fig.set_xticklabels(xticklabel, rotation=25)
         plt.legend()
         plt.show()
 
@@ -248,7 +249,18 @@ class testRSRS(TestCase):
         code = '000016'
         code = '399975'
         code = '399006'
+        code = '399673'
+        code = '399989'  # 中证医疗
+        code = '399932'  # 中证消费
+        code = '399986'  # 中证银行
+        code = '880952'  # 中证银行
+
         dateStart = datetime.date(2005, 3, 1)
         # dateEnd = datetime.date(2019, 12, 31)
-        dateEnd = datetime.date(2020, 3, 20)
+        # dateEnd = datetime.date(2020, 3, 20)
+        dateEnd = datetime.datetime.now().date()
         self._RSRS(code, dateStart, dateEnd, label=code)
+
+
+if __name__ == '__main__':
+    unittest.main()
