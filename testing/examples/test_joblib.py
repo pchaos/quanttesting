@@ -62,5 +62,24 @@ class MyTestCase(unittest.TestCase):
         print('{:.4f} s'.format(end - start))
 
 
+    def test_diskcaching(self):
+        from joblib import Memory
+
+        cachedir = '/tmp/your_cache_dir_goes_here'
+        mem = Memory(cachedir)
+        import numpy as np
+        a = np.vander(np.arange(3)).astype(np.float)
+
+        square = mem.cache(np.square)
+        b = square(a)
+
+        c = square(a)
+        # The above call did not trigger an evaluation
+
+        from joblib import Parallel, delayed
+        from math import sqrt
+        Parallel(n_jobs=1)(delayed(sqrt)(i ** 2) for i in range(10))
+
+
 if __name__ == '__main__':
     unittest.main()
