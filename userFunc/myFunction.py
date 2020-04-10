@@ -92,11 +92,12 @@ def etfAmountGreater(code, startDate, endDate=None, amount=1000):
     df = qa.QA_fetch_index_day_adv(code, startDate, endDate)
     return df[df['amount'] >= amount * 10000]
 
+
 def codeInfo(codes):
     """返回指数或etf对应的股票信息"""
     index = qa.QA_fetch_index_list_adv()
     etf = qa.QA_fetch_etf_list()
-    return pd.concat([index[index['code'].isin(codes)],  etf[etf['code'].isin(codes)]], axis=0)
+    return pd.concat([index[index['code'].isin(codes)], etf[etf['code'].isin(codes)]], axis=0)
 
 
 def getRealFilename(filename):
@@ -165,3 +166,30 @@ def somefunc(cls):
         return instances[cls]
 
     return _wrapper
+
+
+def CMI(data: pd.DataFrame, n=30):
+    """如何把市场划分为趋势行情和震荡行情，也就成了这个策略的关键，恒温器策略引入了市场波动指数（Choppy Market Index），简称CMI
+    它是一个用来判断市场走势类型的技术指标。通过计算当前收盘价与N周期前收盘价的差值与这段时间内价格波动的范围的比值，来判断目前的价格走势是趋势还是震荡。
+    CMI的计算公式为：
+    CMI=(abs(Close-ref(close,(n-1)))*100/(HHV(high,n)-LLV(low,n))
+    其中，abs是绝对值，n是周期数。
+
+    策略逻辑
+    一般来说CMI的值在0~100区间，值越大，趋势越强。当CMI的值小于20时，策略认为市场处于震荡模式；当CMI的值大于等于20时，策略认为市场处于趋势模式。
+
+    整个策略逻辑，可以简化的写成下面这样：
+
+    如果CMI < 20，执行震荡策略；
+    如果CMI ≥ 20，执行趋势策略；
+    """
+    close = data.close
+    dict = {"CMI": np.abs((close - qa.REF(close, n - 1))) * 100 / (qa.HHV(data.high, n) - qa.LLV(data.low, n))}
+    return pd.DataFrame(dict)
+
+def RSV(data: pd.DataFrame, n=100):
+    """RSV=（收盘价-最低价）/（最高价-最低价）
+    RSV有何规律呢？很明显，在股价上涨趋势中，往往收盘价接近最高价，此时RSV值接近于1
+    """
+    dict = {"RSV": (data.close - data.low)/(data.high - data.low)}
+    return pd.DataFrame(dict)
