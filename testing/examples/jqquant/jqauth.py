@@ -11,4 +11,5 @@ userid=getEnvVar('jquserid')
 passwd=getEnvVar('jqpasswd')
 assert userid 
 auth(userid,passwd)
+print("验证：{}".format(is_auth()))
 print("JoinQuant 使用情况：", get_query_count())
