@@ -11,15 +11,24 @@
 
 import unittest
 import datetime
+import os
 from jqdatasdk import *
 from dotenv import load_dotenv
 from .testbase import TestingBase
 
+
 def getEnvVar(key):
+    from os import sys, path
+
+    # __file__ should be defined in this case
+    DIRNAME = path.dirname(path.dirname(path.abspath(__file__)))
+    if DIRNAME not in sys.path:
+        sys.path.append(DIRNAME)
     load_dotenv(verbose=True)
     return os.getenv(key)
 
-class jqTestingbase(unittest.TestCase):
+
+class jqTestingbase(TestingBase):
 
     @classmethod
     def userInit(cls):
@@ -30,7 +39,6 @@ class jqTestingbase(unittest.TestCase):
         passwd = getEnvVar('jqpasswd')
         assert userid
         auth(userid, passwd)
-
 
     @classmethod
     def userEnd(cls):
