@@ -24,6 +24,7 @@ from .myFunction import codeInfo
 from .myFunction import getRealFilename
 from .myFunction import setdiff_sorted
 from .myFunction import CMI
+from .myFunction import RSV
 from .chCounts import CHCOUNTS, CHCOUNTS2
 from .chCounts import CHCOUNTS3
 from .chCounts import FOURWEEK, pltFourWeek
@@ -42,4 +43,5 @@ from .comm import str2date, date2str
 from .comm import is_all_chinese, is_contains_chinese
 from .RSRS import getdata
 from .RSRS import RSRS1, RSRS2, RSRS3, RSRS4
-from .qatestbase import qaTestingbase
+from .qatestbase import qaTestingBase
+from .jqtestbase import jqTestingbase

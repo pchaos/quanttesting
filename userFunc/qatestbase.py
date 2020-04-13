@@ -12,12 +12,10 @@
 import unittest
 import datetime
 import QUANTAXIS as qa
+from .testbase import TestingBase
 
-class qaTestingbase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        super(qaTestingbase, cls).setUpClass()
-        cls.userInit()
+
+class qaTestingBase(TestingBase):
 
     @classmethod
     def userInit(cls):
@@ -29,14 +27,8 @@ class qaTestingbase(unittest.TestCase):
         cls.dataFrame = qa.QA_fetch_index_day_adv(cls.code, start=dateStart, end=dateEnd)
 
     @classmethod
-    def tearDownClass(cls) -> None:
-        super(qaTestingbase, cls).tearDownClass()
-        cls.userEnd()
-
-    @classmethod
     def userEnd(cls):
         """class结束，用户释放资源
         """
         if cls.dataFrame is not None:
             cls.dataFrame = None
-
