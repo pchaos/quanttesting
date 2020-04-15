@@ -1,4 +1,7 @@
-"""test.py - demo of using a c++ class from within Python"""
+# -*- coding: utf-8 -*-
+"""test.py - demo of using a c++ class from within Python
+"""
+
 from foo import Foo
 
 # We'll create a Foo object with a value of 5...
