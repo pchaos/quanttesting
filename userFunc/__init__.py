@@ -12,7 +12,7 @@
 """
 __author__ = 'pchaos'
 
-from .myFunction import getCodeList
+from .myFunction import getCodeList, ifupMA
 from .myFunction import full_pickle, loosen_pickle
 from .myFunction import compressed_pickle, decompress_pickle
 from .myFunction import read_zxg
@@ -25,6 +25,7 @@ from .myFunction import getRealFilename
 from .myFunction import setdiff_sorted
 from .myFunction import CMI
 from .myFunction import RSV
+from .myFunction import fourWeek, taoboshiIndicator
 from .chCounts import CHCOUNTS, CHCOUNTS2
 from .chCounts import CHCOUNTS3
 from .chCounts import FOURWEEK, pltFourWeek
@@ -38,7 +39,6 @@ from .rps import RPSIndex
 from .qaETFstrategy import QAStrategyETFBase
 from .qaETFQARisk import QAETF_Risk
 from .qaIndexDatastruct import QAIndex_DataStruct_Day
-from .comm import ifupMA
 from .comm import str2date, date2str
 from .comm import is_all_chinese, is_contains_chinese
 from .RSRS import getdata

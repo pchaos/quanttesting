@@ -168,7 +168,7 @@ def somefunc(cls):
     return _wrapper
 
 
-def CMI(data: pd.DataFrame, n=30):
+def CMI(data: pd.DataFrame, n=100):
     """如何把市场划分为趋势行情和震荡行情，也就成了这个策略的关键，恒温器策略引入了市场波动指数（Choppy Market Index），简称CMI
     它是一个用来判断市场走势类型的技术指标。通过计算当前收盘价与N周期前收盘价的差值与这段时间内价格波动的范围的比值，来判断目前的价格走势是趋势还是震荡。
     CMI的计算公式为：
@@ -187,9 +187,74 @@ def CMI(data: pd.DataFrame, n=30):
     dict = {"CMI": np.abs((close - qa.REF(close, n - 1))) * 100 / (qa.HHV(data.high, n) - qa.LLV(data.low, n))}
     return pd.DataFrame(dict)
 
-def RSV(data: pd.DataFrame, n=100):
+
+def RSV(data: pd.DataFrame, n=14):
     """RSV=（收盘价-最低价）/（最高价-最低价）
     RSV有何规律呢？很明显，在股价上涨趋势中，往往收盘价接近最高价，此时RSV值接近于1
     """
-    dict = {"RSV": (data.close - data.low)/(data.high - data.low)}
+    dict = {"RSV": (data.close - data.low) / (data.high - data.low)}
     return pd.DataFrame(dict)
+
+
+def ifupMA(data, n=[20]):
+    """收盘站上n均线上
+
+    """
+    if isinstance(n, int):
+        # 传进来的参数为整数类型时
+        dict = {'MA{}'.format(n): (data.close - qa.MA(data.close, n)).dropna() > 0}
+    elif isinstance(n, list):
+        dict = {'MA{}'.format(i): data.close - qa.MA(data.close, i) for i in n}
+    return pd.DataFrame(dict).dropna() > 0
+
+
+def fourWeek(data, m=20, n=20):
+    """四周规则
+    　　只要价格涨过前四个日历周内的最高价，则平回空头头寸，开立多头头寸。
+    　　只要价格跌过前四个周内(照日历算满)的最低价，则平回多头头寸，建立空头头寸。
+    """
+
+    def flag(x, preFlag):
+        if x['close'] > x['hclose']:
+            preFlag[0] = 1
+        elif x['close'] < x['lclose']:
+            preFlag[0] = -1
+        return preFlag[0]
+
+    def highLow(data, m=20, n=20):
+        ''' 计算n周期最 fw.join(upma)高收盘价、最低收盘价
+
+        :param data: dataFrame
+        :param n: 计算最高收盘价周期; 默认：20
+        :param n: 计算最低收盘价周期; 默认：20
+        :return:
+        '''
+        high = qa.HHV(data['close'], m - 1)
+        low = qa.LLV(data['close'], n - 1)
+        return pd.DataFrame({'hclose': high.shift(1), 'lclose': low.shift(1), 'close': data.close})
+
+    df = highLow(data, m, n)
+    preFlag = [0]
+    df['flag'] = df.apply(lambda x: flag(x, preFlag), axis=1);
+    return pd.DataFrame({'flag': df['flag']})
+
+
+def taoboshiIndicator(data, m=20, n=20, maday=50):
+    """陶博士中期信号
+    """
+
+    def flag(x, preFlag):
+        if x['flag'] > 0 and x['MA{}'.format(maday)]:
+            # 中期入场信号
+            preFlag[0] = 1
+        elif x['flag'] < 0 or x['MA{}'.format(maday)]:
+            # 中期出场信号 跌破20日收盘最低价或者ma50
+            preFlag[0] = -1
+        return preFlag[0]
+
+    fw = fourWeek(data, m, n)
+    maday = 50
+    upma = ifupMA(data, maday)
+    preFlag = [0]
+    result = fw.join(upma).apply(lambda x: flag(x, preFlag), axis=1)
+    return pd.DataFrame({'flag': result})
