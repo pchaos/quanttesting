@@ -25,7 +25,8 @@ def save_day(paralleled=True):
     QA_SU_save_stock_list('tdx')
     QA_SU_save_stock_block('tdx')
     QA_SU_save_stock_day('tdx', paralleled=paralleled)
-    QA_SU_save_stock_xdxr('tdx')
+    QA_SU_save_stock_xdxr('tdx', paralleled=paralleled)
+    # QA_SU_save_stock_xdxr('tdx')
 
 
 if __name__ == '__main__':

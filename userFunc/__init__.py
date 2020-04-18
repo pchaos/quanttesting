@@ -25,7 +25,8 @@ from .myFunction import getRealFilename
 from .myFunction import setdiff_sorted
 from .myFunction import CMI
 from .myFunction import RSV
-from .myFunction import fourWeek, taoboshiIndicator
+from .myFunction import fourWeek, TBSIndicator
+from .myFunction import TBSMonthIndicator
 from .chCounts import CHCOUNTS, CHCOUNTS2
 from .chCounts import CHCOUNTS3
 from .chCounts import FOURWEEK, pltFourWeek

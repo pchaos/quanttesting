@@ -239,7 +239,7 @@ def fourWeek(data, m=20, n=20):
     return pd.DataFrame({'flag': df['flag']})
 
 
-def taoboshiIndicator(data, m=20, n=20, maday=50):
+def TBSIndicator(data, m=20, n=20, maday=50):
     """陶博士中期信号
     """
 
@@ -247,7 +247,8 @@ def taoboshiIndicator(data, m=20, n=20, maday=50):
         if x['flag'] > 0 and x['MA{}'.format(maday)]:
             # 中期入场信号
             preFlag[0] = 1
-        elif x['flag'] < 0 or x['MA{}'.format(maday)]:
+        # elif x['flag'] < 0 or x['MA{}'.format(maday)]:
+        elif x['flag'] < 0 and x['MA{}'.format(maday)]:
             # 中期出场信号 跌破20日收盘最低价或者ma50
             preFlag[0] = -1
         return preFlag[0]
@@ -257,4 +258,28 @@ def taoboshiIndicator(data, m=20, n=20, maday=50):
     upma = ifupMA(data, maday)
     preFlag = [0]
     result = fw.join(upma).apply(lambda x: flag(x, preFlag), axis=1)
+    return pd.DataFrame({'flag': result})
+
+
+def TBSMonthIndicator(data, m=10, n=20):
+    """陶博士月线牛熊判断
+    10月交叉20月均线
+    """
+    def flag(x, preFlag):
+        if x['jc']:
+            # 金叉
+            preFlag[0] = 1
+        elif x['sc']:
+            # 死叉
+            preFlag[0] = -1
+        return preFlag[0]
+
+    close = data['close']
+    ma1 = qa.MA(close, m)
+    ma2 = qa.MA(close, n)
+    cross1 = qa.CROSS_STATUS(ma1, ma2)
+    cross2 = qa.CROSS_STATUS(ma2, ma1)
+    preFlag = [0]
+    # 金叉 死叉
+    result = pd.DataFrame({'jc': cross1, 'sc':cross2}, index=ma1.index).apply(lambda x: flag(x, preFlag), axis=1)
     return pd.DataFrame({'flag': result})

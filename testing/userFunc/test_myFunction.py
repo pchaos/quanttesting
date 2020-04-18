@@ -18,7 +18,7 @@ import statsmodels.formula.api as sml
 import matplotlib.pyplot as plt
 import QUANTAXIS as qa
 from userFunc import qaTestingBase, CMI, RSV
-from userFunc import fourWeek, taoboshiIndicator
+from userFunc import fourWeek, TBSIndicator, TBSMonthIndicator
 
 
 class testMyFunction(qaTestingBase):
@@ -57,7 +57,8 @@ class testMyFunction(qaTestingBase):
         print(dfind[dfind.shift(1)['flag'] != dfind['flag']].iloc[-30:])
 
     def test_taoboshiIndicator(self):
-        """2019-01-18 399006     1
+        """ 陶博士中期信号 ???
+        2019-01-18 399006     1
         2019-04-26 399006    -1
         2019-06-21 399006     1
         2019-08-09 399006    -1
@@ -73,20 +74,24 @@ class testMyFunction(qaTestingBase):
         # code = '399001' # 深证指数
         # code = '399106' # 深证综指
         days = 750
-        m, n, maday= 20, 20, 50
-        self._taoboshiIndicator(code, days, m, maday, n, week=False)
+        m, n, maday = 20, 20, 50
+        self._taoboshiIndicator(code, days, m, n, maday, resample='d')
         m, n, maday = 4, 4, 10
-        self._taoboshiIndicator(code, days, m, maday, n, week=True)
+        self._taoboshiIndicator(code, days, m, n, maday, resample='w')
 
-    def _taoboshiIndicator(self, code, days, m, maday, n, week=False):
+    def _taoboshiIndicator(self, code, days, m, n, maday=None, resample='d', indicator=TBSIndicator):
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(1)
         data = qa.QA_fetch_index_day_adv(code, start, end)
-        if week:
+        if resample.upper() == 'W':
             # 转换为周线数据
             data = qa.QA_DataStruct_Day(data.week)
-        # print(data.data.columns, type(data.data))
-        dfind = data.add_func(taoboshiIndicator, m, n, maday)
+        elif resample.upper() == 'M':
+            data = qa.QA_DataStruct_Day(data.month)
+        if not maday:
+            dfind = data.add_func(indicator, m, n)
+        else:
+            dfind = data.add_func(indicator, m, n, maday)
         self.assertTrue(len(dfind) > 0, '指标个数为零')
         if days > 300:
             # 出现标志的个数大于零
@@ -96,6 +101,15 @@ class testMyFunction(qaTestingBase):
         print(dfind.iloc[-1])
         # 指标变向
         print(dfind[dfind.shift(1)['flag'] != dfind['flag']].iloc[-30:])
+
+    def test_TBSMonthIndicator(self):
+        code = '399006'  # 创业板指数
+        # code = '000001'  # 上证指数
+        # code = '399001' # 深证指数
+        code = '399106' # 深证综指
+        days = 2050
+        m, n = 10, 20
+        self._taoboshiIndicator(code, days, m,  n,  resample='m', indicator=TBSMonthIndicator)
 
 
 if __name__ == '__main__':
