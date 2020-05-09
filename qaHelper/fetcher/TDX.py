@@ -53,21 +53,23 @@ class TDX(Fetcher):
         start = str(start)[0:10]
         today_ = datetime.date.today()
         lens = QA_util_get_trade_gap(start, today_)
-        if str(frequence) in ['5', '5m', '5min', 'five']:
-            frequence, type_ = 0, '5min'
-            lens = 48 * lens
-        elif str(frequence) in ['1', '1m', '1min', 'one']:
-            frequence, type_ = 8, '1min'
-            lens = 240 * lens
-        elif str(frequence) in ['15', '15m', '15min', 'fifteen']:
-            frequence, type_ = 1, '15min'
-            lens = 16 * lens
-        elif str(frequence) in ['30', '30m', '30min', 'half']:
-            frequence, type_ = 2, '30min'
-            lens = 8 * lens
-        elif str(frequence) in ['60', '60m', '60min', '1h']:
-            frequence, type_ = 3, '60min'
-            lens = 4 * lens
+        frequence, type_, multiplicator = cls.getReverseFrequence(frequence)
+        lens = lens * multiplicator
+        # if str(frequence) in ['5', '5m', '5min', 'five']:
+        #     frequence, type_ = 0, '5min'
+        #     lens = 48 * lens
+        # elif str(frequence) in ['1', '1m', '1min', 'one']:
+        #     frequence, type_ = 8, '1min'
+        #     lens = 240 * lens
+        # elif str(frequence) in ['15', '15m', '15min', 'fifteen']:
+        #     frequence, type_ = 1, '15min'
+        #     lens = 16 * lens
+        # elif str(frequence) in ['30', '30m', '30min', 'half']:
+        #     frequence, type_ = 2, '30min'
+        #     lens = 8 * lens
+        # elif str(frequence) in ['60', '60m', '60min', '1h']:
+        #     frequence, type_ = 3, '60min'
+        #     lens = 4 * lens
         if lens > 20800:
             lens = 20800
         with cls.tdxapi.connect(cls.ip, cls.port) as api:
@@ -162,7 +164,7 @@ class TDX(Fetcher):
                     #     return QA_data_make_hfq(data,xdxr)
         except Exception as e:
             if isinstance(e, TypeError):
-                print('1、Tushare内置的pytdx版本和QUANTAXIS使用的pytdx 版本不同, 请重新安装pytdx以解决此问题.{}:{}'.format(cls.ip,cls.port))
+                print('1、Tushare内置的pytdx版本和QUANTAXIS使用的pytdx 版本不同, 请重新安装pytdx以解决此问题.{}:{}'.format(cls.ip, cls.port))
                 print('pip uninstall pytdx\npip install pytdx')
                 print('2、或者此时间段无数据。')
             else:
@@ -173,7 +175,7 @@ class TDX(Fetcher):
             frequence='day'):
 
         frequence = cls.getFrequence(frequence)
-        if 5 <= frequence !=8:
+        if 5 <= frequence != 8:
             return cls.getDay(code, start, end, if_fq, frequence)
         else:
             return cls.getMin(code, start, end, if_fq, frequence)

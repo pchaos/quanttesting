@@ -5,7 +5,7 @@ from unittest import TestCase
 import datetime
 import pandas as pd
 import QUANTAXIS as qa
-from QUANTAXIS.QAFetch.QATdx import QA_fetch_get_stock_day
+from QUANTAXIS.QAFetch.QATdx import QA_fetch_get_stock_day, QA_fetch_get_stock_min
 from qaHelper.fetcher import TDX
 
 
@@ -57,13 +57,37 @@ class testTDX(TestCase):
         df2 = QA_fetch_get_stock_day(code, start, end)
         self.assertTrue(df.equals(df2), "和QA返回的数据不一致")
 
-    def test_get_nocode(self):
+    def test_get_noData(self):
         code = '600001'  # 不存在的股票代码
         days = 365 * 1.2
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = TDX.get(code, start, end)
         self.assertTrue(df is None, "{}已退市，返回数据数量应该等于0{}。".format(code, df))
+
+    def test_get_min(self):
+        code = '000001'
+        days = 30 * 1.2
+        start = datetime.datetime.now() - datetime.timedelta(days)
+        end = datetime.datetime.now() - datetime.timedelta(0)
+        df = TDX.get(code, start, end, frequence='1min')
+        self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
+
+    def test_get_min_diffQA(self):
+        code = '000001'
+        days = 30 * 1.2
+        start = datetime.datetime.now() - datetime.timedelta(days)
+        end = datetime.datetime.now() - datetime.timedelta(0)
+        df = TDX.get(code, start, end, frequence='1min')
+        df2=QA_fetch_get_stock_min(code, start, end, frequence='1min')
+        # todo df的长度比df2长。未找出原因
+        if len(df) > len(df2):
+            df = df[-len(df2):]
+            print("df的长度比df2长")
+        else:
+            df2 = df2[-len(df):]
+            print("df2的长度比df长")
+        self.assertTrue(df.equals(df2), "和QA返回的分钟线数据不一致:{}:{}".format(len(df), len(df2)))
 
 
 if __name__ == '__main__':
