@@ -172,6 +172,8 @@ class TDX(Fetcher):
     def get(cls, code, start, end, if_fq='00',
             frequence='day'):
 
-        frequence = cls.get_frequence(frequence)
-        if frequence >= 5:
+        frequence = cls.getFrequence(frequence)
+        if 5 <= frequence !=8:
             return cls.getDay(code, start, end, if_fq, frequence)
+        else:
+            return cls.getMin(code, start, end, if_fq, frequence)
