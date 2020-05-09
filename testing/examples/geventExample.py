@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from gevent import spawn, joinall, monkey;
+from gevent import spawn, joinall, monkey
 
-monkey.patch_all()
+monkey.patch_all(thread=False)
 
 import time
 
