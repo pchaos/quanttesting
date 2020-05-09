@@ -43,6 +43,7 @@ def getCode() -> None:
     data2 = getIndexCalret(fileName, code, start, end)
     return code, data2
 
+
 def _getRPS(rpsday, dataFrame):
     # data = qa.QA_DataStruct_Index_day(self.data2)
     data = qa.QA_DataStruct_Index_day(dataFrame)
@@ -54,7 +55,7 @@ def _getRPS(rpsday, dataFrame):
     return dfg
 
 
-def main():
+def indexRPSMain():
     # 显示rps排名前10%的中文名称
     code, data2 = getCode()
     rpsday = [20, 50]
@@ -69,7 +70,8 @@ def main():
     # 排名前n%
     n = 10
     rpstopn = rpsIndex.rpsTopN(end, n)
-    print("RPS排名前{}% ：\n".format(n), rpstopn)
+    print("指数总数： {}，RPS排名前{}% 的个数{}：\n".format(len(code), n, len(rpstopn)), rpstopn)
+
 
 if __name__ == '__main__':
-    main()
+    indexRPSMain()
