@@ -49,27 +49,12 @@ class TDX(Fetcher):
     @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
     def getMin(cls, code, start, end, if_fq='00',
                frequence=9):
-        type_ = ''
+        # type_ = ''
         start = str(start)[0:10]
         today_ = datetime.date.today()
         lens = QA_util_get_trade_gap(start, today_)
-        frequence, type_, multiplicator = cls.getReverseFrequence(frequence)
+        _, type_, multiplicator = cls.getReverseFrequence(frequence)
         lens = lens * multiplicator
-        # if str(frequence) in ['5', '5m', '5min', 'five']:
-        #     frequence, type_ = 0, '5min'
-        #     lens = 48 * lens
-        # elif str(frequence) in ['1', '1m', '1min', 'one']:
-        #     frequence, type_ = 8, '1min'
-        #     lens = 240 * lens
-        # elif str(frequence) in ['15', '15m', '15min', 'fifteen']:
-        #     frequence, type_ = 1, '15min'
-        #     lens = 16 * lens
-        # elif str(frequence) in ['30', '30m', '30min', 'half']:
-        #     frequence, type_ = 2, '30min'
-        #     lens = 8 * lens
-        # elif str(frequence) in ['60', '60m', '60min', '1h']:
-        #     frequence, type_ = 3, '60min'
-        #     lens = 4 * lens
         if lens > 20800:
             lens = 20800
         with cls.tdxapi.connect(cls.ip, cls.port) as api:
@@ -107,7 +92,7 @@ class TDX(Fetcher):
             end_date {str:10} -- 10位长度的日期 比如'2018-01-01'
         Keyword Arguments:
             if_fq {str} -- '00'/'bfq' -- 不复权 '01'/'qfq' -- 前复权 '02'/'hfq' -- 后复权 '03'/'ddqfq' -- 定点前复权 '04'/'ddhfq' --定点后复权
-            frequency {int} -- K线种类
+            frequency {int} -- K线周期
                 0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线
                 5 周K线
                 6 月K线
@@ -173,9 +158,30 @@ class TDX(Fetcher):
     @classmethod
     def get(cls, code, start, end, if_fq='00',
             frequence='day'):
+        """通达信历史数据
 
+        Args:
+            code:
+            start:
+            end:
+            if_fq:
+            frequence: K线周期
+                0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线
+                5 周K线
+                6 月K线
+                7 1分钟
+                8 1分钟K线
+                9 日K线
+                10 季K线
+                11 年K线
+
+        Returns:
+
+        """
         frequence = cls.getFrequence(frequence)
         if 5 <= frequence != 8:
+            #日线以上周期
             return cls.getDay(code, start, end, if_fq, frequence)
         else:
+            # 日线以下周期
             return cls.getMin(code, start, end, if_fq, frequence)

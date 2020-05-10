@@ -4,13 +4,14 @@ tushare
 pandas
 numpy
 matplotlib
-QUANTAXIS>1.4.3
+QUANTAXIS>1.9.2
 pyecharts
+pyecharts-jupyter-installer
 jupyter-echarts-pypkg
 statsmodels
 ipython
 pytest
-mpl_finance
+mplfinance
 mock
 seaborn
 python-dotenv
