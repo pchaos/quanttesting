@@ -91,6 +91,7 @@ class testTDX(TestCase):
             print("df2的长度比df长")
         self.assertTrue(len(df) == len(df2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(df), len(df2)))
         obo = self.diffOneByOne(df, df2)
+        # todo  连续获取分钟数据时，不定时返回结果不想等。报错
         self.assertTrue(df.equals(df2), "和QA返回的分钟线数据不一致:{}".format(obo))
 
     def diffOneByOne(self, df1, df2):
@@ -99,7 +100,6 @@ class testTDX(TestCase):
         for i in range(len(df1)):
             for col in df1.columns:
                 if df1[col][i] != df2[col][i]:
-                    # print(chCounts.chCounts[i], chCounts2.chCounts[i])
                     oneByOne.append([{"比较顺序": i}, col, df1[col][i], df2[col][i], df1.iloc[i]])
         return oneByOne
 
