@@ -101,19 +101,19 @@ class QueryMongodb(Fetcher):
                       ]]
             except:
                 res = None
-            if format in ['P', 'p', 'pandas', 'pd']:
+            if cls.format in ['P', 'p', 'pandas', 'pd']:
                 return res
-            elif format in ['json', 'dict']:
+            elif cls.format in ['json', 'dict']:
                 return QA_util_to_json_from_pandas(res)
             # 多种数据格式
-            elif format in ['n', 'N', 'numpy']:
+            elif cls.format in ['n', 'N', 'numpy']:
                 return numpy.asarray(res)
-            elif format in ['list', 'l', 'L']:
+            elif cls.format in ['list', 'l', 'L']:
                 return numpy.asarray(res).tolist()
             else:
                 print(
                     "QA Error QA_fetch_stock_day format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
-                    % format
+                    % cls.format
                 )
                 return None
         else:

@@ -17,11 +17,19 @@ class testQuery(TestCase):
 
         qm.collections = DATABASE.stock_min
         self.assertTrue(collections.name != qm.collections.name)
-        print("改变表名：{}".format(qm.collections))
+        print("原始表名：{}，\n改变后表名：{}".format(collections, qm.collections))
 
         qm.collections = collections
         self.assertTrue(collections.name == qm.collections.name)
 
+
+    def test_get(self):
+        code = '000001'
+        days = 365 * 1.2
+        start = datetime.datetime.now() - datetime.timedelta(days)
+        end = datetime.datetime.now() - datetime.timedelta(0)
+        df = qm.get(code, start, end)
+        self.assertTrue(len(df) > days//10, "返回数据数量应该大于0。")
 
 if __name__ == '__main__':
     unittest.main()
