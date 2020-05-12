@@ -6,17 +6,10 @@ import datetime
 import pandas as pd
 from retrying import retry
 from pytdx.hq import TdxHq_API
-from QUANTAXIS.QAFetch.QATdx import get_mainmarket_ip, select_best_ip
-from QUANTAXIS.QAFetch.base import _select_market_code, _select_index_code, _select_type, _select_bond_market_code
-from QUANTAXIS.QAUtil import (QA_Setting, QA_util_date_stamp,
-                              QA_util_date_str2int, QA_util_date_valid,
-                              QA_util_get_real_date, QA_util_get_real_datelist,
-                              QA_util_future_to_realdatetime, QA_util_tdxtimestamp,
-                              QA_util_future_to_tradedatetime,
-                              QA_util_get_trade_gap, QA_util_log_info,
-                              QA_util_time_stamp, QA_util_web_ping,
-                              exclude_from_stock_ip_list, future_ip_list,
-                              stock_ip_list, trade_date_sse)
+from QUANTAXIS.QAFetch.QATdx import get_mainmarket_ip
+from QUANTAXIS.QAFetch.base import _select_market_code
+from QUANTAXIS.QAUtil import (QA_util_date_stamp,
+                              QA_util_get_trade_gap, QA_util_time_stamp)
 from .fetcher import Fetcher
 from .classproperty import classproperty
 
@@ -155,33 +148,3 @@ class TDX(Fetcher):
             else:
                 print(e)
 
-    @classmethod
-    def get(cls, code, start, end, if_fq='00',
-            frequence='day'):
-        """通达信历史数据
-
-        Args:
-            code:
-            start:
-            end:
-            if_fq:
-            frequence: K线周期
-                0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线
-                5 周K线
-                6 月K线
-                7 1分钟
-                8 1分钟K线
-                9 日K线
-                10 季K线
-                11 年K线
-
-        Returns:
-
-        """
-        frequence = cls.getFrequence(frequence)
-        if 5 <= frequence != 8:
-            #日线以上周期
-            return cls.getDay(code, start, end, if_fq, frequence)
-        else:
-            # 日线以下周期
-            return cls.getMin(code, start, end, if_fq, frequence)

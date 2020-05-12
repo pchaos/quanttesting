@@ -15,6 +15,8 @@ class testTDX(TestCase):
         pass
 
     def test_getAPI(self):
+        """pytdx connect
+        """
         from QUANTAXIS.QAUtil import QA_util_get_trade_gap
         from QUANTAXIS.QAFetch.base import _select_market_code
         code = '600000'
@@ -84,11 +86,22 @@ class testTDX(TestCase):
         if len(df) > len(df2):
             df = df[-len(df2):]
             print("df的长度比df2长")
-        else:
+        elif len(df) < len(df2):
             df2 = df2[-len(df):]
             print("df2的长度比df长")
-        self.assertTrue(df.equals(df2), "和QA返回的分钟线数据不一致:{}:{}".format(len(df), len(df2)))
+        self.assertTrue(len(df) == len(df2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(df), len(df2)))
+        obo = self.diffOneByOne(df, df2)
+        self.assertTrue(df.equals(df2), "和QA返回的分钟线数据不一致:{}".format(obo))
 
+    def diffOneByOne(self, df1, df2):
+        oneByOne = []
+        # 逐个比较，判断哪一天不匹配
+        for i in range(len(df1)):
+            for col in df1.columns:
+                if df1[col][i] != df2[col][i]:
+                    # print(chCounts.chCounts[i], chCounts2.chCounts[i])
+                    oneByOne.append([{"比较顺序": i}, col, df1[col][i], df2[col][i], df1.iloc[i]])
+        return oneByOne
 
 if __name__ == '__main__':
     unittest.main()
