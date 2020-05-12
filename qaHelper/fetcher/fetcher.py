@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
+from .classproperty import classproperty
 
 # import QUANTAXIS as qa
 
@@ -27,7 +28,26 @@ PERIODSLENS = {0: 48, 1: 16, 2: 8, 3: 4, 5: 1,
                6: 1, 8: 240, 9: 1, 10: 1, 11: 1}
 
 
-class Fetcher(ABC):
+class Fetcher(ABC, metaclass=ABCMeta):
+    """
+
+    """
+    # 返回数据格式
+    _format = "numpy"
+
+    @classproperty
+    def format(cls):
+        return cls._format
+
+    @format.setter
+    def format(cls, value):
+        if cls._format != value:
+            cls._format = value
+
+    @format.deleter
+    def format(cls):
+        del cls._format
+
     @classmethod
     def getFrequence(cls, frequence: str):
         """股票周期
@@ -67,7 +87,68 @@ class Fetcher(ABC):
         return frequence, REVERSPERIODS.get(frequence), PERIODSLENS.get(frequence)
 
     @classmethod
-    @abstractmethod
-    def get(cls, code, start_date, end_date, if_fq='00',
+    def get(cls, code, start, end, if_fq='00',
             frequence='day'):
+        """通达信历史数据
+
+        Args:
+            code:
+            start:
+            end:
+            if_fq:
+            frequence: K线周期
+                0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线
+                5 周K线
+                6 月K线
+                7 1分钟
+                8 1分钟K线
+                9 日K线
+                10 季K线
+                11 年K线
+
+        Returns:
+
+        """
+        frequence = cls.getFrequence(frequence)
+        if 5 <= frequence != 8:
+            #日线以上周期
+            return cls.getDay(code, start, end, if_fq, frequence)
+        else:
+            # 日线以下周期
+            return cls.getMin(code, start, end, if_fq, frequence)
+
+
+    @classmethod
+    @abstractmethod
+    def getDay(cls, code, start_date, end_date, if_fq, frequence):
+        """获取日线及以上级别的数据
+
+        Arguments:
+            code {str:6} -- code 是一个单独的code 6位长度的str
+            start_date {str:10} -- 10位长度的日期 比如'2017-01-01'
+            end_date {str:10} -- 10位长度的日期 比如'2018-01-01'
+        Keyword Arguments:
+            if_fq {str} -- '00'/'bfq' -- 不复权 '01'/'qfq' -- 前复权 '02'/'hfq' -- 后复权 '03'/'ddqfq' -- 定点前复权 '04'/'ddhfq' --定点后复权
+            frequency {int} -- K线周期
+                0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线
+                5 周K线
+                6 月K线
+                7 1分钟
+                8 1分钟K线
+                9 日K线
+                10 季K线
+                11 年K线
+            ip {str} -- [description] (default: None) ip可以通过select_best_ip()函数重新获取
+            port {int} -- [description] (default: {None})
+        Returns:
+            pd.DataFrame/None -- 返回的是dataframe,如果出错比如只获
+            取了一天,而当天停牌,返回None
+        Exception:
+            如果出现网络问题/服务器拒绝, 会出现socket:time out 尝试再次获取/更换ip即可, 本函数不做处理
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def getMin(cls, code, start, end, if_fq, frequence):
         pass

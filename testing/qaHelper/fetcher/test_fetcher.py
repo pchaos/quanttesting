@@ -28,5 +28,18 @@ class testFetcher(TestCase):
         frequence, type_, multiplicator = Fetcher.getReverseFrequence(peroid)
         self.assertTrue(multiplicator == 240, "1min倍数为240")
 
+    def test_format(self):
+        format = Fetcher.format
+        self.assertTrue(format == 'numpy', "")
+
+        Fetcher.format = "pd"
+        self.assertTrue(format != Fetcher.format)
+        Fetcher.format = format
+        self.assertTrue(format == Fetcher.format)
+
+        del Fetcher.format
+        self.assertFalse(hasattr(Fetcher, "format"), "删除属性'format'后，类中应该没有该属性")
+
+
 if __name__ == '__main__':
     unittest.main()
