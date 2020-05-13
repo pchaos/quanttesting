@@ -4,6 +4,7 @@ import unittest
 from unittest import TestCase
 import datetime
 import pandas as pd
+import numpy as np
 import QUANTAXIS as qa
 from QUANTAXIS.QAFetch.QATdx import QA_fetch_get_stock_day, QA_fetch_get_stock_min
 from QUANTAXIS.QAUtil import DATABASE
@@ -22,14 +23,22 @@ class testQuery(TestCase):
         qm.collections = collections
         self.assertTrue(collections.name == qm.collections.name)
 
-
     def test_get(self):
         code = '000001'
         days = 365 * 1.2
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.get(code, start, end)
-        self.assertTrue(len(df) > days//10, "返回数据数量应该大于0。")
+        self.assertTrue(len(df) > days // 10, "返回数据数量应该大于0。")
+
+    def test_get_noData(self):
+        code = '600001'  # 不存在的股票代码
+        days = 365 * 1.2
+        start = datetime.datetime.now() - datetime.timedelta(days)
+        end = datetime.datetime.now() - datetime.timedelta(0)
+        df = qm.get(code, start, end)
+        self.assertTrue(isinstance(df, np.ndarray) and df.size == 1, "{}已退市，返回数据数量应该等于0,{}。".format(code, df))
+
 
 if __name__ == '__main__':
     unittest.main()
