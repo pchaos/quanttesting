@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from unittest import TestCase
 import datetime
 import pandas as pd
-import QUANTAXIS as qa
 from QUANTAXIS.QAFetch.QATdx import QA_fetch_get_stock_day, QA_fetch_get_stock_min
 from qaHelper.fetcher import TDX
+from .qhtestbase import QhBaseTestCase
 
 
-class testTDX(TestCase):
+class testTDX(QhBaseTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         pass
@@ -90,18 +89,10 @@ class testTDX(TestCase):
             df2 = df2[-len(df):]
             print("df2的长度比df长")
         self.assertTrue(len(df) == len(df2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(df), len(df2)))
-        obo = self.diffOneByOne(df, df2)
+        obo = self.differOneByOne(df, df2)
         # todo  连续获取分钟数据时，不定时返回结果不想等。报错
         self.assertTrue(df.equals(df2), "和QA返回的分钟线数据不一致:{}".format(obo))
 
-    def diffOneByOne(self, df1, df2):
-        oneByOne = []
-        # 逐个比较，判断哪一天不匹配
-        for i in range(len(df1)):
-            for col in df1.columns:
-                if df1[col][i] != df2[col][i]:
-                    oneByOne.append([{"比较顺序": i}, col, df1[col][i], df2[col][i], df1.iloc[i]])
-        return oneByOne
 
 if __name__ == '__main__':
     unittest.main()
