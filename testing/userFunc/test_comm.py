@@ -4,7 +4,6 @@ from unittest import TestCase
 from datetime import datetime
 import time
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import QUANTAXIS as qa
 from userFunc import ifupMA
@@ -86,7 +85,7 @@ class testIfupMA(TestCase):
         # 获取全市场股票 list格式
         code = self.getCodeList(isTesting=False)
         # code = self.getCodeList(isTesting=True)
-        start = '2018-01-01'
+        start = '2015-01-01'
         end = datetime.now()
         # 获取全市场数据 QADataStruct格式
         data = qa.QA_fetch_stock_day_adv(code, start, end).to_qfq()
