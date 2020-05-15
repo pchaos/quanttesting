@@ -84,10 +84,10 @@ class testTDX(QhBaseTestCase):
         # todo df的长度比df2长。未找出原因
         if len(df) > len(df2):
             df = df[-len(df2):]
-            print("df的长度比df2长")
+            print("df的长度比df2长:{}, {}".format(len(df), len(df2)))
         elif len(df) < len(df2):
             df2 = df2[-len(df):]
-            print("df2的长度比df长")
+            print("df2的长度比df长:{}, {}".format(len(df), len(df2)))
         self.assertTrue(len(df) == len(df2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(df), len(df2)))
         obo = self.differOneByOne(df, df2)
         # todo  连续获取分钟数据时，不定时返回结果不想等。报错
