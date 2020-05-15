@@ -54,7 +54,7 @@ class testQuery(QhBaseTestCase):
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.get(code, start, end)
-        self.assertTrue(df is None, "{}已退市，返回数据数量应该等于0,{}。".format(code, df))
+        self.assertTrue(df is None, "{}已退市，2020年返回数据数量应该等于0,{}。".format(code, df))
 
     def test_get_min(self):
         code = '000001'
@@ -63,14 +63,37 @@ class testQuery(QhBaseTestCase):
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.get(code, start, end, frequence='1min')
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
+        print(df.data.tail(10))
+
+    def test_get_min_datetimestr(self):
+        code = '000001'
+        days = 30 * 1.2
+        start = str(datetime.datetime.now() - datetime.timedelta(days))[:10]
+        end = str(datetime.datetime.now() - datetime.timedelta(0))[:10]
+        df = qm.get(code, start, end, frequence='1min')
+        self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
+        print(df.data.tail(10))
+        start = datetime.datetime.now() - datetime.timedelta(days)
+        end = datetime.datetime.now() - datetime.timedelta(0)
+        df2 = qm.get(code, start, end, frequence='1min')
+        # str化后的时间为开盘时间，
+        self.assertTrue(len(df)>=len(df2))
+        data1, data2= df.data, df2.data
+        if len(data1) > len(data2):
+            data1 = data1[-len(data2):]
+            print("array1f的长度比array2长")
+        elif len(data1) < len(data2):
+            data2 = data2[-len(data1):]
+            print("array2的长度比array1长")
+        self.assertTrue(data1.equals(data2), "截取相同长度后的数据应该相同")
 
     def test_get_min_diffQA(self):
         code = '000001'
-        days = 10 * 1.2
-        start = datetime.datetime.now() - datetime.timedelta(days)
-        # end = datetime.datetime.now() - datetime.timedelta(0)
+        days = 20 * 1.2
+        start = str(datetime.datetime.now() - datetime.timedelta(days))
+        end = str(datetime.datetime.now() - datetime.timedelta(0))
         df = qm.get(code, start, end, frequence='1min')
-        df2 = QA_fetch_stock_min_adv(code, start, end=None, frequence='1min')
+        df2 = QA_fetch_stock_min_adv(code, start, end=end, frequence='1min')
         # todo df的长度比df2长。未找出原因
         if len(df) > len(df2):
             df = df[-len(df2):]

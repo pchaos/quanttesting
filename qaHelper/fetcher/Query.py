@@ -42,7 +42,7 @@ class QueryMongodb(Fetcher):
         del cls._collections
 
     @classmethod
-    def getDay(cls, code, start, end, if_fq, frequence):
+    def getDay(cls, code, start, end, if_fq='00', frequence=9):
         """'获取股票日线'
 
         Returns:
