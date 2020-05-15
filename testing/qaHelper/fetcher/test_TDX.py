@@ -80,7 +80,7 @@ class testTDX(QhBaseTestCase):
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = TDX.get(code, start, end, frequence='1min')
-        df2=QA_fetch_get_stock_min(code, start, end, frequence='1min')
+        df2 = QA_fetch_get_stock_min(code, start, end, frequence='1min')
         # todo df的长度比df2长。未找出原因
         if len(df) > len(df2):
             df = df[-len(df2):]
