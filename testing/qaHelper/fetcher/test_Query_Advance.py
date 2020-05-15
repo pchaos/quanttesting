@@ -95,16 +95,18 @@ class testQuery(QhBaseTestCase):
         df = qm.get(code, start, end, frequence='1min')
         df2 = QA_fetch_stock_min_adv(code, start, end=end, frequence='1min')
         # todo df的长度比df2长。未找出原因
-        if len(df) > len(df2):
-            df = df[-len(df2):]
+        data1, data2= df.data, df2.data
+        self.assertTrue(len(data1) == len(data2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(data1), len(data2)))
+        if len(data1) > len(data2):
+            data1 = data1[-len(data2):]
             print("array1f的长度比array2长")
-        elif len(df) < len(df2):
-            df2 = df2[-len(df):]
+        elif len(data1) < len(data2):
+            data2 = data2[-len(data1):]
             print("array2的长度比array1长")
-        self.assertTrue(len(df) == len(df2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(df), len(df2)))
         # todo  连续获取分钟数据时，不定时返回结果不想等。报错
-        self.assertTrue(np.array_equal(df, df2),
-                        "和QA返回的分钟线数据不一致:{}".format(np.setdiff1d(df, df2, assume_unique=True)))
+        obo = self.differOneByOne(data1, data2)
+        self.assertTrue(data1.equals(data2),
+                        "和QA返回的分钟线数据不一致:{}".format(obo))
 
 
 if __name__ == '__main__':
