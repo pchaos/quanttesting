@@ -99,11 +99,11 @@ class testQuery(QhBaseTestCase):
         data1, data2 = df, df2
         self.assertTrue(len(data1) == len(data2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(data1), len(data2)))
         if len(data1) > len(data2):
-            data1 = data1[-len(data2):]
             print("array1f的长度比array2长")
+            data1 = data1[-len(data2):]
         elif len(data1) < len(data2):
-            data2 = data2[-len(data1):]
             print("array2的长度比array1长")
+            data2 = data2[-len(data1):]
         # todo  连续获取分钟数据时，不定时返回结果不想等。报错
         obo = self.differOneByOne(data1, data2)
         self.assertTrue(data1.equals(data2),

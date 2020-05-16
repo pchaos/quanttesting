@@ -84,7 +84,7 @@ class testTDX(QhBaseTestCase):
         df2 = QA_fetch_get_stock_min(code, start, end, frequence='1min')
         # todo df的长度比df2长。未找出原因
         if len(df) > len(df2):
-            print("df的长度比df2长:{}, {}".format(len(df), len(df2)))
+            print("新的长度比QA方法长:{}, {}".format(len(df), len(df2)))
             df = df[-len(df2):]
         elif len(df) < len(df2):
             print("df2的长度比df长:{}, {}".format(len(df), len(df2)))
