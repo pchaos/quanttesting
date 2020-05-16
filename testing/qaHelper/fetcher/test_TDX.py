@@ -45,6 +45,7 @@ class testTDX(QhBaseTestCase):
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = TDX.get(code, start, end)
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
+        self.assertTrue(isinstance(df, pd.DataFrame))
 
     def test_get_diffQA(self):
         """和QA返回的数据对比一致性
@@ -75,7 +76,7 @@ class testTDX(QhBaseTestCase):
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
 
     def test_get_min_diffQA(self):
-        code = '000001'
+        code = '000002'
         days = 30 * 1.2
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
@@ -83,11 +84,11 @@ class testTDX(QhBaseTestCase):
         df2 = QA_fetch_get_stock_min(code, start, end, frequence='1min')
         # todo df的长度比df2长。未找出原因
         if len(df) > len(df2):
-            df = df[-len(df2):]
             print("df的长度比df2长:{}, {}".format(len(df), len(df2)))
+            df = df[-len(df2):]
         elif len(df) < len(df2):
-            df2 = df2[-len(df):]
             print("df2的长度比df长:{}, {}".format(len(df), len(df2)))
+            df2 = df2[-len(df):]
         self.assertTrue(len(df) == len(df2), "和QA返回的分钟线数据长度不一致:{}:{}".format(len(df), len(df2)))
         obo = self.differOneByOne(df, df2)
         # todo  连续获取分钟数据时，不定时返回结果不想等。报错
