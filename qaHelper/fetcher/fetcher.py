@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from abc import ABC, abstractmethod, ABCMeta
+import pandas as pd
+from QUANTAXIS.QAData import (QA_DataStruct_Stock_day, QA_DataStruct_Stock_min)
 from .classproperty import classproperty
 
 # import QUANTAXIS as qa
@@ -87,6 +89,33 @@ class Fetcher(ABC, metaclass=ABCMeta):
         return frequence, REVERSPERIODS.get(frequence), PERIODSLENS.get(frequence)
 
     @classmethod
+    def getAdv(cls, code, start, end, if_fq='00', frequence='day'):
+        """返回QA_DataStruct_Stock结构
+        """
+        if isinstance(frequence , str):
+            frequence = cls.getFrequence(frequence)
+        res = cls.get(code, start, end, if_fq, frequence)
+        if res is None:
+            # 🛠 todo 报告是代码不合法，还是日期不合法
+            print(
+                "QA Error getAdv parameter code=%s , start=%s, end=%s call get return None"
+                % (code,
+                   start,
+                   end)
+            )
+            return None
+        else:
+            if isinstance(res, pd.DataFrame):
+                res_reset_index = res.set_index(['date', 'code'], drop=cls.ifDropIndex)
+                if 5 <= frequence != 8:
+                    # 日线以上周期
+                    return QA_DataStruct_Stock_day(res_reset_index)
+                else:
+                    return QA_DataStruct_Stock_min(res_reset_index)
+            else:
+                return None
+
+    @classmethod
     def get(cls, code, start, end, if_fq='00',
             frequence='day'):
         """通达信历史数据
@@ -99,7 +128,7 @@ class Fetcher(ABC, metaclass=ABCMeta):
             frequence: K线周期
                 0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线
                 5 周K线
-                6 月K线
+                6 月frequence = cls.getFrequence(frequence)K线
                 7 1分钟
                 8 1分钟K线
                 9 日K线
@@ -109,7 +138,8 @@ class Fetcher(ABC, metaclass=ABCMeta):
         Returns:
 
         """
-        frequence = cls.getFrequence(frequence)
+        if isinstance(frequence , str):
+            frequence = cls.getFrequence(frequence)
         if 5 <= frequence != 8:
             #日线以上周期
             return cls.getDay(code, start, end, if_fq, frequence)
