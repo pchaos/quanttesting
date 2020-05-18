@@ -11,7 +11,7 @@ from .Query import QueryMongodb
 from qaHelper.fetcher.classproperty import classproperty
 
 
-class QueryMongodb_adv(QueryMongodb):
+class QueryMongodbStock(QueryMongodb):
     # 是否重新设置index
     _ifDropIndex = True
     _format = "pd"
@@ -48,7 +48,7 @@ class QueryMongodb_adv(QueryMongodb):
             start = '1990-01-01'
             end = str(datetime.date.today())
         cls.format = 'pd'
-        res = super(QueryMongodb_adv, cls).getDay(code, start, end, if_fq, frequence)
+        res = super(QueryMongodbStock, cls).getDay(code, start, end, if_fq, frequence)
         return res
         # if res is None:
         #     # 🛠 todo 报告是代码不合法，还是日期不合法
@@ -101,7 +101,7 @@ class QueryMongodb_adv(QueryMongodb):
 
         # 🛠 todo 报告错误 如果开始时间 在 结束时间之后
 
-        res = super(QueryMongodb_adv, cls).getMin(code, start, end, if_fq, frequence=frequence)
+        res = super(QueryMongodbStock, cls).getMin(code, start, end, if_fq, frequence=frequence)
         return res
         # if res is None:
         #     _, type_, _ = cls.getReverseFrequence(frequence)

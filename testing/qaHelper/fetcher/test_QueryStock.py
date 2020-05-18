@@ -8,8 +8,9 @@ import numpy as np
 import QUANTAXIS as qa
 from QUANTAXIS.QAFetch.QAQuery_Advance import QA_fetch_stock_day_adv, QA_fetch_stock_min_adv
 from QUANTAXIS.QAFetch.QAQuery import QA_fetch_stock_day, QA_fetch_stock_min
+from QUANTAXIS.QAData import (QA_DataStruct_Stock_day, QA_DataStruct_Stock_min)
 from QUANTAXIS.QAUtil import DATABASE
-from qaHelper.fetcher import QueryMongodb_adv as qm
+from qaHelper.fetcher import QueryMongodbStock as qm
 from .qhtestbase import QhBaseTestCase
 
 
@@ -31,6 +32,7 @@ class testQuery(QhBaseTestCase):
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.get(code, start, end)
+        self.assertIsInstance(df, pd.DataFrame,"应返回类型：pd.DataFrame，实际返回数据类型：{}".format(type(df)))
         self.assertTrue(len(df) > days // 10, "返回数据数量应该大于0。")
         print(df.tail())
 
@@ -115,6 +117,7 @@ class testQuery(QhBaseTestCase):
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.getAdv(code, start, end)
+        self.assertIsInstance(df, QA_DataStruct_Stock_day,"应返回类型：QA_DataStruct_Stock_day，实际返回数据类型：{}".format(type(df)))
         self.assertTrue(len(df) > days // 10, "返回数据数量应该大于0。")
         print(df.data.tail())
 

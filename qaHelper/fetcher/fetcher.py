@@ -35,7 +35,8 @@ class Fetcher(ABC, metaclass=ABCMeta):
 
     """
     # 返回数据格式
-    _format = "numpy"
+    # _format = "numpy"
+    _format = "pd"
 
     @classproperty
     def format(cls):
@@ -92,7 +93,7 @@ class Fetcher(ABC, metaclass=ABCMeta):
     def getAdv(cls, code, start, end, if_fq='00', frequence='day'):
         """返回QA_DataStruct_Stock结构
         """
-        if isinstance(frequence , str):
+        if isinstance(frequence, str):
             frequence = cls.getFrequence(frequence)
         res = cls.get(code, start, end, if_fq, frequence)
         if res is None:
@@ -116,8 +117,7 @@ class Fetcher(ABC, metaclass=ABCMeta):
                 return None
 
     @classmethod
-    def get(cls, code, start, end, if_fq='00',
-            frequence='day'):
+    def get(cls, code, start, end, if_fq='00', frequence='day') -> pd.DataFrame:
         """通达信历史数据
 
         Args:
@@ -138,15 +138,14 @@ class Fetcher(ABC, metaclass=ABCMeta):
         Returns:
 
         """
-        if isinstance(frequence , str):
+        if isinstance(frequence, str):
             frequence = cls.getFrequence(frequence)
         if 5 <= frequence != 8:
-            #日线以上周期
+            # 日线以上周期
             return cls.getDay(code, start, end, if_fq, frequence)
         else:
             # 日线以下周期
             return cls.getMin(code, start, end, if_fq, frequence)
-
 
     @classmethod
     @abstractmethod

@@ -30,6 +30,7 @@ class testQuery(QhBaseTestCase):
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.get(code, start, end)
+        self.assertIsInstance(df, pd.DataFrame,"应返回类型：pd.DataFrame，实际返回数据类型：{}".format(type(df)))
         self.assertTrue(len(df) > days // 10, "返回数据数量应该大于0。")
 
     def test_get_diffQA(self):
