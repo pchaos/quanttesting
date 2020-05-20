@@ -23,23 +23,39 @@ from QUANTAXIS.QAUtil import (
 from .fetcher import Fetcher
 from .classproperty import classproperty
 
-class QueryMongodb(Fetcher):
 
-    #数据库表名
-    _collections=DATABASE.stock_day
+class QueryMongodb(Fetcher):
+    # 数据库表名
+    _collectionsDay = DATABASE.stock_day
+    _collectionsMin = DATABASE.stock_min
 
     @classproperty
-    def collections(cls):
-        return cls._collections
+    def collectionsDay(cls):
+        return cls._collectionsDay
 
-    @collections.setter
-    def collections(cls, value):
-        if cls._collections.name != value.name:
-            cls._collections = value
+    @collectionsDay.setter
+    def collectionsDay(cls, value):
+        if cls._collectionsDay.name != value.name:
+            cls._collectionsDay = value
 
-    @collections.deleter
-    def collections(cls):
-        del cls._collections
+    @collectionsDay.deleter
+    def collectionsDay(cls):
+        del cls._collectionsDay
+
+    @classproperty
+    def collectionsMin(cls):
+        """分钟线使用的mongodb collections
+        """
+        return cls._collectionsMin
+
+    @collectionsMin.setter
+    def collectionsMin(cls, value):
+        if cls._collectionsMin.name != value.name:
+            cls._collectionsMin = value
+
+    @collectionsMin.deleter
+    def collectionsMin(cls):
+        del cls._collectionsMin
 
     @classmethod
     def getDay(cls, code, start, end, if_fq='00', frequence=9):
@@ -52,7 +68,7 @@ class QueryMongodb(Fetcher):
             https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
 
         """
-        cls.collections = DATABASE.stock_day
+        collections = cls.collectionsDay
         start = str(start)[0:10]
         end = str(end)[0:10]
         # code= [code] if isinstance(code,str) else code
@@ -62,7 +78,7 @@ class QueryMongodb(Fetcher):
 
         if QA_util_date_valid(end):
 
-            cursor = cls.collections.find(
+            cursor = collections.find(
                 {
                     'code': {
                         '$in': code
@@ -125,7 +141,7 @@ class QueryMongodb(Fetcher):
 
     @classmethod
     def getMin(cls, code, start, end, if_fq='00', frequence=8):
-        cls.collections = DATABASE.stock_min
+        collections =cls.collectionsMin
         '获取股票分钟线'
         _, type_, _ = cls.getReverseFrequence(frequence)
 
@@ -133,7 +149,7 @@ class QueryMongodb(Fetcher):
         # code checking
         code = QA_util_code_tolist(code)
 
-        cursor = cls.collections.find(
+        cursor = collections.find(
             {
                 'code': {
                     '$in': code
@@ -177,4 +193,3 @@ class QueryMongodb(Fetcher):
                 % cls.format
             )
             return None
-

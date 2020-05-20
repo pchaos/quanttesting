@@ -140,6 +140,7 @@ class Fetcher(ABC, metaclass=ABCMeta):
         """
         if isinstance(frequence, str):
             frequence = cls.getFrequence(frequence)
+        cls.format = 'pd'
         if 5 <= frequence != 8:
             # 日线以上周期
             return cls.getDay(code, start, end, if_fq, frequence)
@@ -181,3 +182,19 @@ class Fetcher(ABC, metaclass=ABCMeta):
     @abstractmethod
     def getMin(cls, code, start, end, if_fq, frequence):
         pass
+
+    @classmethod
+    def getNumpy(cls, code, start, end, if_fq='00', frequence='day'):
+        """返回numpy结构
+        """
+        if isinstance(frequence, str):
+            frequence = cls.getFrequence(frequence)
+        cls.format = 'n'
+        if 5 <= frequence != 8:
+            # 日线以上周期
+            return cls.getDay(code, start, end, if_fq, frequence)
+        else:
+            # 日线以下周期
+            return cls.getMin(code, start, end, if_fq, frequence)
+
+        return res

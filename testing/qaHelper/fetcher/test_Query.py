@@ -14,33 +14,33 @@ from .qhtestbase import QhBaseTestCase
 
 class testQuery(QhBaseTestCase):
     def test_collections(self):
-        collections = qm.collections
-        self.assertTrue(collections.name == DATABASE.stock_day.name, "数据表名应该相同")
+        collections = qm.collectionsDay
+        self.assertTrue(collections.name == DATABASE.stock_day.name, "数据表名应该相同 {}".format(collections))
 
-        qm.collections = DATABASE.stock_min
-        self.assertTrue(collections.name != qm.collections.name)
-        print("原始表名：{}，\n改变后表名：{}".format(collections, qm.collections))
+        qm.collectionsDay = DATABASE.stock_min
+        self.assertTrue(collections.name != qm.collectionsDay.name)
+        print("原始表名：{}，\n改变后表名：{}".format(collections, qm.collectionsDay))
 
-        qm.collections = collections
-        self.assertTrue(collections.name == qm.collections.name)
+        qm.collectionsDay = collections
+        self.assertTrue(collections.name == qm.collectionsDay.name)
 
-    def test_get(self):
+    def test_getNumpy(self):
         code = '000001'
         days = 365 * 1.2
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
-        df = qm.get(code, start, end)
-        self.assertIsInstance(df, pd.DataFrame,"应返回类型：pd.DataFrame，实际返回数据类型：{}".format(type(df)))
-        self.assertTrue(len(df) > days // 10, "返回数据数量应该大于0。")
+        arrary = qm.getNumpy(code, start, end)
+        self.assertIsInstance(arrary, np.ndarray, "应返回类型：np.ndarray，实际返回数据类型：{}".format(type(arrary)))
+        self.assertTrue(len(arrary) > days // 10, "返回数据数量应该大于0。")
 
-    def test_get_diffQA(self):
+    def test_getNumpy_diffQA(self):
         """和QA返回的数据对比一致性
         """
         code = '000001'
         days = 365 * 1.2
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
-        array1 = qm.get(code, start, end)
+        array1 = qm.getNumpy(code, start, end)
         self.assertTrue(len(array1) > 0, "返回数据数量应该大于0。")
         array2 = QA_fetch_stock_day(code, start, end)
         self.assertTrue(len(array1) == len(array2), "和QA返回的数据,长度不一致")
@@ -54,7 +54,7 @@ class testQuery(QhBaseTestCase):
         days = 365 * 1.2
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
-        df = qm.get(code, start, end)
+        df = qm.getNumpy(code, start, end)
         self.assertTrue(isinstance(df, np.ndarray) and df.size == 1, "{}已退市，返回数据数量应该等于0,{}。".format(code, df))
 
     def test_get_min(self):
