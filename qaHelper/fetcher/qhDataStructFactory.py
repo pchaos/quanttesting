@@ -3,14 +3,19 @@
 
 """
 
-import  pandas as pd
+import pandas as pd
 from QUANTAXIS.QAData.QADataStruct import QA_DataStruct_Index_day, QA_DataStruct_Index_min
 from QUANTAXIS.QAData.QADataStruct import QA_DataStruct_Stock_day, QA_DataStruct_Stock_min
 from QUANTAXIS.QAData.QADataStruct import QA_DataStruct_Future_day, QA_DataStruct_Future_min
 from QUANTAXIS.QAUtil import DATABASE
 
-class QHDataStructFactory(object):
-    def __init__(self, frequence= 9, type= 'stock'):
+
+class QhDataStructFactory(object):
+    """
+
+    """
+
+    def __init__(self, frequence=9, type='stock'):
         """
 
         Args:
@@ -19,26 +24,27 @@ class QHDataStructFactory(object):
                 ‘index’：指数或etf
                 ‘auto’：自动识别
         """
-        if type =='stock':
+        if type == 'stock':
             if 5 <= frequence != 8:
-               # 日线以上周期
-                self._dataStruct = QA_DataStruct_Stock_day
+                # 日线以上周期
+                self._dataStruct = lambda df,dtype=type, if_fq='bfq' :QA_DataStruct_Stock_day(df, dtype=type, if_fq=if_fq)
             else:
                 self._dataStruct = QA_DataStruct_Stock_min
         elif type == 'index':
             if 5 <= frequence != 8:
-               # 日线以上周期
+                # 日线以上周期
                 self._dataStruct = QA_DataStruct_Index_day
             else:
                 self._dataStruct = QA_DataStruct_Index_min
         elif type == 'future':
             if 5 <= frequence != 8:
-               # 日线以上周期
+                # 日线以上周期
                 self._dataStruct = QA_DataStruct_Future_day
             else:
                 self._dataStruct = QA_DataStruct_Future_min
 
-    def dataStruct(self, df:pd.DataFrame):
+
+    def dataStruct(self, df: pd.DataFrame, if_fq='bfq'):
         """返回QA_Struture结构数据
 
         Args:
@@ -47,4 +53,5 @@ class QHDataStructFactory(object):
         Returns:
 
         """
+
         return self._dataStruct(df)
