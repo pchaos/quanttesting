@@ -27,22 +27,29 @@ class QhDataStructFactory(object):
         if type == 'stock':
             if 5 <= frequence != 8:
                 # 日线以上周期
-                self._dataStruct = lambda df,dtype=type, if_fq='bfq' :QA_DataStruct_Stock_day(df, dtype=type, if_fq=if_fq)
+                self._dataStruct = lambda df, dtype=type, if_fq='bfq': QA_DataStruct_Stock_day(df, dtype=type,
+                                                                                               if_fq=if_fq)
             else:
-                self._dataStruct = QA_DataStruct_Stock_min
+                self._dataStruct = lambda df, dtype=type, if_fq='bfq': QA_DataStruct_Stock_min(df, dtype=type,
+                                                                                               if_fq=if_fq)
         elif type == 'index':
             if 5 <= frequence != 8:
                 # 日线以上周期
-                self._dataStruct = QA_DataStruct_Index_day
+                self._dataStruct = lambda df, dtype=type, if_fq='bfq': QA_DataStruct_Index_day(df, dtype=type,
+                                                                                               if_fq=if_fq)
             else:
-                self._dataStruct = QA_DataStruct_Index_min
+                self._dataStruct = lambda df, dtype=type, if_fq='bfq': QA_DataStruct_Index_min(df, dtype=type,
+                                                                                               if_fq=if_fq)
         elif type == 'future':
             if 5 <= frequence != 8:
                 # 日线以上周期
-                self._dataStruct = QA_DataStruct_Future_day
+                self._dataStruct = lambda df, dtype=type, if_fq='bfq': QA_DataStruct_Future_day(df, dtype=type,
+                                                                                                if_fq=if_fq)
             else:
-                self._dataStruct = QA_DataStruct_Future_min
-
+                self._dataStruct = lambda df, dtype=type, if_fq='bfq': QA_DataStruct_Future_min(df, dtype=type,
+                                                                                                if_fq=if_fq)
+        else:
+            raise Exception("不支持的类型")
 
     def dataStruct(self, df: pd.DataFrame, if_fq='bfq'):
         """返回QA_Struture结构数据
@@ -53,5 +60,7 @@ class QhDataStructFactory(object):
         Returns:
 
         """
-
+        if df is not None and len(df.index.names) == 1:
+            # 设置index
+            df = df.set_index(['date', 'code'], drop=True)
         return self._dataStruct(df)
