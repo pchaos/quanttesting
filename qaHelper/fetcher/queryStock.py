@@ -7,11 +7,14 @@ import pandas as pd
 from pandas import DataFrame
 from QUANTAXIS.QAUtil import (DATABASE)
 from QUANTAXIS.QAData import (QA_DataStruct_Stock_day, QA_DataStruct_Stock_min)
-from .Query import QueryMongodb
+from .query import QueryMongodb
 from qaHelper.fetcher.classproperty import classproperty
 
 
-class QueryMongodbStock(QueryMongodb):
+class QueryStock(QueryMongodb):
+    """股票数据接口（mongodb）
+
+    """
     # 是否重新设置index
     _ifDropIndex = True
     _format = "pd"
@@ -47,24 +50,8 @@ class QueryMongodbStock(QueryMongodb):
         if start == 'all':
             start = '1990-01-01'
             end = str(datetime.date.today())
-        cls.format = 'pd'
-        res = super(QueryMongodbStock, cls).getDay(code, start, end, if_fq, frequence)
+        res = super(QueryStock, cls).getDay(code, start, end, if_fq, frequence)
         return res
-        # if res is None:
-        #     # 🛠 todo 报告是代码不合法，还是日期不合法
-        #     print(
-        #         "QA Error QA_fetch_stock_day_adv parameter code=%s , start=%s, end=%s call QA_fetch_stock_day return None"
-        #         % (code,
-        #            start,
-        #            end)
-        #     )
-        #     return None
-        # else:
-        #     res_reset_index = res.set_index(['date', 'code'], drop=cls.ifDropIndex)
-        #     # if res_reset_index is None:
-        #     #     print("QA Error QA_fetch_stock_day_adv set index 'datetime, code' return None")
-        #     #     return None
-        #     return QA_DataStruct_Stock_day(res_reset_index)
 
     @classmethod
     def getMin(cls, code, start, end, if_fq='00', frequence=8) -> DataFrame:
@@ -78,7 +65,7 @@ class QueryMongodbStock(QueryMongodb):
         :param collections: mongodb 数据库
         :return: QA_DataStruct_Stock_min 类型
         '''
-        cls.collections = DATABASE.stock_min
+        cls.collectionsDay = DATABASE.stock_min
         # __data = [] 未使用
         #
         end = start if end is None else end
@@ -101,21 +88,10 @@ class QueryMongodbStock(QueryMongodb):
 
         # 🛠 todo 报告错误 如果开始时间 在 结束时间之后
 
-        res = super(QueryMongodbStock, cls).getMin(code, start, end, if_fq, frequence=frequence)
+        res = super(QueryStock, cls).getMin(code, start, end, if_fq, frequence=frequence)
         return res
-        # if res is None:
-        #     _, type_, _ = cls.getReverseFrequence(frequence)
-        #     print(
-        #         "QA Error QA_fetch_stock_min_adv parameter code=%s , start=%s, end=%s frequence=%s call QA_fetch_stock_min return None"
-        #         % (code,
-        #            start,
-        #            end,
-        #            type_)
-        #     )
-        #     return None
-        # else:
-        #     res_set_index = res.set_index(['datetime', 'code'], drop=cls.ifDropIndex)
-        #     # if res_set_index is None:
-        #     #     print("QA Error QA_fetch_stock_min_adv set index 'datetime, code' return None")
-        #     #     return None
-        #     return QA_DataStruct_Stock_min(res_set_index)
+
+    @classmethod
+    def _getStoring(cls, storing=None):
+        return 'stock'
+

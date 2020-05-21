@@ -25,7 +25,7 @@ from .classproperty import classproperty
 
 
 class QueryMongodb(Fetcher):
-    # 数据库表名
+    # 默认数据库表名
     _collectionsDay = DATABASE.stock_day
     _collectionsMin = DATABASE.stock_min
 
@@ -69,8 +69,9 @@ class QueryMongodb(Fetcher):
 
         """
         collections = cls.collectionsDay
-        start = str(start)[0:10]
-        end = str(end)[0:10]
+        if not isinstance(start, str) and (len(start) != 10):
+            start = str(start)[0:10]
+            end = str(end)[0:10]
         # code= [code] if isinstance(code,str) else code
 
         # code checking
@@ -104,17 +105,32 @@ class QueryMongodb(Fetcher):
                     'date',
                     drop=False
                 )
-                res = res.loc[:,
-                      [
-                          'code',
-                          'open',
-                          'high',
-                          'low',
-                          'close',
-                          'volume',
-                          'amount',
-                          'date'
-                      ]]
+                if not('up_count' in res.columns):
+                    res = res.loc[:,
+                          [
+                              'code',
+                              'open',
+                              'high',
+                              'low',
+                              'close',
+                              'volume',
+                              'amount',
+                              'date'
+                          ]]
+                # else:
+                #     res = res.loc[:,
+                #           [
+                #               'code',
+                #               'open',
+                #               'high',
+                #               'low',
+                #               'close',
+                #               'volume',
+                #               'amount',
+                #               'date',
+                #               'up_count',
+                #               'down_count'
+                #           ]]
             except:
                 res = None
             if cls.format in ['P', 'p', 'pandas', 'pd']:
@@ -134,14 +150,14 @@ class QueryMongodb(Fetcher):
                 return None
         else:
             QA_util_log_info(
-                'QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right'
+                'QA Error getDay data parameter start=%s end=%s is not right'
                 % (start,
                    end)
             )
 
     @classmethod
     def getMin(cls, code, start, end, if_fq='00', frequence=8):
-        collections =cls.collectionsMin
+        collections = cls.collectionsMin
         '获取股票分钟线'
         _, type_, _ = cls.getReverseFrequence(frequence)
 

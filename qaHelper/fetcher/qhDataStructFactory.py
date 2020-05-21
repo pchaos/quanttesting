@@ -11,7 +11,7 @@ from QUANTAXIS.QAUtil import DATABASE
 
 
 class QhDataStructFactory(object):
-    """
+    """QA_DataStruct工厂类
 
     """
 
@@ -22,6 +22,7 @@ class QhDataStructFactory(object):
             frequence: 周期
             type: ‘stock’：股票
                 ‘index’：指数或etf
+                ‘future’：期货
                 ‘auto’：自动识别
         """
         if type == 'stock':

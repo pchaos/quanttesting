@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod, ABCMeta
 import pandas as pd
 from QUANTAXIS.QAData import (QA_DataStruct_Stock_day, QA_DataStruct_Stock_min)
 from .classproperty import classproperty
+from .qhDataStructFactory import QhDataStructFactory as qdf
 
 # import QUANTAXIS as qa
 
@@ -50,6 +51,20 @@ class Fetcher(ABC, metaclass=ABCMeta):
     @format.deleter
     def format(cls):
         del cls._format
+
+    @classmethod
+    @abstractmethod
+    def _getStoring(cls, storing=None):
+        """虚方法
+            子类确定本类的所属类别
+
+        Args:
+            storing:
+
+        Returns: stock index future
+
+        """
+        pass
 
     @classmethod
     def getFrequence(cls, frequence: str):
@@ -106,15 +121,16 @@ class Fetcher(ABC, metaclass=ABCMeta):
             )
             return None
         else:
-            if isinstance(res, pd.DataFrame):
-                res_reset_index = res.set_index(['date', 'code'], drop=cls.ifDropIndex)
-                if 5 <= frequence != 8:
-                    # 日线以上周期
-                    return QA_DataStruct_Stock_day(res_reset_index)
-                else:
-                    return QA_DataStruct_Stock_min(res_reset_index)
-            else:
-                return None
+           return qdf(frequence, type=cls._getStoring()).dataStruct(res,if_fq)
+            # if isinstance(res, pd.DataFrame):
+            #     res_reset_index = res.set_index(['date', 'code'], drop=cls.ifDropIndex)
+            #     if 5 <= frequence != 8:
+            #         # 日线以上周期
+            #         return QA_DataStruct_Stock_day(res_reset_index)
+            #     else:
+            #         return QA_DataStruct_Stock_min(res_reset_index)
+            # else:
+            #     return None
 
     @classmethod
     def get(cls, code, start, end, if_fq='00', frequence='day') -> pd.DataFrame:

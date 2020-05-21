@@ -14,8 +14,8 @@ from QUANTAXIS.QAData import (QA_DataStruct_Index_day, QA_DataStruct_Index_min)
 from QUANTAXIS.QAData import (QA_DataStruct_Future_day, QA_DataStruct_Future_min)
 from QUANTAXIS.QAUtil import DATABASE
 from .qhtestbase import QhBaseTestCase
-from qaHelper.fetcher import QueryMongodbStock as qm
-from qaHelper.fetcher import QueryMongodbIndex as qmi
+from qaHelper.fetcher import QueryStock as qm
+from qaHelper.fetcher import QueryIndex as qmi
 # from qaHelper.fetcher import QueryMongodbFuture as qmf
 from qaHelper.fetcher import QhDataStructFactory as qd
 
