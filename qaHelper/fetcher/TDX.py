@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+"""pytdx调用通达信数据
 
 """
 import datetime
@@ -41,7 +41,20 @@ class TDX(Fetcher):
     @classmethod
     @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
     def getMin(cls, code, start, end, if_fq='00',
-               frequence=9):
+               frequence=8):
+        """获取分钟级别的数据
+
+        Args:
+            code: 代码 6位长度的str
+            start: 10位长度的日期字符串 比如'2017-01-01'
+            end: 10位长度的日期字符串 比如'2018-01-01'
+            if_fq:
+            frequence:
+
+        Returns: pd.DataFrame/None -- 返回的是dataframe,如果出错比如只获
+            取了一天,而当天停牌,返回None
+
+        """
         # type_ = ''
         start = str(start)[0:10]
         today_ = datetime.date.today()
