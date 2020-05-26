@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .fetcher import Fetcher
+# from .fetcher import Fetcher
 # from .query import QueryMongodb
 from .queryStock import QueryStock as Stock
 from .queryIndex import QueryIndex as Index
@@ -10,7 +10,7 @@ class FecherFactory(object):
         """
 
         Args:
-            typ:
+            typ: str "stock" "index" "future"
 
         Returns:
 
