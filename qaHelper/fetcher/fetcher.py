@@ -134,10 +134,10 @@ class Fetcher(ABC, metaclass=ABCMeta):
 
     @classmethod
     def get(cls, code, start, end, if_fq='00', frequence='day') -> pd.DataFrame:
-        """通达信历史数据
+        """通达信历史数据统一行情接口（支持分钟线及日线数据获取）。
 
         Args:
-            code:
+            code:证券代码 兼容str 或 list数据类型
             start:
             end:
             if_fq:
@@ -151,7 +151,8 @@ class Fetcher(ABC, metaclass=ABCMeta):
                 10 季K线
                 11 年K线
 
-        Returns:
+        Returns: pd.DataFrame/None -- 返回的是dataframe,如果出错比如只获
+            取了一天,而当天停牌,返回None
 
         """
         if isinstance(frequence, str):
@@ -169,11 +170,10 @@ class Fetcher(ABC, metaclass=ABCMeta):
     def getDay(cls, code, start_date, end_date, if_fq, frequence):
         """获取日线及以上级别的数据
 
-        Arguments:
-            code {str:6} -- code 是一个单独的code 6位长度的str
+        Args:
+            code {str:6} or {list} -- code 是一个单独的code 6位长度的str
             start_date {str:10} -- 10位长度的日期 比如'2017-01-01'
             end_date {str:10} -- 10位长度的日期 比如'2018-01-01'
-        Keyword Arguments:
             if_fq {str} -- '00'/'bfq' -- 不复权 '01'/'qfq' -- 前复权 '02'/'hfq' -- 后复权 '03'/'ddqfq' -- 定点前复权 '04'/'ddhfq' --定点后复权
             frequency {int} -- K线周期
                 0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线

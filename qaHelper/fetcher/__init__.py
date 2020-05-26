@@ -6,3 +6,4 @@ from .query import QueryMongodb
 from .queryStock import QueryStock
 from .queryIndex import QueryIndex
 from .qhDataStructFactory import QhDataStructFactory
+from .fetecherFactory import FecherFactory
