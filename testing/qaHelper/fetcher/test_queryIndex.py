@@ -14,7 +14,7 @@ from qaHelper.fetcher import QueryIndex as qm
 from .qhtestbase import QhBaseTestCase
 
 
-class testQuery(QhBaseTestCase):
+class testQueryIndex(QhBaseTestCase):
     def test_collections(self):
         collections = qm.collectionsDay
         self.assertTrue(collections.name == DATABASE.index_day.name, "数据表名应该相同")
