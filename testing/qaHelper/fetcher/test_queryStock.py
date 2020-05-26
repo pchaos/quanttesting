@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from unittest import TestCase
 import datetime
 import pandas as pd
 import numpy as np
@@ -40,17 +39,38 @@ class testQueryStock(QhBaseTestCase):
         """和QA返回的数据对比一致性
         """
         code = '000001'
-        days = 365 * 1.2
-        start = datetime.datetime.now() - datetime.timedelta(days)
+        days = 300 * 1.2
+        self._get_diffQA(code, days)
+
+    def test_get_diffQA_map(self):
+        """和QA返回的数据对比一致性
+        """
+        code = ['000001', '600004', '000002']
+        days = [300 * 1.2] * len(code)
+        # self._get_diffQA(code, days)
+        res = map(self._get_diffQA, code, days)
+        print('test_get_diffQA')
+        for df in res:
+            print(df.head())
+
+    def _get_diffQA(self, code, days):
+        start = (datetime.datetime.now() - datetime.timedelta(days)).date()
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.get(code, start, end)
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
         df2 = QA_fetch_stock_day(code, start, end, format='pd')
         # todo 全自动运行时会报错。单独测试不会报错？？
-        self.assertTrue(len(df) == len(df2), "和QA返回的数据,长度不一致{}:{}".format(len(df) , len(df2)))
+        if len(df) !=len(df2):
+            print("_get_diffQA : {} {} {} {}".format(start, end,df.head(), df2.head()))
+            print('columns:\n {}\n{}'.format(df.columns, df2.columns))
+            print(df.equals(df2))
+        else:
+            print('数据长度{}'.format(len(df)))
+        self.assertTrue(len(df) == len(df2), "和QA返回的数据,长度不一致{}:{}".format(len(df), len(df2)))
         # 两种方式检测DataFrame数据一致性
         obo = self.differOneByOne(df2, df)
         self.assertTrue(df.equals(df2), "和QA返回的数据不一致{}".format(obo))
+        return df
 
     def test_get_noData(self):
         code = '600001'  # 不存在的股票代码
