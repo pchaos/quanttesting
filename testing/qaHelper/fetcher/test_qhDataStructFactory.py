@@ -20,7 +20,7 @@ from qaHelper.fetcher import QueryIndex as qmi
 from qaHelper.fetcher import QhDataStructFactory as qd
 
 
-class TestQHDataStructFactory(QhBaseTestCase):
+class TestQhDataStructFactory(QhBaseTestCase):
     def test_data_struct_stock(self):
         code = '000001'
         days = 365 * 1.2
