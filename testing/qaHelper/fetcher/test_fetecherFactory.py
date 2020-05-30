@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from .qhtestbase import QhBaseTestCase
 from QUANTAXIS.QAFetch.QAQuery import QA_fetch_index_day, QA_fetch_index_min
+from QUANTAXIS.QAFetch.QAQuery import QA_fetch_stock_day, QA_fetch_stock_min
 from QUANTAXIS.QAFetch.QAQuery_Advance import QA_fetch_index_day_adv, QA_fetch_index_min_adv
 from QUANTAXIS.QAData import (QA_DataStruct_Index_day, QA_DataStruct_Index_min)
 from qaHelper import F
@@ -14,6 +15,7 @@ from qaHelper import F
 class TestFetecherFactory(QhBaseTestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        cls._code = ['000001', '600000', '000002']
         cls._qm = F().createFetcher('index')
 
     def test_get(self):
@@ -26,18 +28,47 @@ class TestFetecherFactory(QhBaseTestCase):
         self.assertTrue(len(df) > days // 10, "返回数据数量应该大于0。")
         print(df.tail())
 
-    def test_get_diffQA(self):
+    def test_get_diffQA_stock(self):
         """和QA返回的数据对比一致性
         """
         code = '000001'
         days = 365 * 1.2
         start = (datetime.datetime.now() - datetime.timedelta(days)).date()
         end = (datetime.datetime.now() - datetime.timedelta(0)).date()
-        qm = self._qm
-        df = qm.get(code, start, end)
+        self._get_diffQA(code, end, start, 'stock')
+
+    def test_get_diffQA_index(self):
+        """和QA返回的数据对比一致性
+        """
+        code = '000001'
+        days = 365 * 1.2
+        start = (datetime.datetime.now() - datetime.timedelta(days)).date()
+        end = (datetime.datetime.now() - datetime.timedelta(0)).date()
+        # for _ in range(10):
+        self._get_diffQA(code, end, start, 'index')
+
+    def _get_diffQA(self, code, end, start, typ='stock'):
+        # qm = self._qm
+        if typ == 'stock':
+            qm = F().createFetcher('stock')
+        else:
+            qm = F().createFetcher('index')
+        df = qm.get(code, start, end, frequence='day')
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
-        df2 = QA_fetch_index_day(code, start, end, format='pd')
-        self.assertTrue(len(df) == len(df2), "和QA返回的数据,长度不一致{}:{}".format(len(df), len(df2)))
+        if typ == 'stock':
+            df2 = QA_fetch_stock_day(code, start, end, format='pd')
+        else:
+            df2 = QA_fetch_index_day(code, start, end, format='pd')
+        # self.assertTrue((df.columns.values == df2.columns.values).all(), "df.columns:{}".format(df.columns))
+        if len(df) != len(df2):
+            # show df df2
+            print("Fetcher index: {}\n {}".format(type(qm), qm.collectionsDay))
+            print("{}:{}\n{} {}\n df{} df2{}".format(len(df), len(df2), start, end, df.tail(10),
+                                                     df2.tail(10)))
+        self.assertTrue(np.array_equal(df, df2), "df.columns:{}".format(df.columns))
+        self.assertTrue(len(df) == len(df2),
+                        "和QA返回的数据,长度不一致{}:{}\n{} {}\n df{} df2{}".format(len(df), len(df2), start, end, df.tail(10),
+                                                                         df2.tail(10)))
         # 两种方式检测DataFrame数据一致性
         obo = self.differOneByOne(df, df2)
         self.assertTrue(df.equals(df2), "和QA返回的数据不一致{}".format(obo))
@@ -59,8 +90,10 @@ class TestFetecherFactory(QhBaseTestCase):
         qm = self._qm
         df = qm.get(code, start, end, frequence='1min')
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
+        if qm._getStoring() == 'index':
+            # 指数大于1000
+            self.assertTrue(len(df[df['close'] > 1000])> days //10)
         print(df.tail(10))
-
 
     def test_getMin_datetimestr(self):
         code = '000001'
@@ -85,11 +118,10 @@ class TestFetecherFactory(QhBaseTestCase):
             print("array2的长度比array1长")
         self.assertTrue(data1.equals(data2), "截取相同长度后的数据应该相同")
 
-
     def test_getMin_diffQA(self):
         code = '000001'
         days = 20 * 1.2
-        start = str(datetime.datetime.now() - datetime.timedelta(days))
+        start = str((datetime.datetime.now() - datetime.timedelta(days)).date())
         end = str(datetime.datetime.now() - datetime.timedelta(0))
         qm = self._qm
         df = qm.get(code, start, end, frequence='1min')
@@ -108,18 +140,25 @@ class TestFetecherFactory(QhBaseTestCase):
         self.assertTrue(data1.equals(data2),
                         "和QA返回的分钟线数据不一致:{}".format(obo))
 
-
     def test_getAdv(self):
         code = '000001'
         days = 365 * 1.2
+        self._getAdv(code, days)
+
+    def test_getAdv_codeList(self):
+        code = self._code
+        days = 365 * 1.2
+        self._getAdv(code, days)
+        # todo 检查代码个数是否和输入个数相同
+
+    def _getAdv(self, code, days):
         start = datetime.datetime.now() - datetime.timedelta(days)
         end = datetime.datetime.now() - datetime.timedelta(0)
         qm = self._qm
         df = qm.getAdv(code, start, end)
         self.assertIsInstance(df, QA_DataStruct_Index_day, "应返回类型：QA_DataStruct_Stock_day，实际返回数据类型：{}".format(type(df)))
-        self.assertTrue(len(df) > days // 10, "返回数据数量应该大于0。")
-        print(df.data.tail())
-
+        self.assertTrue(len(df.data) > days // 10, "返回数据数量应该大于0。")
+        print(df.data.tail(10))
 
     def test_getAdv_diffQA(self):
         """和QA返回的数据对比一致性
@@ -136,7 +175,6 @@ class TestFetecherFactory(QhBaseTestCase):
         # 两种方式检测numpy数据一致性
         obo = self.differOneByOne(df.data, df2.data)
         self.assertTrue(df.data.equals(df2.data), "和QA返回的数据不一致{}".format(obo))
-
 
     def test__get_getNumpy(self):
         code = '000001'

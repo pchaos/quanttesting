@@ -7,12 +7,14 @@ from .queryIndex import QueryIndex as Index
 
 class FecherFactory(object):
     def createFetcher(self, typ='stock'):
-        """
+        """获取金融数据接口
+
+        df = F().createFetcher('stock').get(code, start, end)
 
         Args:
-            typ: str "stock" "index" "future"
+            typ: 类型 str "stock" "index" "future"
 
-        Returns:
+        Returns: 对应的fetcher子类
 
         """
         targetclass = typ.capitalize()

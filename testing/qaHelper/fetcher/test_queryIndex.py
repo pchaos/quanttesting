@@ -78,6 +78,7 @@ class testQueryIndex(QhBaseTestCase):
         end = datetime.datetime.now() - datetime.timedelta(0)
         df = qm.get(code, start, end, frequence='1min')
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
+        self.assertTrue(len(df[df['close'] > 1000]) > days // 10)
         print(df.tail(10))
 
     def test_getMin_datetimestr(self):
@@ -118,7 +119,6 @@ class testQueryIndex(QhBaseTestCase):
         elif len(data1) < len(data2):
             print("array2的长度比array1长")
             data2 = data2[-len(data1):]
-        # todo  连续获取分钟数据时，不定时返回结果不想等。报错
         obo = self.differOneByOne(data1, data2)
         self.assertTrue(data1.equals(data2),
                         "和QA返回的分钟线数据不一致:{}".format(obo))

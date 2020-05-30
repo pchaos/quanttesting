@@ -31,6 +31,10 @@ class QueryStock(QueryMongodb):
     def ifDropIndex(cls):
         del cls._ifDropIndex
 
+    def __init__(self, collectionsDay=DATABASE.stock_day, collectionsMin=DATABASE.stock_min):
+        self._collectionsDay = collectionsDay
+        self._collectionsMin = collectionsMin
+
     @classmethod
     def getDay(cls, code, start, end, if_fq='00', frequence=9) -> DataFrame:
         '''
@@ -65,7 +69,7 @@ class QueryStock(QueryMongodb):
         :param collections: mongodb 数据库
         :return: QA_DataStruct_Stock_min 类型
         '''
-        cls.collectionsDay = DATABASE.stock_min
+        # collections = DATABASE.stock_min
         # __data = [] 未使用
         #
         end = start if end is None else end
@@ -94,4 +98,3 @@ class QueryStock(QueryMongodb):
     @classmethod
     def _getStoring(cls, storing=None):
         return 'stock'
-
