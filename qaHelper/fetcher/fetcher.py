@@ -121,16 +121,7 @@ class Fetcher(ABC, metaclass=ABCMeta):
             )
             return None
         else:
-           return qdf(frequence, type=cls._getStoring()).dataStruct(res,if_fq)
-            # if isinstance(res, pd.DataFrame):
-            #     res_reset_index = res.set_index(['date', 'code'], drop=cls.ifDropIndex)
-            #     if 5 <= frequence != 8:
-            #         # 日线以上周期
-            #         return QA_DataStruct_Stock_day(res_reset_index)
-            #     else:
-            #         return QA_DataStruct_Stock_min(res_reset_index)
-            # else:
-            #     return None
+            return qdf(frequence, type=cls._getStoring()).dataStruct(res, if_fq)
 
     @classmethod
     def get(cls, code, start, end, if_fq='00', frequence='day') -> pd.DataFrame:

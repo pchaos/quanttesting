@@ -3,7 +3,11 @@
 import unittest
 import datetime
 import pandas as pd
+import numpy as np
 from QUANTAXIS.QAFetch.QATdx import QA_fetch_get_stock_day, QA_fetch_get_stock_min
+from QUANTAXIS.QAData.QADataStruct import QA_DataStruct_Index_day, QA_DataStruct_Index_min
+from QUANTAXIS.QAData import (QA_DataStruct_Stock_day, QA_DataStruct_Stock_min)
+from QUANTAXIS.QAFetch.QAQuery_Advance import QA_fetch_stock_day_adv, QA_fetch_stock_min_adv
 from qaHelper.fetcher import TDX
 from .qhtestbase import QhBaseTestCase
 
@@ -58,6 +62,44 @@ class testTDX(QhBaseTestCase):
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
         df2 = QA_fetch_get_stock_day(code, start, end)
         self.assertTrue(df.equals(df2), "和QA返回的数据不一致")
+        print(df.tail())
+
+    def test_getAdv(self):
+        code = '000001'
+        days = 365 * 1.2
+        start = datetime.datetime.now() - datetime.timedelta(days)
+        end = datetime.datetime.now() - datetime.timedelta(0)
+        data = TDX.getAdv(code, start, end)
+        self.assertTrue(len(data) > 0, "返回数据数量应该大于0。")
+        self.assertTrue(isinstance(data, QA_DataStruct_Stock_day))
+        start = (datetime.datetime.now() - datetime.timedelta(days)).date()
+        data2 = TDX.getAdv(code, start, end)
+        self.assertTrue(len(data) == len(data2), "起始时间不一样，返回结果不同。")
+        self.assertTrue(isinstance(data2, QA_DataStruct_Stock_day))
+
+    def test_getAdv_diffQA(self):
+        """和QA返回的数据对比一致性
+        """
+        code = '000001'
+        days = 365 * 1.2
+        start = (datetime.datetime.now() - datetime.timedelta(days)).date()
+        end = (datetime.datetime.now() - datetime.timedelta(0)).date()
+        data = TDX.getAdv(code, start, end).data
+        self.assertTrue(len(data) > 0, "返回数据数量应该大于0。")
+        data2 = QA_fetch_stock_day_adv(code, start, end).data
+        if len(data) > len(data2):
+            data = data[:len(data2)]
+            data = data.reset_index()
+            data['date'] = data['date'].astype('datetime64')
+            data = data.set_index(['date', 'code'])
+            # column顺序重拍
+            cols = data2.columns.tolist()
+            data = data[cols]
+        self.assertTrue(len(data) == len(data2), "和QA返回的数据,长度不一致 {} {}".format(len(data), len(data2)))
+        # 两种方式检测numpy数据一致性
+        obo = self.differOneByOne(data, data2)
+        # todo index不同
+        self.assertTrue(data.equals(data2), "和QA返回的数据不一致{}".format(obo))
 
     def test_get_noData(self):
         code = '600001'  # 不存在的股票代码

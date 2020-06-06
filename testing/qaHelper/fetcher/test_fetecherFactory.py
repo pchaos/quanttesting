@@ -92,7 +92,9 @@ class TestFetecherFactory(QhBaseTestCase):
         self.assertTrue(len(df) > 0, "返回数据数量应该大于0。")
         if qm._getStoring() == 'index':
             # 指数大于1000
-            self.assertTrue(len(df[df['close'] > 1000])> days //10)
+            self.assertTrue(len(df[df['close'] > 1000])> days //10, "大部分指数收盘价大于1000")
+        else:
+            self.assertTrue(len(df[df['close'] > 1000]) < days // 10)
         print(df.tail(10))
 
     def test_getMin_datetimestr(self):

@@ -15,6 +15,9 @@ from .classproperty import classproperty
 
 
 class TDX(Fetcher):
+    """通达信网络行情
+
+    """
     ip = ""
     port = 0
     _api = None
@@ -92,11 +95,10 @@ class TDX(Fetcher):
                frequence=9):
         """获取日线及以上级别的数据
 
-        Arguments:
+        Args:
             code {str:6} -- code 是一个单独的code 6位长度的str
             start_date {str:10} -- 10位长度的日期 比如'2017-01-01'
             end_date {str:10} -- 10位长度的日期 比如'2018-01-01'
-        Keyword Arguments:
             if_fq {str} -- '00'/'bfq' -- 不复权 '01'/'qfq' -- 前复权 '02'/'hfq' -- 后复权 '03'/'ddqfq' -- 定点前复权 '04'/'ddhfq' --定点后复权
             frequency {int} -- K线周期
                 0 5分钟K线 1 15分钟K线 2 30分钟K线 3 1小时K线 4 日K线
@@ -160,4 +162,14 @@ class TDX(Fetcher):
                 print('2、或者此时间段无数据。')
             else:
                 print(e)
+
+    @classmethod
+    def getAdv(cls, code, start, end, if_fq='00', frequence='day'):
+        data =  super().getAdv(code, start, end, if_fq, frequence)
+        data.data.drop(['vol', 'date_stamp'], axis=1, inplace=True)
+        return data
+
+    @classmethod
+    def _getStoring(cls, storing=None):
+        return "stock"
 

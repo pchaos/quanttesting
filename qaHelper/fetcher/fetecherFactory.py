@@ -4,6 +4,7 @@
 # from .query import QueryMongodb
 from .queryStock import QueryStock as Stock
 from .queryIndex import QueryIndex as Index
+from .TDX import TDX as Tdx
 
 class FecherFactory(object):
     def createFetcher(self, typ='stock'):

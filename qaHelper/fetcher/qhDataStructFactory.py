@@ -62,6 +62,8 @@ class QhDataStructFactory(object):
 
         """
         if df is not None and len(df.index.names) == 1:
+            if df['date'].dtype != 'datetime64':
+                df['date'] = pd.to_datetime(df['date'])
             # 设置index
             df = df.set_index(['date', 'code'], drop=True)
         return self._dataStruct(df)
