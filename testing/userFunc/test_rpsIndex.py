@@ -60,6 +60,7 @@ class TestRPSIndex(unittest.TestCase):
         rps = rpsIndex.rps()
         self.assertTrue(dfrps.equals(rps), "{} {}".format(dfrps.head(), rps.head()))
         print(rps.tail())
+        print(rps.head(20))
 
     def test_rps_class_multi_rpsday(self):
         # 显示rps排名前10%的中文名称
@@ -72,7 +73,7 @@ class TestRPSIndex(unittest.TestCase):
         print(rps.tail())
 
     def test_rps_class_selectCode(self):
-        # 显示rps排名前10%的中文名称
+        # 显示rps排名前10%的ETF中文名称
         code = self.code
         rpsday = [20, 50, 89]
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
@@ -106,7 +107,7 @@ class TestRPSIndex(unittest.TestCase):
         print(rps)
 
     def test_rps_ETFTOPN(self):
-        # 显示rps排名前10%的中文名称
+        # 显示rps排名前10%的ETF中文名称
         fn = 'zxgETF.txt'
         # code列表
         code = read_zxg(fn)

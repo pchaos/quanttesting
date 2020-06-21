@@ -16,7 +16,8 @@ from .testbase import TestingBase
 
 
 class qaTestingBase(TestingBase):
-
+    """unittest base class for QA
+    """
     @classmethod
     def userInit(cls):
         """用户初始化
