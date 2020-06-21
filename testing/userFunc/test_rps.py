@@ -252,7 +252,7 @@ class testRPS(QhBaseTestCase):
         dftopn.to_csv('/tmp/rpstop.csv', encoding='utf-8', index=False)
 
     def test_rps_name_exclude_topn2(self):
-        """
+        """测试另一种计算排名靠前的方式
         """
         # 显示rps排名前10%的中文名称(去除某些品种)
         code = self.code
