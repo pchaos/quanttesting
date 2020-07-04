@@ -10,6 +10,7 @@
 """
 import datetime
 import pandas as pd
+import numpy as np
 from abc import ABC, abstractmethod
 from abc import ABCMeta
 import QUANTAXIS as qa
@@ -118,7 +119,7 @@ class RPSAbs(metaclass=ABCMeta):
                     # 排名前N%的指数
                     for col in df.columns:
                         # dfn.append(df.sort_values(by=col, ascending=False).reset_index().head(int(len(df) / (100 / percentN))))
-                        dfn.append(round(df[df[col] >= 100 - percentN], 2))
+                        dfn.append(np.round(df[df[col] >= 100 - percentN], decimals=4))
                     dftopn = pd.concat(dfn).drop_duplicates()
                     # print(dftopn)
                     break
@@ -127,8 +128,40 @@ class RPSAbs(metaclass=ABCMeta):
             except Exception as e:
                 theday = theday - datetime.timedelta(1)
         # rps平均值
-        dftopn['AVERAGERPS'] = round(dftopn.sum(axis=1) / len(df.columns), 2)
-        return dftopn
+        dftopn['AVERAGERPS'] = dftopn.sum(axis=1) / len(df.columns)
+        return np.round(dftopn, decimals=2)
+
+    def rpsTopN2(self, startday: datetime.datetime, lastday=None, percentN=5) -> pd.DataFrame:
+        """RPS排名前percentN%的数据
+        """
+        rps = self._getRPS()
+        if lastday is None:
+            lastday = startday = str2date(date2str(startday))
+        else:
+            startday = str2date(date2str(startday))
+        while 1:
+            # 定位最近的rps数据
+            dfn = []
+            try:
+                df = rps.loc[(slice(pd.Timestamp(startday), pd.Timestamp(lastday))), :]
+                if len(df) > 0:
+                    # 排名前N%的指数
+                    dftopn = pd.concat([df.loc[(rps[item] >= 100 - percentN)] for item in df.columns]).sort_index()
+                    df = dftopn.reset_index()
+                    dftopn = df.drop_duplicates(subset=df.columns).set_index(['date', 'code']).sort_index()
+                    # df.drop_duplicates(subset=df.columns).sort_values(by=dftopn.columns[0], ascending=False).set_index(
+                    #     ['date', 'code']).sort_index()
+                    # dftopn.drop_duplicates(inplace=True)
+                    # dftopn.sort_values(by=dftopn.columns[0], ascending=False, inplace=True)
+                    # print(dftopn)
+                    break
+                lastday = startday
+                startday = startday - datetime.timedelta(1)
+            except Exception as e:
+                startday = startday - datetime.timedelta(1)
+        # rps平均值
+        dftopn['AVERAGERPS'] = dftopn.sum(axis=1) / len(dftopn.columns)
+        return np.round(dftopn, decimals=2)
 
     def _getRPS(self):
         if self._rps is None:
@@ -148,6 +181,21 @@ class RPSAbs(metaclass=ABCMeta):
 class RPSIndex(RPSAbs):
     """计算index RPS
     """
+
+    def _getRPS2(self):
+        if self._rps is None:
+            # 未计算rps，则先计算rps
+            data = self._fetchData()
+            dataFrame = pd.DataFrame(data.data['close'])
+            colName = 'RPS'
+            cols = []
+            for num in self._rpsday:
+                coln = '{}{}'.format(colName, num)
+                dataFrame[coln] = data.close.groupby(level=0).rank(axis=1, pct=True) * 100
+                cols.append(coln)
+
+            self._rps = dataFrame[cols].iloc[max(self._rpsday):, :].dropna()
+        return self._rps
 
     def _fetchData(self):
         """

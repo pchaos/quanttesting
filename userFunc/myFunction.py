@@ -73,6 +73,42 @@ def xls2zxg(xlsfile, zxgFile):
     df.to_csv(zxgFile, index=False, sep=" ", header=None)
 
 
+def savexls(dataframe: pd.DataFrame, xlsfile: str, startrow=1, sheetName='Sheet1', index=True):
+    """自动调整保存的列宽
+
+    Args:
+        dataframe:
+        xlsfile:
+        startrow:
+        sheetName:
+        index: bool
+
+    Returns:
+
+    """
+    # Set destination directory to save excel.
+    xlsfile = r'H:\my_project' + "\\" + 'my_file_name.xlsx'
+    writer = pd.ExcelWriter(xlsfile, engine='xlsxwriter')
+
+    # Write excel to file using pandas to_excel
+    dataframe.to_excel(writer, startrow=startrow, sheet_name=sheetName, index=index)
+
+    # Indicate workbook and worksheet for formatting
+    workbook = writer.book
+    worksheet = writer.sheets[sheetName]
+
+    # Iterate through each column and set the width == the max length in that column. A padding length of 2 is also added.
+    for i, col in enumerate(dataframe.columns):
+        # find length of column i
+        column_len = dataframe[col].astype(str).str.len().max()
+        # Setting the length if the column header is larger
+        # than the max column value length
+        column_len = max(column_len, len(col)) + 2
+        # set the column length
+        worksheet.set_column(i, i, column_len)
+    writer.save()
+
+
 def xls2Code(xlsfile):
     """提取xlsfile文件中的股票代码
     """
@@ -265,6 +301,7 @@ def TBSMonthIndicator(data, m=10, n=20):
     """陶博士月线牛熊判断
     10月交叉20月均线
     """
+
     def flag(x, preFlag):
         if x['jc']:
             # 金叉
@@ -281,5 +318,5 @@ def TBSMonthIndicator(data, m=10, n=20):
     cross2 = qa.CROSS_STATUS(ma2, ma1)
     preFlag = [0]
     # 金叉 死叉
-    result = pd.DataFrame({'jc': cross1, 'sc':cross2}, index=ma1.index).apply(lambda x: flag(x, preFlag), axis=1)
+    result = pd.DataFrame({'jc': cross1, 'sc': cross2}, index=ma1.index).apply(lambda x: flag(x, preFlag), axis=1)
     return pd.DataFrame({'flag': result})

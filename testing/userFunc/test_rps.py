@@ -288,10 +288,12 @@ class testRPS(QhBaseTestCase):
         self.assertTrue(len(difflist) <= 1, "代码差别： {}".format(difflist))
         if len(difflist) > 0:
             print(difflist)
+            # 删除多的代买，只是为了方便对比测试。实际使用不需要删除
             if difflist in codetop:
-                dftopn= dftopn[dftopn['code'] != difflist[0]]
+                dftopn = dftopn[dftopn['code'] != difflist[0]]
             else:
-                dftopn2= dftopn2[dftopn2['code'] != difflist[0]].reset_index(drop=True)
+                # dftopn2= dftopn2[dftopn2['code'] != difflist[0]].reset_index(drop=True)
+                dftopn2.drop(dftopn2['code'] == difflist[0]).reset_index(drop=True)
 
         obo = self.differOneByOne(dftopn2.sort_values(['code']), dftopn.sort_values(['code']).reset_index(drop=True))
         self.assertTrue(len(obo) == 0, "{}".format(obo))

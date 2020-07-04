@@ -11,6 +11,7 @@
 import unittest
 import datetime
 import time
+import pandas as pd
 import matplotlib.pyplot as plt
 import QUANTAXIS as qa
 from userFunc import cal_ret, get_RPS
@@ -18,9 +19,10 @@ from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_p
 from userFunc import RPSIndex
 from userFunc import read_zxg
 from userFunc import codeInfo
+from testing.qaHelper.fetcher.qhtestbase import QhBaseTestCase
 
 
-class TestRPSIndex(unittest.TestCase):
+class TestRPSIndex(QhBaseTestCase):
     def setUp(self) -> None:
         fileName = '/tmp/code.pickle'
         try:
@@ -116,6 +118,55 @@ class TestRPSIndex(unittest.TestCase):
         n = 10
         rps = rpsIndex.rpsTopN(self.end, n)
         self.assertTrue(len(rps) > 0)
+
+        print(rps)
+        print("总数： {}".format(len(rps)))
+        dfInfo = codeInfo(list(rps.index.levels[1]))
+        print(dfInfo.name)
+
+    def test_RPSIndex_rpsTopN2(self):
+        # 显示rps排名前10%的ETF中文名称
+        fn = 'zxgETF.txt'
+        # code列表
+        code = read_zxg(fn)
+        rpsday = [20, 50]
+        end = self.end
+        # end = "2020-06-24"
+        rpsIndex = RPSIndex(code, self.start, end, rpsday)
+        n = 10
+        rps = rpsIndex.rpsTopN2(startday=end, percentN=n)
+        rps2 = rpsIndex.rpsTopN(end, n)
+        self.assertTrue(len(rps) > 0)
+        self.assertTrue(len(rps) == len(rps2), "长度不同 {} {}\n{} {}".format(len(rps), len(rps2), rps, rps2))
+        self.assertTrue(rps.sort_values(rps.columns[0], ascending=False).equals(rps2), "排序后不相等 {} {}".format(rps, rps2))
+        # self.assertTrue(rps.equals(rps2), "不相等 {} {}".format(rps, rps2))
+        print(rps)
+        print("总数： {}".format(len(rps)))
+        dfInfo = codeInfo(list(rps.index.levels[1]))
+        print(dfInfo.name)
+
+    def test_RPSIndex_rpsTopN2_2(self):
+        #  一段时间内，显示rps排名前10%的ETF中文名称
+        fn = 'zxgETF.txt'
+        # code列表
+        code = read_zxg(fn)
+        rpsday = [20, 50]
+        rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
+        n = 10
+        start = self.end - datetime.timedelta(10)
+        rps = rpsIndex.rpsTopN2(startday=start, lastday=self.end, percentN=n)
+        self.assertTrue(len(rps) > 0)
+        # for day in reversed(rps.index.levels[0]):
+        for day in rps.index.levels[0]:
+            if day == pd.to_datetime(datetime.date(2020, 6, 30)):
+                continue
+            print("对比日期： {}".format(day))
+            rps2 = rpsIndex.rpsTopN(day, n)
+            df = rps.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
+            self.assertTrue(len(df) == len(rps2), "长度不同 {} {}\n{} {}".format(len(df), len(rps2), rps, rps2))
+            df = df.sort_values(by=df.columns[0], ascending=False, inplace=False)
+            obo = self.differOneByOne(df, rps2)
+            self.assertTrue(len(obo) == 0, "{} {}".format(df, rps2))
 
         print(rps)
         print("总数： {}".format(len(rps)))
