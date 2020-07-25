@@ -183,6 +183,12 @@ class RPSIndex(RPSAbs):
     """
 
     def _getRPS2(self):
+        """ 未完成功能
+        完成后功能等同原_getRPS
+
+        Returns:
+
+        """
         if self._rps is None:
             # 未计算rps，则先计算rps
             data = self._fetchData()
@@ -191,10 +197,15 @@ class RPSIndex(RPSAbs):
             cols = []
             for num in self._rpsday:
                 coln = '{}{}'.format(colName, num)
-                dataFrame[coln] = data.close.groupby(level=0).rank(axis=1, pct=True) * 100
+                # dataFrame[coln] = data.close.groupby(level=0).rank(axis=1, pct=True) * 100
+                dataFrame[coln] = data.close.groupby(level=1).pct_change(periods=num).groupby(level=0).rank(axis=1, pct=True, ascending=True)  * 100
                 cols.append(coln)
+            if 'close' in dataFrame.columns:
+                del dataFrame['close']
 
+            # self._rps = dataFrame[cols].iloc[max(self._rpsday):, :].dropna().reset_index().sort_values(cols[0], ascending=False).set_index(["date", "code"])
             self._rps = dataFrame[cols].iloc[max(self._rpsday):, :].dropna()
+            # self._rps.reset_index().sort_values('RPS20', ascending=False).set_index(["date", "code"])
         return self._rps
 
     def _fetchData(self):

@@ -12,6 +12,7 @@ import unittest
 import datetime
 import time
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
 import QUANTAXIS as qa
 from userFunc import cal_ret, get_RPS
@@ -24,7 +25,11 @@ from testing.qaHelper.fetcher.qhtestbase import QhBaseTestCase
 
 class TestRPSIndex(QhBaseTestCase):
     def setUp(self) -> None:
-        fileName = '/tmp/code.pickle'
+        # 是否删除临时文件
+        # self.deltmp = True
+        self.deltmp = False
+
+        fileName = '/tmp/indexCode.pickle'
         try:
             self.code = decompress_pickle(fileName)
         except Exception as e:
@@ -37,6 +42,15 @@ class TestRPSIndex(QhBaseTestCase):
         self.end = datetime.datetime.now() - datetime.timedelta(0)
         fileName = '/tmp/data{}.pickle'.format(days)
         self.data2 = self.getIndexCalret(fileName, self.code, self.start, self.end)
+
+    def tearDown(self) -> None:
+        try:
+            if self.deltmp:
+                import os
+                myCmd = 'rm /tmp/*.pbz2'
+                os.system(myCmd)
+        except Exception as e:
+            pass
 
     def getIndexCalret(self, readFromfile, code, startDate, endDate):
         try:
@@ -60,7 +74,12 @@ class TestRPSIndex(QhBaseTestCase):
         dfrps = self._getRPS(rpsday, self.data2)
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
         rps = rpsIndex.rps()
-        self.assertTrue(dfrps.equals(rps), "{} {}".format(dfrps.head(), rps.head()))
+        try:
+            self.assertTrue(dfrps.sort_values(dfrps.columns[0], ascending=False).equals(rps),
+                            "排序后不相等 {} {}".format(dfrps, rps))
+        except:
+            self.assertTrue(dfrps.equals(rps), "不相等 {} {}".format(dfrps, rps))
+        # self.assertTrue(dfrps.equals(rps), "{} {}".format(dfrps.head(), rps.head()))
         print(rps.tail())
         print(rps.head(20))
 
@@ -71,7 +90,11 @@ class TestRPSIndex(QhBaseTestCase):
         dfrps = self._getRPS(rpsday, self.data2)
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
         rps = rpsIndex.rps()
-        self.assertTrue(dfrps.equals(rps), "RPS计算不匹配：\n{} {}".format(dfrps.head(), rps.head()))
+        try:
+            self.assertTrue(dfrps.sort_values(dfrps.columns[0], ascending=False).equals(rps),
+                            "排序后不相等 {} {}".format(dfrps, rps))
+        except:
+            self.assertTrue(dfrps.equals(rps), "不相等 {} {}".format(dfrps, rps))
         print(rps.tail())
 
     def test_rps_class_selectCode(self):
@@ -138,8 +161,11 @@ class TestRPSIndex(QhBaseTestCase):
         rps2 = rpsIndex.rpsTopN(end, n)
         self.assertTrue(len(rps) > 0)
         self.assertTrue(len(rps) == len(rps2), "长度不同 {} {}\n{} {}".format(len(rps), len(rps2), rps, rps2))
-        self.assertTrue(rps.sort_values(rps.columns[0], ascending=False).equals(rps2), "排序后不相等 {} {}".format(rps, rps2))
-        # self.assertTrue(rps.equals(rps2), "不相等 {} {}".format(rps, rps2))
+        try:
+            self.assertTrue(rps.sort_values(rps.columns[0], ascending=False).equals(rps2),
+                            "排序后不相等 {} {}".format(rps, rps2))
+        except:
+            self.assertTrue(rps.equals(rps2), "不相等 {} {}".format(rps, rps2))
         print(rps)
         print("总数： {}".format(len(rps)))
         dfInfo = codeInfo(list(rps.index.levels[1]))
@@ -164,15 +190,44 @@ class TestRPSIndex(QhBaseTestCase):
             rps2 = rpsIndex.rpsTopN(day, n)
             df = rps.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
             self.assertTrue(len(df) == len(rps2), "长度不同 {} {}\n{} {}".format(len(df), len(rps2), rps, rps2))
-            df = df.sort_values(by=df.columns[0], ascending=False, inplace=False)
-            obo = self.differOneByOne(df, rps2)
-            self.assertTrue(len(obo) == 0, "{} {}".format(df, rps2))
-
+            try:
+                obo = self.differOneByOne(df, rps2)
+                self.assertTrue(len(obo) == 0, "{} {}".format(df, rps2))
+                self.assertTrue(df.equals(rps2), "不相等 {} {}".format(df, rps2))
+            except Exception as e:
+                df = df.sort_values(by=df.columns[0], ascending=False, inplace=False)
+                obo = self.differOneByOne(df, rps2)
+                self.assertTrue(len(obo) == 0, "{} {}".format(df, rps2))
+                self.assertTrue(df.equals(rps2), "不相等 {} {}".format(df, rps2))
         print(rps)
         print("总数： {}".format(len(rps)))
         dfInfo = codeInfo(list(rps.index.levels[1]))
         print(dfInfo.name)
 
+    def test_readExcel(self):
+        """ 找出新进入强势区间的板块
+        """
+        filename = '/tmp/rpstop.xlsx'
+        sheetName = "rps"
+        if os.path.exists(filename):
+            #
+            df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
+            # df = pd.read_excel(filename, sheet_name=shedf['RPS10']> 95 & df['RPS10'].shift() < 95etName + "1", converters={'code': str})
+            colname = df.columns[1]
+            n=90
+            day = df.index.levels[0][-1]
+            dftop = df[(df[colname].groupby(level=1).shift() < n) & (df[colname] >= n)]
+            dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
+            codes =dfp.reset_index().set_index(['date', 'code']).index.levels[1]
+            print(dfp)
+            day = df.index.levels[0][-2]
+            print(df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), codes), :])
+
 
 if __name__ == '__main__':
+    import subprocess
+
+    list_files = subprocess.run(["ls", "-l"])
+    print("The exit code was: %d" % list_files.returncode)
+
     unittest.main()
