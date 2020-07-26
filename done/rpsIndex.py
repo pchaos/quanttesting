@@ -41,7 +41,16 @@ def getIndexCalret(fileName, code, startDate, endDate):
     return dataCalret
 
 
-def getCode(fileName=None, excludeFileName='zxgExclude.txt') -> None:
+def getCode(fileName=None, excludeFileName='zxgExclude.txt'):
+    """返回代码 及代码对应的数据
+
+    Args:
+        fileName:
+        excludeFileName:
+
+    Returns:
+
+    """
     if fileName is None:
         fileName = '/tmp/code.pickle'
     try:
@@ -75,8 +84,10 @@ def _getRPS(rpsday, dataFrame):
 
 def indexRPSMain():
     # 显示rps排名前10%的中文名称
+    # 股票代码
     code, data2 = getCode(excludeFileName='../testing/userFunc/zxgExclude.txt')
-    rpsday = [20, 50]
+    rpsday = [10, 20, 50]
+    # rpsday = [20, 50]
     days = 300 * 1.2
     start = datetime.datetime.now() - datetime.timedelta(days)
     end = datetime.datetime.now() - datetime.timedelta(0)
@@ -86,19 +97,20 @@ def indexRPSMain():
     print(rpstopn.head(20))
     print(rpstopn.tail(10))
     # 排名前n%
-    n = 10
+    n = 50
     # fil = lambda x: (x['RPS20'] > 100 - n) | (x['RPS50'] > 100 - n)
     # fil = lambda x :[x['RPS{}'.format(item)] > 100-n  for item in rpsday]
     # rpstopn.loc[(rpstopn['RPS20'] > 100 - n) | (rpstopn['RPS50'] > 100 - n)]
     rpstopn = pd.concat([rpstopn.loc[(rpstopn[item] > 100 - n)] for item in rpstopn.columns])
     rpstopn.drop_duplicates(inplace=True)
-    rpstopn2 = rpsIndex.rpsTopN(end, n)
+    # rpstopn2 = rpsIndex.rpsTopN(end, n)
+    rpstopn2 = rpsIndex.rpsTopN2(start, end, n)
     print(" 指数总数： {}，RPS排名前{}% 的个数{}：\n".format(len(code), n, len(rpstopn)))
     print("日期： {}".format(end))
     print("rpstopn", rpstopn.tail(10))
     print("rpstopn2", rpstopn2.head(10))
     #  todo rpstopn concat rpstopn2
-    return rpstopn
+    return rpstopn2
 
 
 def indexcnName(dftopn: pd.DataFrame):
@@ -117,9 +129,45 @@ def indexcnName(dftopn: pd.DataFrame):
     return dftopn.set_index(['date', 'code'])
 
 
+def save2Excel(dataFrame, filename, sheetName):
+    """
+    保存excel，设定列宽
+
+    Args:
+        dataFrame:
+        filename:
+        sheetName:
+
+    Returns:
+
+    """
+    writer = pd.ExcelWriter(filename, engine='xlsxwriter')
+    # rpstop.to_excel(filename, encoding='utf-8', sheet_name=sheetName, index=True)
+    dataFrame.to_excel(writer, encoding='utf-8', sheet_name=sheetName, index=True, float_format="%.2f")
+    # 不合并单元格保存
+    # dataFrame.to_excel(writer, encoding='utf-8', sheet_name=sheetName + "1", index=True, float_format="%.2f", merge_cells=False)
+    worksheet = writer.sheets[sheetName]
+    # 设置列宽
+    for idx, col in enumerate(dataFrame):  # loop through all columns
+        series = dataFrame[col]
+        max_len = max((
+            # series.astype(str).map(len).max(),  # len of largest item
+            series.astype(str).str.len().max(),  # len of largest item
+            len(str(series.name))  # len of column name/header
+        )) + 2  # adding a little extra space
+        indexlen = len(dataFrame.index.names)
+        worksheet.set_column(idx + indexlen, idx + indexlen, max_len)  # set column width
+    worksheet.set_column(0, 0, 23)  # set column width
+    writer.save()
+
+
 if __name__ == '__main__':
     rpstop = indexRPSMain()
     rpstop = indexcnName(rpstop)
     # 保存到文件
+    filename = '/tmp/rpstop.xlsx'
+    sheetName = "rps"
     # rpstop.to_csv('/tmp/rpstop.csv', encoding='utf-8', index=True)
-    rpstop.to_excel('/tmp/rpstop.xlsx', encoding='utf-8', index=True)
+    save2Excel(rpstop, filename, sheetName)
+
+    # TODO 查找新进入top 10%的板块
