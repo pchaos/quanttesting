@@ -82,7 +82,7 @@ def _getRPS(rpsday, dataFrame):
     return dfg
 
 
-def indexRPSMain():
+def indexRPSMain(n=10):
     # 显示rps排名前10%的中文名称
     # 股票代码
     code, data2 = getCode(excludeFileName='../testing/userFunc/zxgExclude.txt')
@@ -97,7 +97,7 @@ def indexRPSMain():
     print(rpstopn.head(20))
     print(rpstopn.tail(10))
     # 排名前n%
-    n = 50
+    # n = 40
     # fil = lambda x: (x['RPS20'] > 100 - n) | (x['RPS50'] > 100 - n)
     # fil = lambda x :[x['RPS{}'.format(item)] > 100-n  for item in rpsday]
     # rpstopn.loc[(rpstopn['RPS20'] > 100 - n) | (rpstopn['RPS50'] > 100 - n)]
@@ -162,9 +162,9 @@ def save2Excel(dataFrame, filename, sheetName):
 
 
 if __name__ == '__main__':
-    rpstop = indexRPSMain()
+    rpstop = indexRPSMain(n=40)
     rpstop = indexcnName(rpstop)
-    # 保存到文件
+    # 保存到文件C
     filename = '/tmp/rpstop.xlsx'
     sheetName = "rps"
     # rpstop.to_csv('/tmp/rpstop.csv', encoding='utf-8', index=True)
