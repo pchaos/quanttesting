@@ -206,6 +206,7 @@ class TestRPSIndex(QhBaseTestCase):
 
     def test_readExcel(self):
         """ 找出新进入强势区间的板块
+        注意：产生rps文件时，要取前40%的数据
         """
         filename = '/tmp/rpstop.xlsx'
         sheetName = "rps"
@@ -214,14 +215,23 @@ class TestRPSIndex(QhBaseTestCase):
             df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
             # df = pd.read_excel(filename, sheet_name=shedf['RPS10']> 95 & df['RPS10'].shift() < 95etName + "1", converters={'code': str})
             colname = df.columns[1]
-            n=90
+            n = 90
             day = df.index.levels[0][-1]
             dftop = df[(df[colname].groupby(level=1).shift() < n) & (df[colname] >= n)]
-            dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
-            codes =dfp.reset_index().set_index(['date', 'code']).index.levels[1]
+            # dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
+            dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
+            dfp['code'] = dfp.code.apply(lambda x: str(x).zfill(6))
+            dfp.set_index(['date', 'code'], inplace=True)
+            codes = dfp.index.levels[1]
             print(dfp)
             day = df.index.levels[0][-2]
-            print(df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), codes), :])
+            print("前一日rps强度")
+            dfp2 =df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
+            dfp2['code'] = dfp2.code.apply(lambda x: str(x).zfill(6))
+            dfp2.set_index(['date', 'code'], inplace=True)
+            dfp2 = dfp2.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), codes), :]
+            print(dfp2, "\n长度：", len(dfp2))
+            self.assertTrue(len(dfp) == len(dfp2), "{} {}".format(len(dfp), len(dfp2)))
 
 
 if __name__ == '__main__':
