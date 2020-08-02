@@ -121,7 +121,7 @@ class TestRPSIndex(QhBaseTestCase):
         return dfg
 
     def test_rps_ETF_selectCode(self):
-        # 显示rps排名前10%的中文名称
+        # rps筛选特定code
         fn = 'zxgETF.txt'
         # code列表
         code = read_zxg(fn)
@@ -129,7 +129,8 @@ class TestRPSIndex(QhBaseTestCase):
         rpsIndex = RPSIndex(code, self.start, self.end, rpsday)
         rps = rpsIndex.selectCode(code)
         # print(rps.tail())
-        print(rps)
+        # print(rps)
+        self.assertTrue(len(rpsIndex.selectCode(code[:2])) == 2 * len(rpsIndex.selectCode(code[:1])), "两倍长度")
 
     def test_rps_ETFTOPN(self):
         # 显示rps排名前10%的ETF中文名称
@@ -217,6 +218,7 @@ class TestRPSIndex(QhBaseTestCase):
             colname = df.columns[1]
             n = 90
             day = df.index.levels[0][-1]
+            # 本日rps刚超过n
             dftop = df[(df[colname].groupby(level=1).shift() < n) & (df[colname] >= n)]
             # dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
             dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
@@ -226,13 +228,43 @@ class TestRPSIndex(QhBaseTestCase):
             print(dfp)
             day = df.index.levels[0][-2]
             print("前一日rps强度")
-            dfp2 =df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
+            dfp2 = df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
             dfp2['code'] = dfp2.code.apply(lambda x: str(x).zfill(6))
             dfp2.set_index(['date', 'code'], inplace=True)
             dfp2 = dfp2.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), codes), :]
             print(dfp2, "\n长度：", len(dfp2))
             self.assertTrue(len(dfp) == len(dfp2), "{} {}".format(len(dfp), len(dfp2)))
 
+    def test_readExcel2(self):
+        """ 找出rps10新进入强势区间,rps20也在强势区间的板块
+        注意：产生rps文件时，要取前40%的数据
+        """
+        filename = '/tmp/rpstop.xlsx'
+        sheetName = "rps"
+        if os.path.exists(filename):
+            #
+            df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
+            # df = pd.read_excel(filename, sheet_name=shedf['RPS10']> 95 & df['RPS10'].shift() < 95etName + "1", converters={'code': str})
+            colname = df.columns[1]
+            colname2 = df.columns[2]
+            n = 87
+            day = df.index.levels[0][-1]
+            # 本日rps10刚超过n，并且rps20也超过n
+            dftop = df[(df[colname].groupby(level=1).shift() < n) & (df[colname] >= n) & (df[colname2] >= n)]
+            # dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
+            dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
+            dfp['code'] = dfp.code.apply(lambda x: str(x).zfill(6))
+            dfp.set_index(['date', 'code'], inplace=True)
+            codes = dfp.index.levels[1]
+            print(dfp)
+            day = df.index.levels[0][-2]
+            print("前一日rps强度")
+            dfp2 = df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
+            dfp2['code'] = dfp2.code.apply(lambda x: str(x).zfill(6))
+            dfp2.set_index(['date', 'code'], inplace=True)
+            dfp2 = dfp2.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), codes), :]
+            print(dfp2, "\n长度：", len(dfp2))
+            self.assertTrue(len(dfp) == len(dfp2), "{} {}".format(len(dfp), len(dfp2)))
 
 if __name__ == '__main__':
     import subprocess
