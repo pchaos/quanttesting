@@ -143,31 +143,68 @@ def save2Excel(dataFrame, filename, sheetName):
     """
     writer = pd.ExcelWriter(filename, engine='xlsxwriter')
     # rpstop.to_excel(filename, encoding='utf-8', sheet_name=sheetName, index=True)
-    dataFrame.to_excel(writer, encoding='utf-8', sheet_name=sheetName, index=True, float_format="%.2f")
-    # 不合并单元格保存
-    # dataFrame.to_excel(writer, encoding='utf-8', sheet_name=sheetName + "1", index=True, float_format="%.2f", merge_cells=False)
-    worksheet = writer.sheets[sheetName]
-    # 设置列宽
-    for idx, col in enumerate(dataFrame):  # loop through all columns
-        series = dataFrame[col]
-        max_len = max((
-            # series.astype(str).map(len).max(),  # len of largest item
-            series.astype(str).str.len().max(),  # len of largest item
-            len(str(series.name))  # len of column name/header
-        )) + 2  # adding a little extra space
-        indexlen = len(dataFrame.index.names)
-        worksheet.set_column(idx + indexlen, idx + indexlen, max_len)  # set column width
-    worksheet.set_column(0, 0, 23)  # set column width
-    writer.save()
+    if not isinstance(sheetName, list):
+        dataFrame.to_excel(writer, encoding='utf-8', sheet_name=sheetName, index=True, float_format="%.2f")
+        # 不合并单元格保存
+        # dataFrame.to_excel(writer, encoding='utf-8', sheet_name=sheetName + "1", index=True, float_format="%.2f", merge_cells=False)
+        worksheet = writer.sheets[sheetName]
+        # 设置列宽
+        for idx, col in enumerate(dataFrame):  # loop through all columns
+            series = dataFrame[col]
+            max_len = max((
+                # series.astype(str).map(len).max(),  # len of largest item
+                series.astype(str).str.len().max(),  # len of largest item
+                len(str(series.name))  # len of column name/header
+            )) + 2  # adding a little extra space
+            indexlen = len(dataFrame.index.names)
+            worksheet.set_column(idx + indexlen, idx + indexlen, max_len)  # set column width
+        worksheet.set_column(0, 0, 23)  # set column width
+        writer.save()
+    else:
+        # 多dataframe保存到excel
+        assert len(dataFrame) == len(sheetName)
+        income_sheets = {}
+        for i in range(len(sheetName)):
+            income_sheets[sheetName[i]] = dataFrame[i]
+        for sheet_name in income_sheets.keys():
+            df = income_sheets[sheet_name]
+            df.to_excel(writer, encoding='utf-8', sheet_name=sheet_name, index=True, float_format="%.2f")
+            worksheet = writer.sheets[sheet_name]
+            # 设置列宽
+            for idx, col in enumerate(df):  # loop through all columns
+                series = df[col]
+                max_len = max((
+                    # series.astype(str).map(len).max(),  # len of largest item
+                    series.astype(str).str.len().max(),  # len of largest item
+                    len(str(series.name))  # len of column name/header
+                )) + 2  # adding a little extra space
+                indexlen = len(df.index.names)
+                worksheet.set_column(idx + indexlen, idx + indexlen, max_len)  # set column width
+            worksheet.set_column(0, 0, 23)  # set column width
+
+        writer.save()
 
 
 if __name__ == '__main__':
+    # 单个dataframeexcel保存
+    # rpstop = indexRPSMain(n=40)
+    # rpstop = indexcnName(rpstop)
+    # # 保存到文件C
+    # filename = '/tmp/rpstop.xlsx'
+    # sheetName = "rps"
+    # save2Excel(rpstop, filename, sheetName)
+
+    # 多个dataframe保存excel
     rpstop = indexRPSMain(n=40)
     rpstop = indexcnName(rpstop)
-    # 保存到文件C
+    # 保存到文件
     filename = '/tmp/rpstop.xlsx'
     sheetName = "rps"
-    # rpstop.to_csv('/tmp/rpstop.csv', encoding='utf-8', index=True)
-    save2Excel(rpstop, filename, sheetName)
+    rpstop2 = indexRPSMain(n=10)
+    rpstop2 = indexcnName(rpstop2)
+    # 保存到文件
+    filename = '/tmp/rpstop.xlsx'
+    sheetName2 = "rpsTop10"
+    save2Excel([rpstop, rpstop2], filename, [sheetName, sheetName2])
 
     # TODO 查找新进入top 10%的板块
