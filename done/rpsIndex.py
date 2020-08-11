@@ -12,9 +12,15 @@ import datetime
 import pandas as pd
 import QUANTAXIS as qa
 from QUANTAXIS.QAData import (QA_DataStruct_Index_day)
+import os.path as path
+import sys
+PARENT_DIR = path.dirname(path.dirname(path.abspath(__file__)))
+if PARENT_DIR not in sys.path:
+    sys.path.append(PARENT_DIR)
 from userFunc.myFunction import read_zxg, setdiff_sorted
 from userFunc import compressed_pickle, decompress_pickle
 from userFunc import cal_ret, get_RPS, RPSIndex
+
 
 
 def getIndexCalret(fileName, code, startDate, endDate):
