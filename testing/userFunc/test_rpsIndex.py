@@ -276,6 +276,7 @@ class TestRPSIndex(QhBaseTestCase):
         filename = '/tmp/rpstop.xlsx'
         sheetName = "rps"
         if os.path.exists(filename):
+            print("rps10新进入强势区间,rps20也在强势区间的板块")
             #
             df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
             # df = pd.read_excel(filename, sheet_name=shedf['RPS10']> 95 & df['RPS10'].shift() < 95etName + "1", converters={'code': str})
