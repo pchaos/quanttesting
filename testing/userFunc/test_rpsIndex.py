@@ -228,9 +228,10 @@ class TestRPSIndex(QhBaseTestCase):
             dfp.set_index(['date', 'code'], inplace=True)
             codes = dfp.index.levels[1]
             if len(dfp)> 0:
-                print(dfp)
-                pyperclip.copy(dfp)
+                pyperclip.copy(dfp.to_csv())
                 pyperclip.paste()
+                print("复制道粘贴板")
+                print(dfp)
             else:                print("no data")
             day = df.index.levels[0][-2]
             print("前一日rps强度")
