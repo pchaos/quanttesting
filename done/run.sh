@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 #conda activate quantaxis && echo "activate quantaxis"
+conda info | grep quantaxis
+if [ ! $? -eq 0 ]; then
+  echo "Please activate quantaxis first "
+#  conda activate quantaxis
+  exit 1
+fi
 if [ ! -f "/tmp/rpstop.xlsx" ]; then
  echo "计算RPS" && python done/rpsIndex.py
 else
