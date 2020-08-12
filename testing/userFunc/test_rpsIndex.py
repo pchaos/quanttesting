@@ -14,6 +14,7 @@ import time
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import pyperclip
 import QUANTAXIS as qa
 from userFunc import cal_ret, get_RPS
 from userFunc import full_pickle, loosen_pickle, compressed_pickle, decompress_pickle
@@ -228,8 +229,9 @@ class TestRPSIndex(QhBaseTestCase):
             codes = dfp.index.levels[1]
             if len(dfp)> 0:
                 print(dfp)
-            else:
-                print("no data")
+                pyperclip.copy(dfp)
+                pyperclip.paste()
+            else:                print("no data")
             day = df.index.levels[0][-2]
             print("前一日rps强度")
             dfp2 = df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
