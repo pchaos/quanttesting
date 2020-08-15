@@ -50,14 +50,20 @@ def get_UA():
     return random.choice(uastrings)
 
 class GrabberRequests(GrabberBase):
-    def __init__(self):
-        pass
+    def __init__(self, headers=None, proxy=False):
+        super().__init__(headers,proxy)
 
+    def get(self, url="", params={}):
+        """
 
+        Args:
+            url:
+            params:
 
-    @classmethod
-    def get(cls, url="", params={}):
+        Returns:
+
+        """
         headers = {'User-Agent': get_UA()}
         headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
-        # return requests.get(url=url, headers=headers, proxies=cls.proxies, params=params)
-        return requests.get(url=url, headers=headers,params=params)
+        return requests.get(url=url, headers=headers, proxies=self.proxies, params=params)
+        # return requests.get(url=url, headers=headers,params=params)

@@ -13,6 +13,6 @@ class GrabberBase(object):
             self.headers =headers
 
 
-    def get(self):
-        pass
+    # def get(self):
+    #     pass
 

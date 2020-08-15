@@ -35,12 +35,12 @@ class test_GrabberRequests(TestCase):
                   'sortType': "desc",
                   'pageNum': '1'
                   }
-        res = grequests.get(url=url, params=params)
+        res = gr.get(url=url, params=params)
         self.assertTrue(res.status_code == 200)
         print(res.content)
 
         url = "http://www.cninfo.com.cn/new/fulltextSearch/full?searchkey=%E4%B8%9A%E7%BB%A9%E9%A2%84%E5%A2%9E&sdate=&edate=&isfulltext=false&sortName=pubdate&sortType=desc&pageNum=1"
-        res2 = grequests.get(url=url)
+        res2 = gr.get(url=url)
         self.assertTrue(res.content == res2.content)
 
     def test_get_json(self):
@@ -64,7 +64,7 @@ class test_GrabberRequests(TestCase):
                   'sortType': "desc",
                   'pageNum': '1'
                   }
-        res = grequests.get(url=url, params=params)
+        res = gr.get(url=url, params=params)
         self.assertTrue(res.status_code == 200)
         print(res.content)
         j = json.loads(res.content)
@@ -98,7 +98,7 @@ class test_GrabberRequests(TestCase):
                   'sortType': "desc",
                   'pageNum': '1'
                   }
-        res = grequests.get(url=url, params=params)
+        res = gr.get(url=url, params=params)
         self.assertTrue(res.status_code == 200)
         # print(res.content)
         j = json.loads(res.content)
@@ -136,7 +136,7 @@ class test_GrabberRequests(TestCase):
                       'sortType': "desc",
                       'pageNum': i
                       }
-            res = grequests.get(url=url, params=params)
+            res = gr.get(url=url, params=params)
             self.assertTrue(res.status_code == 200)
             # print(res.content)
             j = json.loads(res.content)
@@ -150,3 +150,7 @@ class test_GrabberRequests(TestCase):
                     for key in keys:
                         print(j2.get(key), end='||')
                     print("")
+
+
+if __name__ == '__main__':
+    unittest.main()
