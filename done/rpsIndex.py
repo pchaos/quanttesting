@@ -201,16 +201,18 @@ if __name__ == '__main__':
     # save2Excel(rpstop, filename, sheetName)
 
     # 多个dataframe保存excel
-    rpstop = indexRPSMain(n=40)
+    top =50
+    rpstop = indexRPSMain(n=top)
     rpstop = indexcnName(rpstop)
     # 保存到文件
     filename = '/tmp/rpstop.xlsx'
     sheetName = "rps"
-    rpstop2 = indexRPSMain(n=10)
+    top=10
+    rpstop2 = indexRPSMain(n=top)
     rpstop2 = indexcnName(rpstop2)
     # 保存到文件
     filename = '/tmp/rpstop.xlsx'
-    sheetName2 = "rpsTop10"
+    sheetName2 = f"rps排名前{top}"
     save2Excel([rpstop, rpstop2], filename, [sheetName, sheetName2])
 
     # TODO 查找新进入top 10%的板块

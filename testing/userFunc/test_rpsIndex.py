@@ -304,6 +304,37 @@ class TestRPSIndex(QhBaseTestCase):
             print(dfp2, "\n长度：", len(dfp2))
             self.assertTrue(len(dfp) == len(dfp2), "{} {}".format(len(dfp), len(dfp2)))
 
+    def test_readExcel4(self):
+        """ 找出rps10新进入强势区间,rps20也在强势区间的板块
+        本日rps10刚超过n，并且rps20也超过n*0.8 前一日rps20小于n
+        注意：产生rps文件时，要取前40%的数据
+        """
+        filename = '/tmp/rpstop.xlsx'
+        sheetName = "rps"
+        if os.path.exists(filename):
+            #
+            df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
+            colname = df.columns[1]
+            colname2 = df.columns[2]
+            n = 87
+            day = df.index.levels[0][-1]
+            # 本日rps10刚超过n，并且rps20也超过n*0.8 前一日rps20小于n
+            dftop = df[(df[colname].groupby(level=1).shift(1) < n) & (df[colname] >= n) & (df[colname2] >= n*0.8) & (df[colname2].groupby(level=1).shift(1) < n)]
+            # dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
+            dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
+            dfp['code'] = dfp.code.apply(lambda x: str(x).zfill(6))
+            dfp.set_index(['date', 'code'], inplace=True)
+            codes = dfp.index.levels[1]
+            print(dfp)
+            day = df.index.levels[0][-2]
+            print(f"前一日rps强度({str(day)[:10]})")
+            dfp2 = df.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :].reset_index(drop=False)
+            dfp2['code'] = dfp2.code.apply(lambda x: str(x).zfill(6))
+            dfp2.set_index(['date', 'code'], inplace=True)
+            dfp2 = dfp2.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), codes), :]
+            print(dfp2, f"\n长度：{len(dfp2)}, {len(dfp)}")
+            self.assertTrue(len(dfp) >= len(dfp2), "{} {}".format(len(dfp), len(dfp2)))
+
 if __name__ == '__main__':
     import subprocess
 
