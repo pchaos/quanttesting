@@ -18,10 +18,10 @@ from QUANTAXIS.QACmd import QA_SU_save_stock_day, QA_SU_save_index_day, QA_SU_sa
 def save_day(paralleled=True):
     """多进程保存日线数据
     """
+    QA_SU_save_index_list('tdx')
     QA_SU_save_index_day('tdx', paralleled=paralleled)
     QA_SU_save_etf_list('tdx')
     QA_SU_save_etf_day('tdx', paralleled=paralleled)
-    QA_SU_save_index_list('tdx')
     QA_SU_save_stock_list('tdx')
     QA_SU_save_stock_block('tdx')
     QA_SU_save_stock_day('tdx', paralleled=paralleled)
