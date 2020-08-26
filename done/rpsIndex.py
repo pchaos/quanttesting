@@ -100,7 +100,7 @@ def indexRPSMain(n=10):
     # dfrps = _getRPS(rpsday, data2)
     rpsIndex = RPSIndex(code, start, end, rpsday)
     rpstopn = rpsIndex.rps()
-    print(rpstopn.head(20))
+    # print(rpstopn.head(20))
     print(rpstopn.tail(10))
     # 排名前n%
     # n = 40
@@ -201,7 +201,8 @@ if __name__ == '__main__':
     # save2Excel(rpstop, filename, sheetName)
 
     # 多个dataframe保存excel
-    top =50
+    # top =50
+    top =40
     rpstop = indexRPSMain(n=top)
     rpstop = indexcnName(rpstop)
     # 保存到文件
