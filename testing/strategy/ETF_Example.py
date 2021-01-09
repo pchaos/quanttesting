@@ -77,6 +77,7 @@ positions.open_cost_short  # 基于开仓价计算的多头开仓价空头成本
 
 """
 import datetime
+import pandas as pd
 import QUANTAXIS as QA
 # from QUANTAXIS.QAARP import QA_Risk, QA_User
 # from QUANTAXIS.QAEngine.QAThreadEngine import QA_Thread
@@ -107,7 +108,12 @@ class strategy(QAStrategyETFBase):
                          trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username,
                          trade_password=eventmq_password,
                          taskid=taskid, mongo_ip=mongo_ip)
+
+
+    def user_init(self):
         self.cutsCount = 10
+        klines = QA.QA_fetch_index_day_adv(self.code, self.start, self.end)
+        self._cci = QA.QA_indicator_CCI(klines, 14)
 
     def on_bar(self, data):
         # print(data)
@@ -123,7 +129,7 @@ class strategy(QAStrategyETFBase):
         # print(code)
         # print(self.running_time)
         # input()
-        res = self.cci(code)
+        res = self.cci(data)
 
         # print(res.iloc[-1])
         # print(res.CCI.tail(10))
@@ -158,8 +164,10 @@ class strategy(QAStrategyETFBase):
         print("交易记录: {}".format(self.acc.trade))
         print("交易记录: {}".format(self.acc.trade[code].sum()))
 
-    def cci(self, code):
-        return QA.QA_indicator_CCI(self.market_data, 14).loc[(slice(None), code), :]
+    def cci(self, data):
+        day = data.name[0]
+        code = data.name[1]
+        return self._cci.loc[(slice(pd.Timestamp(day - datetime.timedelta(60)), pd.Timestamp(day)), code), :]
 
     def getPerVolume(self, price):
         """计算每次买入的数量
@@ -184,9 +192,9 @@ class strategy(QAStrategyETFBase):
 
 
 if __name__ == '__main__':
-    s = strategy(code=['515050', '159952'], frequence='day', start='2019-08-01', end='2020-02-10', strategy_id='xetf1')
-    # s.debug()
-    s.run_backtest()
+    s = strategy(code=['515050', '159952', '515000'], frequence='day', start='2019-08-01', end='2020-02-10', strategy_id='xetf2')
+    s.debug()
+    # s.run_backtest()
     # print(s.market_data)
     # s.risk_check()
     s = None
