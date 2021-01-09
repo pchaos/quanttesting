@@ -103,11 +103,12 @@ class testMyFunction(qaTestingBase):
         print(dfind[dfind.shift(1)['flag'] != dfind['flag']].iloc[-30:])
 
     def test_TBSMonthIndicator(self):
+        """"""
         code = '399006'  # 创业板指数
         # code = '000001'  # 上证指数
         # code = '399001' # 深证指数
         code = '399106' # 深证综指
-        days = 2050
+        days = 13650
         m, n = 10, 20
         self._taoboshiIndicator(code, days, m,  n,  resample='m', indicator=TBSMonthIndicator)
 

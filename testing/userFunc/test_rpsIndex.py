@@ -385,7 +385,8 @@ class TestRPSIndex(QhBaseTestCase):
             df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
             colname = df.columns[1]
             colname2 = df.columns[2]
-            day = df.index.levels[0][-10]
+            nday = 30  # 区间长度
+            day = df.index.levels[0][-nday]
             # 本日rps10刚超过n，并且rps20也超过n*0.8 前一日rps20小于n
             dftop = df[(df[colname].groupby(level=1).shift(1) < n) & (df[colname] >= n) & (df[colname2] >= n * 0.8) & (
                     df[colname2].groupby(level=1).shift(1) < n)]
@@ -396,7 +397,7 @@ class TestRPSIndex(QhBaseTestCase):
             codes = dfp.index.levels[1]
             # print(dfp)
             print("满足条件个数")
-            for day in df.index.levels[0][-10:]:
+            for day in df.index.levels[0][-nday:]:
                 print(f"{str(day)[:10]}  {len(dfp.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), slice(None)), :])}")
                 # print(dfp.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), slice(None)), :])
             # print(tabulate(dfp, headers='keys', tablefmt='psql'))
@@ -408,7 +409,6 @@ class TestRPSIndex(QhBaseTestCase):
                 .format({colname: "${:10,.2f}"})
 
             self.df2xlsWithColor(dfs, filename)
-
 
     def test_readExcel_peroid_2(self):
         """ 找出rps20新进入强势区间,rps10也在强势区间的板块
@@ -422,32 +422,83 @@ class TestRPSIndex(QhBaseTestCase):
             n = 87
             print(f'当日rps10刚超过{n}，rps20也超过{round(n, 2)}, 前一日rps20小于{n}')
             df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
+
             colname = df.columns[1]
             colname2 = df.columns[2]
-            day = df.index.levels[0][-10]
+            nday = 30  # 区间长度
+            day = df.index.levels[0][-nday]
             # 本日rps10刚超过n，并且rps20也超过n*0.8 前一日rps20小于n
             dftop = df[(df[colname2].groupby(level=1).shift(1) < n) & (df[colname] >= n) & (df[colname2] >= n)]
+            dftop2 = df[(df[colname2].groupby(level=1).shift(1) < n) & (df[colname].groupby(level=1).shift(1) < n) & (
+                    df[colname] >= n) & (df[colname2] >= n)]
+            obo = self.differOneByOne(dftop, dftop2)
+            if len(obo) > 0:
+                print(f"不同:{obo}")
             # dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
             dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(None))), :].reset_index(drop=False)
             dfp['code'] = dfp.code.apply(lambda x: str(x).zfill(6))
             dfp.set_index(['date', 'code'], inplace=True)
             codes = dfp.index.levels[1]
             # print(dfp)
-            print("满足条件个数")
-            for day in df.index.levels[0][-10:]:
+            print("满足条件个数:")
+            for day in df.index.levels[0][-nday:]:
                 print(f"{str(day)[:10]}  {len(dfp.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), slice(None)), :])}")
                 # print(dfp.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), slice(None)), :])
             # print(tabulate(dfp, headers='keys', tablefmt='psql'))
             # print(tableize(dfp))
             #
-            dfs = dfp.style.applymap(lambda x: "background-color: red" if x >= n else "background-color: white",
+            dfs = dfp.style.applymap(lambda x: "background-color: lightred" if x >= n else "background-color: white",
                                      subset=[colname2]) \
                 .highlight_max(axis=1) \
                 .format({colname: "${:10,.2f}"})
 
-            self.df2xlsWithColor(dfs, filename)
+            self.df2xlsWithColor(dfs, filename, sheetname="rps20Upper")
 
-    def df2xlsWithColor(self, dfs, filename):
+    def test_readExcel_peroid_3(self):
+        """ 找出rps20新进入强势区间,rps10也在强势区间的板块
+        当日rps10刚超过n，并且rps20也超过n 前一日rps20小于n
+        注意：产生rps文件时，要取前40%的数据
+        """
+        filename = '/tmp/rpstop.xlsx'
+        sheetName = "rps"
+        if os.path.exists(filename):
+            #
+            n = 87
+            print(f'当日rps10刚超过{n}，rps20也超过{round(n, 2)}, 前一日rps20小于{n}')
+            df = pd.read_excel(filename, sheet_name=sheetName, index_col=[0, 1], converters={'code': str})
+
+            colname = df.columns[1]
+            colname2 = df.columns[2]
+            nday = 30  # 区间长度
+            day = df.index.levels[0][-nday]
+            # 本日rps10刚超过n，并且rps20也超过n*0.8 前一日rps20小于n
+            dftop = df[(df[colname2].groupby(level=1).shift(1) < n) & (df[colname] >= n) & (df[colname2] >= n)]
+            dftop2 = df[(df[colname2].groupby(level=1).shift(1) < n) & (df[colname].groupby(level=1).shift(1) < n) & (
+                    df[colname] >= n) & (df[colname2] >= n)]
+            obo = self.differOneByOne(dftop, dftop2)
+            if len(obo) > 0:
+                print(f"不同:{obo}")
+            # dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(day))), :]
+            dfp = dftop.loc[(slice(pd.Timestamp(day), pd.Timestamp(None))), :].reset_index(drop=False)
+            dfp['code'] = dfp.code.apply(lambda x: str(x).zfill(6))
+            dfp.set_index(['date', 'code'], inplace=True)
+            codes = dfp.index.levels[1]
+            # print(dfp)
+            print("满足条件个数:")
+            for day in df.index.levels[0][-nday:]:
+                print(f"{str(day)[:10]}  {len(dfp.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), slice(None)), :])}")
+                # print(dfp.loc[(slice(pd.Timestamp(day), pd.Timestamp(day)), slice(None)), :])
+            # print(tabulate(dfp, headers='keys', tablefmt='psql'))
+            # print(tableize(dfp))
+            #
+            dfs = dfp.style.applymap(lambda x: "background-color: lightred" if x >= n else "background-color: white",
+                                     subset=[colname2]) \
+                .highlight_max(axis=1) \
+                .format({colname: "${:10,.2f}"})
+
+            self.df2xlsWithColor(dfs, filename, sheetname="rps20Upper")
+
+    def df2xlsWithColor(self, dfs, filename, sheetname=""):
         from openpyxl.formatting.rule import ColorScaleRule
         from openpyxl.styles import Alignment, Font, NamedStyle
         from openpyxl.utils import get_column_letter
@@ -457,7 +508,10 @@ class TestRPSIndex(QhBaseTestCase):
             'mode': 'a',
             'engine': 'openpyxl'}
         with pd.ExcelWriter(**writer_args) as writer:
-            sheet_name = 'rpsColored'
+            if len(sheetname) == 0:
+                sheet_name = 'rpsColored'
+            else:
+                sheet_name = sheetname
             dfs.to_excel(writer, sheet_name)
 
             # set index column width

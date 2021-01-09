@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """RSRS(阻力支撑相对强度)择时策略
 https://zhuanlan.zhihu.com/p/33501881
+基于RSRS指标的标准分策略源码评分
+本篇基于光大证券研报《基于阻力支撑相对强度(RSRS)的市场择时》，给出了RSRS斜率指标择时，以及在斜率基础上的标准化指标择时策略。
+使用QUANTAXIS实现
+
+https://github.com/pchaos/quanttesting/blob/master/testing/userFunc/test_RSRS.py
+https://github.com/pchaos/quanttesting/blob/master/userFunc/RSRS.py
 
 @Time    : 2020/3/26 下午3:27
 

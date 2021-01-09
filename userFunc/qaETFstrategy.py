@@ -43,6 +43,9 @@ class QAStrategyETFBase(QAStrategyStockBase):
                          taskid=taskid, mongo_ip=mongo_ip)
         self.market_type = market_type
 
+    def user_init(self):
+        self.market_type = 'index_cn'
+
     def run_backtest(self):
         self.debug()
         self.acc.save()

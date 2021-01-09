@@ -201,6 +201,7 @@ class testRSRS(TestCase):
         result = RSRS1(rsrsDara)
         num = result.flag.abs().sum() / 2
         nav = result.nav[result.shape[0] - 1]
+        print('策略名称：{}'.format(RSRS1.__name__), end=";")
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
         # 标准分策略
@@ -208,6 +209,7 @@ class testRSRS(TestCase):
         num = result2.flag.abs().sum() / 2
         nav = result2.nav[result.shape[0] - 1]
         ret_year = (nav - 1)
+        print('策略名称：{}'.format(RSRS2.__name__), end=";")
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
         # 修正标准分策略
@@ -215,6 +217,7 @@ class testRSRS(TestCase):
         num = result3.flag.abs().sum() / 2
         nav = result3.nav[result.shape[0] - 1]
         ret_year = (nav - 1)
+        print('策略名称：{}'.format(RSRS3.__name__), end=";")
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
         N = 16
@@ -227,6 +230,7 @@ class testRSRS(TestCase):
         num = result4.flag.abs().sum() / 2
         nav = result4.nav[result.shape[0] - 1]
         ret_year = (nav - 1)
+        print('策略名称：{}'.format(RSRS4.__name__), end=";")
         print('交易次数 = ', num)
         print('策略净值为= ', nav)
         xtick = np.arange(0, result.shape[0], int(result.shape[0] / 7))
@@ -253,7 +257,7 @@ class testRSRS(TestCase):
         code = '399989'  # 中证医疗
         code = '399932'  # 中证消费
         code = '399986'  # 中证银行
-        code = '880952'  # 中证银行
+        code = '880952'  # 芯片
 
         dateStart = datetime.date(2005, 3, 1)
         # dateEnd = datetime.date(2019, 12, 31)
