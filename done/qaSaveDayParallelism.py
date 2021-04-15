@@ -33,7 +33,10 @@ def save_day(paralleled=True):
 
 
 if __name__ == '__main__':
+    old_QA_SU_save_stock_xdxr = QA_SU_save_stock_xdxr
     QA_SU_save_stock_xdxr= Mock(side_effect=QA_SU_save_stock_xdxr_mock)
     # select_save_engine= Mock(side_effect=_select_save_engine)
     # save_day(False)
     save_day(True)
+    # 还原版本
+    QA_SU_save_stock_xdxr = old_QA_SU_save_stock_xdxr
