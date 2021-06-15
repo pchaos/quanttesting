@@ -14,9 +14,14 @@
 from QUANTAXIS.QACmd import QA_SU_save_stock_day, QA_SU_save_index_day, QA_SU_save_etf_day, \
     QA_SU_save_stock_xdxr, QA_SU_save_etf_list, QA_SU_save_index_list, QA_SU_save_stock_list, \
     QA_SU_save_stock_block
-from qaSaveMock import QA_SU_save_stock_xdxr_mock
+from QUANTAXIS.QAFetch.QATdx import for_sh
+from QUANTAXIS.QAFetch import QATdx
+from qaSaveMock import QA_SU_save_stock_xdxr_mock, for_sh_mock
 
 from mock import Mock
+
+__updated__ = "2021-06-15"
+
 
 def save_day(paralleled=True):
     """多进程保存日线数据
@@ -34,9 +39,13 @@ def save_day(paralleled=True):
 
 if __name__ == '__main__':
     old_QA_SU_save_stock_xdxr = QA_SU_save_stock_xdxr
-    QA_SU_save_stock_xdxr= Mock(side_effect=QA_SU_save_stock_xdxr_mock)
-    # select_save_engine= Mock(side_effect=_select_save_engine)
+    QA_SU_save_stock_xdxr = Mock(side_effect=QA_SU_save_stock_xdxr_mock)
+    old_for_sh = QATdx.for_sh
+    QATdx.for_sh = Mock(side_effect=for_sh_mock)
     # save_day(False)
     save_day(True)
+    # QA_SU_save_etf_list('tdx')
+    # QA_SU_save_etf_day('tdx', paralleled=True)
     # 还原版本
     QA_SU_save_stock_xdxr = old_QA_SU_save_stock_xdxr
+    QATdx.for_sh = old_for_sh

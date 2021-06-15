@@ -409,6 +409,4 @@ combobox6.pack(side=tk.LEFT)
 combobox6.bind('<<ComboboxSelected>>', math_operator_process)
 
 
-
-
 root.mainloop()
