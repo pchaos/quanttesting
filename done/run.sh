@@ -13,7 +13,8 @@ else
 fi
 if [ -f "/tmp/rpstop.xlsx" ]; then
   echo "计算RPS10 ..."  && pytest testing/userFunc/test_rpsIndex.py -k "test_readExcel_block10" -v -s --disable-warnings
-  pytest testing/userFunc/test_rpsIndex.py::TestRPSIndex::test_readExcel4 -s --disable-warnings
+#  pytest testing/userFunc/test_rpsIndex.py::TestRPSIndex::test_readExcel4 -s --disable-warnings
   pytest testing/userFunc/test_rpsIndex.py::TestRPSIndex::test_readExcel_peroid -s --disable-warnings
+  pytest testing/userFunc/test_rpsIndex.py::TestRPSIndex::test_readExcel_peroid_2 -s --disable-warnings
 fi
 #conda deactivate

@@ -27,6 +27,7 @@ def for_sh_mock(code):
     elif str(code)[0:3] in ['000', '880']:
         return 'index_cn'
     elif str(code)[0:2] in ['50', '51', '58']:
+        # 增加50 58开头的代码
         #  print(f"etf {code}")
         return 'etf_cn'
     # 110×××120×××企业债券；

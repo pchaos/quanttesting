@@ -38,7 +38,7 @@ def save_day(paralleled=True):
     #  QA_SU_save_stock_xdxr('tdx')
 
 
-def save_min(paralleled=True):
+def save_etf_min(paralleled=True):
     QA_SU_save_etf_min('tdx')
 
 
@@ -69,12 +69,13 @@ if __name__ == '__main__':
     if weekday() % 6 == 1:
         #  if weekday() % 2 == 1:
         # 周2、4、6保存分钟数据
-        save_min()
+        save_etf_min()
     if weekday() % 4 == 2:
         #  if weekday() % 4 == 0:
         # 周1、5保存分钟数据
         #  QA_SU_save_index_min('tdx')
         save_index_min()
+        print(f"save index min done")
     # 还原版本
     QA_SU_save_stock_xdxr = old_QA_SU_save_stock_xdxr
     QATdx.for_sh = old_for_sh
