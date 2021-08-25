@@ -10,6 +10,7 @@
 @license : Copyright(C), pchaos
 @Contact : p19992003#gmail.com
 """
+
 import time
 from QUANTAXIS.QACmd import QA_SU_save_stock_day, QA_SU_save_index_day, QA_SU_save_etf_day, \
     QA_SU_save_stock_xdxr, QA_SU_save_etf_list, QA_SU_save_index_list, QA_SU_save_stock_list, \
@@ -17,7 +18,7 @@ from QUANTAXIS.QACmd import QA_SU_save_stock_day, QA_SU_save_index_day, QA_SU_sa
     QA_SU_save_etf_min, QA_SU_save_index_min
 from QUANTAXIS.QAFetch.QATdx import for_sh
 from QUANTAXIS.QAFetch import QATdx
-from qaSaveMock import QA_SU_save_stock_xdxr_mock, for_sh_mock
+from qaSaveMock import QA_SU_save_stock_xdxr_mock, for_sh_mock, get_mainmarket_ip
 
 from mock import Mock
 
@@ -34,8 +35,11 @@ def save_day(paralleled=True):
     QA_SU_save_stock_list('tdx')
     QA_SU_save_stock_block('tdx')
     QA_SU_save_stock_day('tdx', paralleled=paralleled)
+
+
+def save_xdxr(parallele=True):
     # 使用mock多进程下载xdxr数据
-    #  QA_SU_save_stock_xdxr('tdx')
+    QA_SU_save_stock_xdxr('tdx')
 
 
 def save_etf_min(paralleled=True):
@@ -62,23 +66,27 @@ if __name__ == '__main__':
     QA_SU_save_stock_xdxr = Mock(side_effect=QA_SU_save_stock_xdxr_mock)
     old_for_sh = QATdx.for_sh
     QATdx.for_sh = Mock(side_effect=for_sh_mock)
+    old_get_mainmarket_ip = QATdx.get_mainmarket_ip
+    QATdx.get_mainmarket_ip = Mock(side_effect=get_mainmarket_ip)
     # save_day(False)
     save_day(True)
-    # QA_SU_save_etf_list('tdx')
-    # QA_SU_save_etf_day('tdx', paralleled=True)
     if weekday() % 6 == 1:
         #  if weekday() % 2 == 1:
         # 周2、4、6保存分钟数据
         save_etf_min()
-    if weekday() % 4 == 2:
+    if weekday() % 4 == 0:
         #  if weekday() % 4 == 0:
         # 周1、5保存分钟数据
         #  QA_SU_save_index_min('tdx')
         save_index_min()
         print(f"save index min done")
+    elif weekday() % 7 == 2:
+        # 周三下载xdxr
+        save_xdxr()
     # 还原版本
     QA_SU_save_stock_xdxr = old_QA_SU_save_stock_xdxr
     QATdx.for_sh = old_for_sh
+    QATdx.get_mainmarket_ip = old_get_mainmarket_ip
 
     # end time
     end = time.time()

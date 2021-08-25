@@ -1,7 +1,10 @@
+from functools import lru_cache
+import random
 from QUANTAXIS.QAUtil import DATABASE, print_used_time
 from QUANTAXIS.QASU.main import select_save_engine
+from QUANTAXIS.QAUtil import QASetting
 
-__updated__ = "2021-06-15"
+__updated__ = "2021-08-14"
 
 
 @print_used_time
@@ -22,6 +25,8 @@ def QA_SU_save_stock_xdxr_mock(engine, client=DATABASE):
 
 # @print_used_time
 def for_sh_mock(code):
+    """更新etf代码范围
+    """
     if str(code)[0] == '6':
         return 'stock_cn'
     elif str(code)[0:3] in ['000', '880']:
@@ -39,3 +44,35 @@ def for_sh_mock(code):
         return 'bond_cn'
     else:
         return 'undefined'
+
+
+@lru_cache
+def get_stock_ips():
+    from multiprocessing import cpu_count
+    from QUANTAXIS.QAFetch.QATdx import get_ip_list_by_multi_process_ping
+    stock_ip_list = QASetting.stock_ip_list
+    ips = get_ip_list_by_multi_process_ping(stock_ip_list, _type='stock')[
+        :cpu_count() * 2 + 1]
+    return ips
+
+
+def get_mainmarket_ip(ip, port):
+    """随机返回速度靠前的行情地址
+    Arguments:
+        ip {[type]} -- [description]
+        port {[type]} -- [description]
+    Returns:
+        [type] -- [description]
+    """
+
+    global best_ip
+    if ip is None and port is None:
+        ips = get_stock_ips()
+        n = len(ips)
+        if n > 0:
+            item = ips[random.randint(0, n - 1)]
+            ip = item['ip']
+            port = item['port']
+    else:
+        pass
+    return ip, port
