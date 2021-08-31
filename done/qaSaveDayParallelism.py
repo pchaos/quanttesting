@@ -18,9 +18,9 @@ from QUANTAXIS.QACmd import QA_SU_save_stock_day, QA_SU_save_index_day, QA_SU_sa
     QA_SU_save_etf_min, QA_SU_save_index_min
 from QUANTAXIS.QAFetch.QATdx import for_sh
 from QUANTAXIS.QAFetch import QATdx
-from qaSaveMock import QA_SU_save_stock_xdxr_mock, for_sh_mock, get_mainmarket_ip
-
 from mock import Mock
+from qaSaveMock import QA_SU_save_stock_xdxr_mock, for_sh_mock, get_mainmarket_ip
+import pytdx_base_socket_client_mock
 
 __updated__ = "2021-06-16"
 
@@ -68,6 +68,7 @@ if __name__ == '__main__':
     QATdx.for_sh = Mock(side_effect=for_sh_mock)
     old_get_mainmarket_ip = QATdx.get_mainmarket_ip
     QATdx.get_mainmarket_ip = Mock(side_effect=get_mainmarket_ip)
+    #  bsc.to_df = Mock(side_effect=pytdx_base_socket_client_mock._to_df)
     # save_day(False)
     save_day(True)
     if weekday() % 6 == 1:
